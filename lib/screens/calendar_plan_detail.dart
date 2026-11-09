@@ -1473,12 +1473,12 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
           ),
           borderRadius: BorderRadius.circular(16),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).cardPadding, vertical: UiDimensions.of(context).rowGap),
         child: LayoutBuilder(
           builder: (context, constraints) {
             const spacing = 10.0;
             final width = constraints.maxWidth;
-            final twoColumnBreakpoint = 420.0;
+            final twoColumnBreakpoint = 330.0;
             final useTwoColumns = width >= twoColumnBreakpoint;
             final fieldWidth = useTwoColumns
                 ? ((width - spacing) / 2).clamp(0.0, 280.0)
@@ -1502,7 +1502,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
             final expandedContent = Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 8),
+                SizedBox(height: UiDimensions.of(context).rowGap),
                 Wrap(
                   spacing: spacing,
                   runSpacing: spacing,
@@ -1517,7 +1517,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: UiDimensions.of(context).rowGap),
                 Wrap(
                   spacing: spacing,
                   runSpacing: spacing,
@@ -1603,9 +1603,9 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                     );
                   },
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: UiDimensions.of(context).rowGap),
                 SizedBox(
-                  height: useTwoColumns ? 220 : 240,
+                  height: useTwoColumns ? 200 : 220,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: DecoratedBox(
@@ -1803,6 +1803,8 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
             ),
             child: Text(
               valueText,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: enabled
                     ? theme.textTheme.bodyMedium?.color
@@ -2479,6 +2481,8 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                     .map(
                       (e) => Chip(
                         label: Text(e),
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
                         visualDensity: VisualDensity.compact,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),

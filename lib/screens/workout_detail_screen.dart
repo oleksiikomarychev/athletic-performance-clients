@@ -2397,7 +2397,7 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Готовность к тренировке',
+                isNarrow ? 'Готовность · x${_readinessFactor(_readinessSlider).toStringAsFixed(2)}' : 'Готовность к тренировке',
                 maxLines: isNarrow ? 2 : 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.titleMedium.copyWith(
@@ -2405,6 +2405,7 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                   color: theme.colorScheme.onSurface,
                 ),
               ),
+              if (!isNarrow) ...[
               const SizedBox(height: 4),
               Text(
                 'Коэффициент нагрузки: x${_readinessFactor(_readinessSlider).toStringAsFixed(2)}',
@@ -2412,6 +2413,7 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
+              ],
             ],
           );
 
@@ -2533,7 +2535,7 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                   Expanded(child: titleBlock),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: dimensions.rowGap),
               Row(
                 children: [
                   Expanded(child: controls),
@@ -2839,11 +2841,10 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                       color: AppColors.primary,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
+                        minWidth: 48,
+                        minHeight: 48,
                       ),
                     ),
-                    const SizedBox(width: 4),
                     IconButton(
                       icon: const Icon(Icons.edit_outlined, size: 20),
                       onPressed: () => _navigateToExerciseForm(
@@ -2860,11 +2861,10 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                       color: AppColors.primary,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
+                        minWidth: 48,
+                        minHeight: 48,
                       ),
                     ),
-                    const SizedBox(width: 4),
                     IconButton(
                       icon: const Icon(Icons.delete_outline, size: 20),
                       onPressed: () => _deleteExerciseInstance(instance),
@@ -2872,8 +2872,8 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                       color: AppColors.error,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
+                        minWidth: 48,
+                        minHeight: 48,
                       ),
                     ),
                   ],
@@ -3028,9 +3028,9 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                             ),
                             decoration: InputDecoration(
                               isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 12,
+                              contentPadding: EdgeInsets.symmetric(
+                                vertical: dimensions.rowGap,
+                                horizontal: dimensions.rowGap,
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -3086,9 +3086,9 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                             ),
                             decoration: InputDecoration(
                               isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 12,
+                              contentPadding: EdgeInsets.symmetric(
+                                vertical: dimensions.rowGap,
+                                horizontal: dimensions.rowGap,
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -3147,9 +3147,9 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                             ),
                             decoration: InputDecoration(
                               isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 12,
+                              contentPadding: EdgeInsets.symmetric(
+                                vertical: dimensions.rowGap,
+                                horizontal: dimensions.rowGap,
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),

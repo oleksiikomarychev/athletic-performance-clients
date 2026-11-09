@@ -283,24 +283,19 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                     ].join(' • ');
 
                     return Card(
-                      margin: EdgeInsets.only(bottom: UiDimensions.of(context).cardPadding),
+                      margin: EdgeInsets.only(bottom: UiDimensions.of(context).rowGap),
                       child: ListTile(
-                        title: Text(plan.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        title: Row(children: [
+                          Flexible(child: Text(plan.name, style: const TextStyle(fontWeight: FontWeight.bold))),
+                          const SizedBox(width: 6),
+                          Icon(plan.isActive ? Icons.check_circle : Icons.circle_outlined,
+                            size: 18, color: plan.isActive ? Colors.green : Colors.grey),
+                        ]),
                         subtitle: Text(subtitle),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              plan.isActive ? Icons.check_circle : Icons.circle_outlined,
-                              color: plan.isActive ? Colors.green : Colors.grey,
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton(
+                        trailing: IconButton(
                               icon: const Icon(Icons.delete, color: Colors.red),
                               onPressed: () => _deletePlan(plan.id),
                             ),
-                          ],
-                        ),
                         onTap: () async {
                           final result = await Navigator.push<bool>(
                             context,

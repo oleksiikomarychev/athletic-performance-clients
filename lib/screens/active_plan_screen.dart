@@ -119,6 +119,8 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
   ];
   String _metricX = 'effort_avg';
   String _metricY = 'effort_avg';
+  CalendarFormat _calendarFormat = CalendarFormat.twoWeeks;
+  bool _chartExpanded = false;
 
   @override
   void initState() {
@@ -1936,7 +1938,8 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
         startingDayOfWeek: StartingDayOfWeek.monday,
         selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
         eventLoader: (day) => eventsByDay[_dateOnly(day)] ?? const <Workout>[],
-        calendarFormat: CalendarFormat.month,
+        calendarFormat: _calendarFormat,
+        onFormatChanged: (format) => setState(() => _calendarFormat = format),
         onDaySelected: (selectedDay, focusedDay) {
           setState(() {
             _manualDaySelection = true;
@@ -2255,6 +2258,8 @@ extension _APAnalytics on _ActivePlanScreenState {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: _metricX,
+                    isExpanded: true,
+                    selectedItemBuilder: (context) => _metrics.map((m) => Text(_metricLabel(m), maxLines: 1, overflow: TextOverflow.ellipsis)).toList(),
                     decoration: const InputDecoration(labelText: 'Ось X'),
                     items: _metrics
                         .map(
@@ -2271,6 +2276,8 @@ extension _APAnalytics on _ActivePlanScreenState {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: _metricY,
+                    isExpanded: true,
+                    selectedItemBuilder: (context) => _metrics.map((m) => Text(_metricLabel(m), maxLines: 1, overflow: TextOverflow.ellipsis)).toList(),
                     decoration: const InputDecoration(labelText: 'Ось Y'),
                     items: _metrics
                         .map(
@@ -2288,27 +2295,43 @@ extension _APAnalytics on _ActivePlanScreenState {
             const SizedBox(height: 10),
             if (totals != null && totals.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: EdgeInsets.only(bottom: dimensions.rowGap),
                 child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+                  spacing: dimensions.rowGap,
+                  runSpacing: 4,
                   children: totals.entries.map((entry) {
                     final label = _metricLabel(entry.key);
                     final value = entry.value;
                     return Chip(
                       label: Text('$label: ${value.toStringAsFixed(2)}'),
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     );
                   }).toList(),
                 ),
               ),
             SizedBox(
-              height: 240,
-              child: PlanAnalyticsChart(
-                points: analytics,
-                metricX: _metricX,
-                metricY: _metricY,
-                emptyText: 'Нет данных для плана',
-                showScatterAxisTitles: false,
+              height: _chartExpanded ? 240 : 180,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  PlanAnalyticsChart(
+                    points: analytics,
+                    metricX: _metricX,
+                    metricY: _metricY,
+                    emptyText: 'Нет данных для плана',
+                    showScatterAxisTitles: false,
+                  ),
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: IconButton(
+                      tooltip: _chartExpanded ? 'Свернуть график' : 'Развернуть график',
+                      onPressed: () => setState(() => _chartExpanded = !_chartExpanded),
+                      icon: Icon(_chartExpanded ? Icons.unfold_less : Icons.unfold_more),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
