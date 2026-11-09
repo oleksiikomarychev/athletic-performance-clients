@@ -30,9 +30,9 @@ is available.
 
 ## Deploy Flutter Web with Coolify
 
-The workflow in `.github/workflows/publish-web.yml` builds Flutter Web, pushes
+The workflow in `.github/workflows/publish-web.yml` builds Flutter Web and pushes
 `oleksiikomarychev/workoutapp-web:latest` and a commit-specific image to Docker
-Hub, then calls the Coolify deploy webhook. Nginx serves the Flutter app on
+Hub. Nginx serves the Flutter app on
 port `80` and proxies `/api/` to the Coolify gateway domain. The browser uses
 the web app's HTTPS origin for API requests, so it does not need direct access
 to the gateway's HTTP domain.
@@ -46,13 +46,13 @@ variables → Actions**:
 | Variable | `CHAT_WS_URL` | Public `wss://` agent origin, if chat is available |
 | Secret | `DOCKERHUB_USERNAME` | Docker Hub username |
 | Secret | `DOCKERHUB_TOKEN` | Docker Hub access token with push access |
-| Secret | `COOLIFY_WEBHOOK` | Deploy webhook URL from the Coolify web application |
-| Secret | `COOLIFY_TOKEN` | Coolify API token with Deploy permission |
 
 In Coolify, create a **Docker Image** application using
 `oleksiikomarychev/workoutapp-web:latest`, set the internal port to `80`, and
-assign the public HTTPS domain. Disable Git push auto-deploy for this app: the
-workflow triggers deployment only after the new image is published. The
+assign the public HTTPS domain. After the GitHub Actions image publish succeeds,
+press **Deploy** in Coolify to pull the new `latest` image. The Coolify API is
+disabled and its panel is available only over HTTP, so this workflow does not
+send a deploy token or call its webhook. The
 Docker Hub image must be public or the Coolify server must be authenticated
 to Docker Hub.
 
