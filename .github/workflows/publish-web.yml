@@ -1,0 +1,81 @@
+name: Publish and deploy Flutter web
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-web-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.3'
+          channel: stable
+          cache: true
+
+      - name: Validate deployment configuration
+        env:
+          API_URL: ${{ vars.PROD_API_BASE_URL }}
+          CHAT_URL: ${{ vars.CHAT_WS_URL }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          [[ "$API_URL" == https://* ]] || { echo 'Set repository variable PROD_API_BASE_URL to the public HTTPS API origin'; exit 1; }
+          if [[ -n "$CHAT_URL" && "$CHAT_URL" != wss://* ]]; then
+            echo 'CHAT_WS_URL must use wss:// when set'
+            exit 1
+          fi
+          [[ -n "$DOCKERHUB_USERNAME" && -n "$DOCKERHUB_TOKEN" ]] || { echo 'Set DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets'; exit 1; }
+
+      - name: Test and build Flutter web
+        env:
+          API_URL: ${{ vars.PROD_API_BASE_URL }}
+          CHAT_URL: ${{ vars.CHAT_WS_URL }}
+        run: |
+          flutter pub get
+          flutter test test/exercise_set_dto_test.dart
+          flutter build web --release --no-wasm-dry-run \
+            --dart-define="PROD_API_BASE_URL=$API_URL" \
+            --dart-define="CHAT_WS_URL=$CHAT_URL"
+
+      - uses: docker/setup-buildx-action@v3
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.web
+          platforms: linux/amd64
+          push: true
+          tags: |
+            oleksiikomarychev/workoutapp-web:latest
+            oleksiikomarychev/workoutapp-web:sha-${{ github.sha }}
+          cache-from: type=gha,scope=flutter-web
+          cache-to: type=gha,mode=max,scope=flutter-web
+
+      - name: Trigger Coolify deployment
+        env:
+          COOLIFY_WEBHOOK: ${{ secrets.COOLIFY_WEBHOOK }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+        run: |
+          set -euo pipefail
+          [[ -n "$COOLIFY_WEBHOOK" && -n "$COOLIFY_TOKEN" ]] || { echo 'Set COOLIFY_WEBHOOK and COOLIFY_TOKEN secrets'; exit 1; }
+          curl --fail-with-body --show-error --silent --request POST \
+            --header "Authorization: Bearer $COOLIFY_TOKEN" \
+            "$COOLIFY_WEBHOOK"
