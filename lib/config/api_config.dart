@@ -7,8 +7,14 @@ class ApiConfig {
 
   static const String _productionUrlOverride =
       String.fromEnvironment('PROD_API_BASE_URL', defaultValue: '');
+  static const String _localUrlOverride =
+      String.fromEnvironment('LOCAL_API_BASE_URL', defaultValue: '');
 
   static String get localBaseUrl {
+    if (_localUrlOverride.isNotEmpty) {
+      return _localUrlOverride;
+    }
+
     // 1. Если это Web, жестко возвращаем localhost
     if (kIsWeb) {
       return 'http://127.0.0.1:8000';

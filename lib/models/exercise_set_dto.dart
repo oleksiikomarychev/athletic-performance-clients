@@ -12,6 +12,8 @@ int? _volumeFromJson(dynamic json) {
   return null;
 }
 
+Object? _repsFromJson(Map json, String key) => json['reps'] ?? json['volume'];
+
 @freezed
 class ExerciseSetDto with _$ExerciseSetDto {
   const ExerciseSetDto._();
@@ -21,7 +23,7 @@ class ExerciseSetDto with _$ExerciseSetDto {
     int? id,
     @JsonKey(name: 'set_type') String? setType,
     @Default(<ExerciseSetDto>[]) List<ExerciseSetDto> subsets,
-    @JsonKey(name: 'volume') @Default(0) int reps,
+    @JsonKey(name: 'volume', readValue: _repsFromJson) @Default(0) int reps,
     @JsonKey(name: 'working_weight') @Default(0.0) double weight,
     double? rpe,
     int? order,

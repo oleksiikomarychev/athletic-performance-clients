@@ -25,7 +25,7 @@ mixin _$ExerciseSetDto {
   @JsonKey(name: 'set_type')
   String? get setType => throw _privateConstructorUsedError;
   List<ExerciseSetDto> get subsets => throw _privateConstructorUsedError;
-  @JsonKey(name: 'volume')
+  @JsonKey(name: 'volume', readValue: _repsFromJson)
   int get reps => throw _privateConstructorUsedError;
   @JsonKey(name: 'working_weight')
   double get weight => throw _privateConstructorUsedError;
@@ -65,7 +65,7 @@ abstract class $ExerciseSetDtoCopyWith<$Res> {
     int? id,
     @JsonKey(name: 'set_type') String? setType,
     List<ExerciseSetDto> subsets,
-    @JsonKey(name: 'volume') int reps,
+    @JsonKey(name: 'volume', readValue: _repsFromJson) int reps,
     @JsonKey(name: 'working_weight') double weight,
     double? rpe,
     int? order,
@@ -179,7 +179,7 @@ abstract class _$$ExerciseSetDtoImplCopyWith<$Res>
     int? id,
     @JsonKey(name: 'set_type') String? setType,
     List<ExerciseSetDto> subsets,
-    @JsonKey(name: 'volume') int reps,
+    @JsonKey(name: 'volume', readValue: _repsFromJson) int reps,
     @JsonKey(name: 'working_weight') double weight,
     double? rpe,
     int? order,
@@ -287,7 +287,7 @@ class _$ExerciseSetDtoImpl extends _ExerciseSetDto
     this.id,
     @JsonKey(name: 'set_type') this.setType,
     final List<ExerciseSetDto> subsets = const <ExerciseSetDto>[],
-    @JsonKey(name: 'volume') this.reps = 0,
+    @JsonKey(name: 'volume', readValue: _repsFromJson) this.reps = 0,
     @JsonKey(name: 'working_weight') this.weight = 0.0,
     this.rpe,
     this.order,
@@ -322,7 +322,7 @@ class _$ExerciseSetDtoImpl extends _ExerciseSetDto
   }
 
   @override
-  @JsonKey(name: 'volume')
+  @JsonKey(name: 'volume', readValue: _repsFromJson)
   final int reps;
   @override
   @JsonKey(name: 'working_weight')
@@ -436,7 +436,7 @@ abstract class _ExerciseSetDto extends ExerciseSetDto {
     final int? id,
     @JsonKey(name: 'set_type') final String? setType,
     final List<ExerciseSetDto> subsets,
-    @JsonKey(name: 'volume') final int reps,
+    @JsonKey(name: 'volume', readValue: _repsFromJson) final int reps,
     @JsonKey(name: 'working_weight') final double weight,
     final double? rpe,
     final int? order,
@@ -464,7 +464,7 @@ abstract class _ExerciseSetDto extends ExerciseSetDto {
   @override
   List<ExerciseSetDto> get subsets;
   @override
-  @JsonKey(name: 'volume')
+  @JsonKey(name: 'volume', readValue: _repsFromJson)
   int get reps;
   @override
   @JsonKey(name: 'working_weight')

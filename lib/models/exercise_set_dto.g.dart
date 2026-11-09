@@ -15,7 +15,7 @@ _$ExerciseSetDtoImpl _$$ExerciseSetDtoImplFromJson(Map<String, dynamic> json) =>
               ?.map((e) => ExerciseSetDto.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const <ExerciseSetDto>[],
-      reps: (json['volume'] as num?)?.toInt() ?? 0,
+      reps: (_repsFromJson(json, 'volume') as num?)?.toInt() ?? 0,
       weight: (json['working_weight'] as num?)?.toDouble() ?? 0.0,
       rpe: (json['rpe'] as num?)?.toDouble(),
       order: (json['order'] as num?)?.toInt(),
