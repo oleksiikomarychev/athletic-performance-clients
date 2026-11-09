@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiConfig {
-  static bool useProd = kReleaseMode;
+  static bool useProd = false;
 
   static const String _productionUrlOverride =
       String.fromEnvironment('PROD_API_BASE_URL', defaultValue: '');
@@ -21,7 +21,7 @@ class ApiConfig {
     }
 
     // 2. Если это не Web, пробуем взять из .env, если нет - дефолтный IP
-    return dotenv.maybeGet('LOCAL_API_BASE_URL') ?? 'http://192.168.31.75:8000';
+    return dotenv.maybeGet('LOCAL_API_BASE_URL') ?? 'http://192.168.31.151:8000';
   }
 
   static final String productionBaseUrl = _productionUrlOverride.isNotEmpty
