@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 
 class BottomNavBarItem {
   final IconData icon;
@@ -44,6 +45,7 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dimensions = UiDimensions.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
@@ -54,11 +56,11 @@ class CustomBottomNavBar extends StatelessWidget {
               : unselectedFontSize,
         ) *
         1.1;
-    final barHeight = height > iconSize + 4 + scaledLabelHeight * 2.6 + 18
+    final barHeight = height > iconSize + 4 + scaledLabelHeight * 2 + 20
         ? height
-        : iconSize + 4 + scaledLabelHeight * 2.6 + 18;
-    const double outerHorizontalPadding = 12.0;
-    const double islandOffset = 16.0;
+        : iconSize + 4 + scaledLabelHeight * 2 + 20;
+    final outerHorizontalPadding = dimensions.navigationInset;
+    final islandOffset = dimensions.navigationInset;
 
     return Material(
       color: Colors.transparent,
@@ -69,7 +71,7 @@ class CustomBottomNavBar extends StatelessWidget {
           top: false,
           bottom: true,
           child: Padding(
-            padding: const EdgeInsets.only(
+            padding: EdgeInsets.only(
               left: outerHorizontalPadding,
               right: outerHorizontalPadding,
               bottom: islandOffset,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
 
@@ -89,7 +90,7 @@ class _UserMaxWidgetState extends ConsumerState<UserMaxWidget> {
     final l10n = AppLocalizations.of(context);
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+        padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding, vertical: UiDimensions.of(context).sectionGap),
         child: Form(
           key: _formKey,
           child: Column(
@@ -163,7 +164,7 @@ class _UserMaxWidgetState extends ConsumerState<UserMaxWidget> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: UiDimensions.of(context).sectionGap),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(

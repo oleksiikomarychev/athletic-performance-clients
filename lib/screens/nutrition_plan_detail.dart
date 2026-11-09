@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/src/api/nutrition_api.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
@@ -98,24 +99,21 @@ class _NutritionPlanDetailState extends State<NutritionPlanDetail> {
             ],
           ),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildInfoSection(l10n),
-                const SizedBox(height: 24),
+                SizedBox(height: UiDimensions.of(context).sectionGap),
                 Text(
                   l10n.nutritionEntriesLabel,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: UiDimensions.of(context).rowGap),
                 if (entries.isEmpty)
                   Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(32.0),
+                      padding: EdgeInsets.all(UiDimensions.of(context).sectionGap),
                       child: Text(l10n.nutritionNoEntries),
                     ),
                   )
@@ -123,9 +121,9 @@ class _NutritionPlanDetailState extends State<NutritionPlanDetail> {
                   ...entries.map((entry) {
                     final entryMap = entry as Map<String, dynamic>;
                     return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
+                      margin: EdgeInsets.only(bottom: UiDimensions.of(context).rowGap),
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -161,7 +159,7 @@ class _NutritionPlanDetailState extends State<NutritionPlanDetail> {
   Widget _buildInfoSection(AppLocalizations l10n) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
         child: Column(
           children: [
             _buildInfoRow(

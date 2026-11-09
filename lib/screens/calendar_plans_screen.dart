@@ -5,6 +5,7 @@ import 'package:workout_app/services/base_api_service.dart';
 import 'package:workout_app/config/api_config.dart';
 import 'package:workout_app/screens/user_profile_screen.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/loading_indicator.dart';
 import 'package:workout_app/widgets/error_message.dart';
@@ -261,7 +262,7 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                   );
                 }
                 return ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  padding: EdgeInsets.symmetric(vertical: UiDimensions.of(context).rowGap, horizontal: UiDimensions.of(context).pagePadding),
                   itemCount: items.length,
                   itemBuilder: (context, index) {
                     final plan = items[index];
@@ -282,7 +283,7 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                     ].join(' • ');
 
                     return Card(
-                      margin: const EdgeInsets.only(bottom: 16.0),
+                      margin: EdgeInsets.only(bottom: UiDimensions.of(context).cardPadding),
                       child: ListTile(
                         title: Text(plan.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                         subtitle: Text(subtitle),

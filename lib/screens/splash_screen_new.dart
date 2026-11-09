@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/screens/home_screen_new.dart';
 
 
@@ -83,12 +84,12 @@ class _SplashScreenNewState extends State<SplashScreenNew>
               scale: _animation,
               child: const FlutterLogo(size: 100),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: UiDimensions.of(context).sectionGap),
             const Text(
               'Workout App',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: UiDimensions.of(context).rowGap),
             const CircularProgressIndicator(),
           ],
         ),

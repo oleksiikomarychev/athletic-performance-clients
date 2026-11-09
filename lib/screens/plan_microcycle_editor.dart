@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'dart:async';
 import 'package:workout_app/models/microcycle.dart';
 import 'package:workout_app/models/plan_schedule.dart';
@@ -251,7 +252,7 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
             ],
           ),
           body: Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -286,7 +287,7 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
                               final eIdx = entry.key;
                               final ex = entry.value;
                               return Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6),
+                                padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).cardPadding, vertical: 6),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [

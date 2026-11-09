@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/src/api/nutrition_api.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
@@ -114,7 +115,7 @@ class _NutritionPlansListState extends State<NutritionPlansList> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: EdgeInsets.symmetric(vertical: UiDimensions.of(context).rowGap),
       itemCount: _sessions.length,
       itemBuilder: (context, index) {
         final session = _sessions[index];

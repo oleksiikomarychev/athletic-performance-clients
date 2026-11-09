@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 
 class FloatingHeaderBar extends StatelessWidget {
   final String title;
@@ -22,6 +23,7 @@ class FloatingHeaderBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dimensions = UiDimensions.of(context);
     final VoidCallback? effectiveOnTitleTap = onTitleTap ?? AssistantChatHost.of(context)?.openChat;
 
     final theme = Theme.of(context);
@@ -108,7 +110,7 @@ class FloatingHeaderBar extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        padding: EdgeInsets.fromLTRB(dimensions.headerInset, 8, dimensions.headerInset, 8),
         child: Align(
           alignment: Alignment.topCenter,
           child: ClipRRect(
@@ -119,8 +121,8 @@ class FloatingHeaderBar extends StatelessWidget {
                 sigmaY: isDark ? 0 : 22,
               ),
               child: Container(
-                height: 56,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                height: dimensions.headerHeight,
+                padding: EdgeInsets.symmetric(horizontal: dimensions.headerInset),
                 decoration: BoxDecoration(
                   color: theme.brightness == Brightness.dark
                       ? AppColors.darkChrome

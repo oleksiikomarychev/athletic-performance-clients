@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
@@ -263,7 +264,7 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding),
                     itemCount: _muscleGroups.length + 1,
                     itemBuilder: (context, index) {
                       if (index == 0) {
@@ -348,7 +349,7 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
 
         final exercise = state.exercises[index];
         return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          margin: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding, vertical: 8),
           child: ListTile(
             title: Text(
               exercise.name ?? '',

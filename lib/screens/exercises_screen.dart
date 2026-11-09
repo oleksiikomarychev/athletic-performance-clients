@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -725,12 +726,12 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                       .loadExercises();
                 },
                 child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
                   itemCount: displayedExercises.length + 1,
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       return Card(
-                        margin: const EdgeInsets.only(bottom: 16),
+                        margin: EdgeInsets.only(bottom: UiDimensions.of(context).rowGap),
                         child: SwitchListTile(
                           title: const Text('Show only main exercises'),
                           subtitle: const Text(
@@ -746,7 +747,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
 
                     final exercise = displayedExercises[index - 1];
                     return Card(
-                      margin: const EdgeInsets.only(bottom: 16),
+                      margin: EdgeInsets.only(bottom: UiDimensions.of(context).rowGap),
                       child: ListTile(
                         leading: const Icon(Icons.fitness_center),
                         title: Text(

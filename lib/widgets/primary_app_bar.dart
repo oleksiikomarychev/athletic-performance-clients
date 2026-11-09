@@ -3,9 +3,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 
 class PrimaryAppBar extends StatelessWidget implements PreferredSizeWidget {
-  static const double _toolbarHeight = 72;
+  static const double _toolbarHeight = 64;
 
   final String? title;
   final Widget? titleWidget;
@@ -74,6 +75,7 @@ class PrimaryAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dimensions = UiDimensions.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final chipColor = backgroundColor ??
         (isDark ? Colors.transparent : Colors.white.withOpacity(0.12));
@@ -164,7 +166,7 @@ class PrimaryAppBar extends StatelessWidget implements PreferredSizeWidget {
       flexibleSpace: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        padding: EdgeInsets.fromLTRB(dimensions.headerInset, 8, dimensions.headerInset, 8),
           child: Align(
             alignment: Alignment.topCenter,
             child: ClipRRect(
@@ -175,8 +177,8 @@ class PrimaryAppBar extends StatelessWidget implements PreferredSizeWidget {
                     sigmaY: isDark ? 0 : 22,
                   ),
                 child: Container(
-                  height: 56,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  height: dimensions.headerHeight,
+                  padding: EdgeInsets.symmetric(horizontal: dimensions.headerInset),
                   decoration: BoxDecoration(
                     color: isDark ? AppColors.darkChrome : null,
                     gradient: isDark ? null : AppGradients.blue,

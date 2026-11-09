@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider_package;
@@ -632,7 +633,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
             ],
           ),
           body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -644,7 +645,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text('Mesocycles', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('Mesocycles', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             Expanded(
               child: ListView.builder(
                 itemCount: _mesocycles.length,
@@ -733,7 +734,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

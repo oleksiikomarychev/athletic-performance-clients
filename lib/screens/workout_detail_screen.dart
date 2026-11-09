@@ -19,6 +19,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/providers/workout_provider.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/widgets/floating_header_bar.dart';
 import 'package:workout_app/screens/user_profile_screen.dart';
 import 'nutrition_plan_create.dart';
@@ -2293,6 +2294,8 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
   }
 
   Widget _buildBody() {
+    final theme = Theme.of(context);
+    final dimensions = UiDimensions.of(context);
     if (_isLoadingExercises) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -2308,13 +2311,17 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8ECFF),
+                  color: theme.brightness == Brightness.dark
+                      ? theme.colorScheme.primaryContainer
+                      : const Color(0xFFE8ECFF),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.fitness_center,
                   size: 48,
-                  color: AppColors.primary,
+                  color: theme.brightness == Brightness.dark
+                      ? theme.colorScheme.onPrimaryContainer
+                      : AppColors.primary,
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -2333,7 +2340,7 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
       );
     } else {
       content = ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: EdgeInsets.symmetric(horizontal: dimensions.pagePadding, vertical: dimensions.cardPadding),
         itemCount: _uniqueExercises.length,
         itemBuilder: (context, index) {
           final exercise = _uniqueExercises[index];
@@ -2344,7 +2351,7 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
 
     return Column(
       children: [
-        const SizedBox(height: 72),
+        SizedBox(height: dimensions.headerHeight + 16),
         _buildMetadataCard(),
         _buildSessionBanner(),
         Expanded(child: content),
@@ -2354,11 +2361,12 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
 
   Widget _buildMetadataCard() {
     final theme = Theme.of(context);
+    final dimensions = UiDimensions.of(context);
     if (_workout == null) return const SizedBox.shrink();
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.fromLTRB(dimensions.pagePadding, dimensions.cardPadding, dimensions.pagePadding, 8),
+      padding: EdgeInsets.all(dimensions.cardPadding),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
@@ -2371,12 +2379,16 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
           Widget icon = Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFFE8ECFF),
+              color: theme.brightness == Brightness.dark
+                  ? theme.colorScheme.primaryContainer
+                  : const Color(0xFFE8ECFF),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.fitness_center,
-              color: AppColors.primary,
+              color: theme.brightness == Brightness.dark
+                  ? theme.colorScheme.onPrimaryContainer
+                  : AppColors.primary,
               size: 20,
             ),
           );
@@ -2434,13 +2446,17 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8ECFF),
+                  color: theme.brightness == Brightness.dark
+                      ? theme.colorScheme.primaryContainer
+                      : const Color(0xFFE8ECFF),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   _readinessSlider.round().toString(),
                   style: AppTextStyles.titleMedium.copyWith(
-                    color: AppColors.primary,
+                    color: theme.brightness == Brightness.dark
+                        ? theme.colorScheme.onPrimaryContainer
+                        : AppColors.primary,
                     fontWeight: FontWeight.w600,
                   ),
                   textAlign: TextAlign.center,
@@ -2534,11 +2550,12 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
 
   Widget _buildSessionBanner() {
     final theme = Theme.of(context);
+    final dimensions = UiDimensions.of(context);
     final isActive = _activeSession?.isActive == true;
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.fromLTRB(dimensions.pagePadding, 8, dimensions.pagePadding, dimensions.cardPadding),
+      padding: EdgeInsets.all(dimensions.cardPadding),
       decoration: BoxDecoration(
         color: isActive
             ? theme.colorScheme.tertiaryContainer
@@ -2691,6 +2708,8 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
   }
 
   Widget _buildExerciseCard(ExerciseDefinition exercise) {
+    final theme = Theme.of(context);
+    final dimensions = UiDimensions.of(context);
     final instances =
         _workout?.exerciseInstances
             .where((instance) => instance.exerciseListId == exercise.id)
@@ -2708,19 +2727,23 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.only(left: 4, top: 8, bottom: 12),
+              padding: EdgeInsets.only(left: 4, top: 8, bottom: dimensions.rowGap),
               child: Row(
                 children: [
                   Container(
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE8ECFF),
+                      color: theme.brightness == Brightness.dark
+                          ? theme.colorScheme.primaryContainer
+                          : const Color(0xFFE8ECFF),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.fitness_center,
-                      color: AppColors.primary,
+                      color: theme.brightness == Brightness.dark
+                          ? theme.colorScheme.onPrimaryContainer
+                          : AppColors.primary,
                       size: 20,
                     ),
                   ),
@@ -2755,11 +2778,12 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
 
   Widget _buildInstanceCard(ExerciseInstance instance) {
     final theme = Theme.of(context);
+    final dimensions = UiDimensions.of(context);
     final isUpdating =
         instance.id != null && _updatingInstanceIds.contains(instance.id!);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: dimensions.cardPadding),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
@@ -2769,7 +2793,7 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: EdgeInsets.fromLTRB(dimensions.cardPadding, dimensions.cardPadding, dimensions.cardPadding, 8),
             child: Row(
               children: [
                 Expanded(
@@ -2860,9 +2884,9 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
           if (instance.sets.isNotEmpty) ...[
             Divider(height: 1, thickness: 1, color: Theme.of(context).colorScheme.outlineVariant),
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 12.0,
+              padding: EdgeInsets.symmetric(
+                horizontal: dimensions.cardPadding,
+                vertical: dimensions.rowGap,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2928,14 +2952,19 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                 set.id != null;
 
             return Container(
-              margin: const EdgeInsets.symmetric(
-                horizontal: 12.0,
+              margin: EdgeInsets.symmetric(
+                horizontal: dimensions.rowGap,
                 vertical: 4.0,
               ),
               decoration: BoxDecoration(
                 color: isCompleted
-                    ? const Color(0xFFEFF8F2)
-                    : Theme.of(context).colorScheme.surface.withOpacity(0.3),
+                    ? theme.brightness == Brightness.dark
+                        ? Color.alphaBlend(
+                            AppColors.success.withValues(alpha: 0.16),
+                            theme.colorScheme.surfaceContainerLow,
+                          )
+                        : const Color(0xFFEFF8F2)
+                    : theme.colorScheme.surface.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(12.0),
                 border: Border.all(
                   color: isCompleted
@@ -2952,9 +2981,9 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                       ? () => _toggleSetCompletion(instance, set)
                       : null,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12.0,
-                      vertical: 12.0,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: dimensions.rowGap,
+                      vertical: dimensions.rowGap,
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,

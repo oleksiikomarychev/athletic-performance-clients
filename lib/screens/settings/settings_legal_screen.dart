@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 
 class SettingsLegalScreen extends StatelessWidget {
   const SettingsLegalScreen({super.key});
@@ -10,20 +11,20 @@ class SettingsLegalScreen extends StatelessWidget {
         title: const Text('Legal'),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: const [
+        padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
+        children: [
           Text(
             'Privacy Policy',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           SizedBox(height: 8),
           Text(
             'This is a placeholder. Add your privacy policy text or open a web page.',
           ),
-          SizedBox(height: 24),
+          SizedBox(height: UiDimensions.of(context).sectionGap),
           Text(
             'Terms of Service',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           SizedBox(height: 8),
           Text(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 import 'package:workout_app/models/microcycle.dart';
 import 'package:workout_app/models/plan_schedule.dart';
@@ -613,7 +614,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: EdgeInsets.all(UiDimensions.of(context).densePagePadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -6,6 +6,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/models/applied_calendar_plan.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 import 'package:workout_app/models/workout.dart';
@@ -1924,9 +1925,11 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
   }
 
   Widget _buildCalendar(Map<DateTime, List<Workout>> eventsByDay) {
+    final dimensions = UiDimensions.of(context);
     return Container(
       color: Theme.of(context).colorScheme.surface,
       child: TableCalendar<Workout>(
+        rowHeight: dimensions.calendarRowHeight,
         firstDay: DateTime.utc(2018, 1, 1),
         lastDay: DateTime.utc(2100, 12, 31),
         focusedDay: _focusedDay,
@@ -1965,10 +1968,11 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
   }
 
   Widget _buildDayHeader() {
+    final dimensions = UiDimensions.of(context);
     final day = _selectedDay ?? _dateOnly(DateTime.now());
     final title = DateFormat('EEEE, MMM d, yyyy').format(day);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      padding: EdgeInsets.fromLTRB(dimensions.pagePadding, 4, dimensions.pagePadding, 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -1980,6 +1984,7 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
   }
 
   Widget _buildDayList(Map<DateTime, List<Workout>> eventsByDay) {
+    final dimensions = UiDimensions.of(context);
     final day = _selectedDay ?? _dateOnly(DateTime.now());
     final workouts = eventsByDay[day] ?? const <Workout>[];
     if (workouts.isEmpty) {
@@ -1991,7 +1996,7 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: EdgeInsets.fromLTRB(dimensions.pagePadding, 0, dimensions.pagePadding, dimensions.cardPadding),
       itemBuilder: (ctx, i) {
         final w = workouts[i];
         final st = _statusOf(w);
@@ -2037,7 +2042,7 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
           ),
         );
       },
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, __) => SizedBox(height: dimensions.rowGap),
       itemCount: workouts.length,
     );
   }
@@ -2053,7 +2058,7 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
       builder: (ctx) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            padding: EdgeInsets.fromLTRB(UiDimensions.of(ctx).pagePadding, 8, UiDimensions.of(ctx).pagePadding, UiDimensions.of(ctx).cardPadding),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2234,13 +2239,14 @@ extension _APAnalytics on _ActivePlanScreenState {
     List<PlanAnalyticsPoint> analytics, {
     Map<String, double>? totals,
   }) {
+    final dimensions = UiDimensions.of(context);
     return Card(
       elevation: 1,
       color: Theme.of(context).colorScheme.surfaceContainerLow,
-      margin: const EdgeInsets.symmetric(horizontal: 12),
+      margin: EdgeInsets.symmetric(horizontal: dimensions.pagePadding),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        padding: EdgeInsets.symmetric(horizontal: dimensions.cardPadding, vertical: dimensions.rowGap),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

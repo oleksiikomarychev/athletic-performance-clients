@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:intl/intl.dart';
 import 'package:workout_app/models/workout_session.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
@@ -102,7 +103,7 @@ class _SessionLogScreenState extends ConsumerState<SessionLogScreen> {
             onTitleTap: openChat,
           ),
           body: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
             children: [
               _InfoRow(
                 label: 'Workout ID',
@@ -115,7 +116,7 @@ class _SessionLogScreenState extends ConsumerState<SessionLogScreen> {
                 label: 'Duration (sec)',
                 value: (session.durationSeconds ?? 0).toString(),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: UiDimensions.of(context).sectionGap),
               Text('Exercises & Sets', style: AppTextStyles.titleMedium),
               const SizedBox(height: 8),
               if (_loading)
@@ -129,7 +130,7 @@ class _SessionLogScreenState extends ConsumerState<SessionLogScreen> {
                 const Text('No exercise data available for this workout')
               else
                 ..._workout!.exerciseInstances.map(_buildInstanceCard),
-              const SizedBox(height: 16),
+              SizedBox(height: UiDimensions.of(context).sectionGap),
               Text('Raw Progress', style: AppTextStyles.titleMedium),
               const SizedBox(height: 4),
               Text(

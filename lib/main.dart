@@ -7,6 +7,7 @@ import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart' as pv;
 import 'package:workout_app/providers/app_locale_provider.dart';
 import 'package:workout_app/providers/app_theme_mode_provider.dart';
+import 'package:workout_app/providers/app_ui_density_provider.dart';
 import 'package:workout_app/firebase_options.dart';
 import 'package:workout_app/features/auth/auth_gate.dart';
 import 'package:workout_app/features/auth/auth_service.dart';
@@ -59,11 +60,15 @@ Future<void> main() async {
   }
 
   final initialThemeMode = await AppThemeModeController.loadInitialThemeMode();
+  final initialDensity = await AppUiDensityController.loadInitialDensity();
   runApp(
     ProviderScope(
       overrides: [
         appThemeModeProvider.overrideWith(
           (ref) => AppThemeModeController(initialThemeMode: initialThemeMode),
+        ),
+        appUiDensityProvider.overrideWith(
+          (ref) => AppUiDensityController(initialDensity: initialDensity),
         ),
       ],
       child: const MyApp(),
@@ -79,6 +84,7 @@ class MyApp extends ConsumerWidget {
     final apiClient = ApiClient();
     final appLocale = ref.watch(appLocaleProvider);
     final themeMode = ref.watch(appThemeModeProvider);
+    final density = ref.watch(appUiDensityProvider);
     return pv.MultiProvider(
       providers: [
         pv.Provider<ApiClient>.value(value: apiClient),
@@ -89,8 +95,8 @@ class MyApp extends ConsumerWidget {
       child: MaterialApp(
         scaffoldMessengerKey: rootScaffoldMessengerKey,
         onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-        theme: AppTheme.lightTheme(),
-        darkTheme: AppTheme.darkTheme(),
+        theme: AppTheme.lightTheme(density: density),
+        darkTheme: AppTheme.darkTheme(density: density),
         themeMode: themeMode,
         debugShowCheckedModeBanner: false,
         localizationsDelegates: AppLocalizations.localizationsDelegates,

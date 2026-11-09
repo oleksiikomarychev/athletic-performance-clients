@@ -15,6 +15,7 @@ import 'package:workout_app/src/widgets/apply_plan_widget.dart'
 import 'package:workout_app/models/calendar_plan_summary.dart';
 import 'package:workout_app/screens/plan_editor_screen.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/plan_analytics_chart.dart';
 import 'package:workout_app/screens/user_profile_screen.dart';
@@ -1000,12 +1001,12 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                 onRefresh: () async => _subscribePlanById(_currentPlan.id),
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(UiDimensions.of(context).densePagePadding),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildPlanInfo(context),
-                      const SizedBox(height: 12),
+                      SizedBox(height: UiDimensions.of(context).rowGap),
                       Card(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
@@ -2061,6 +2062,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
 
   Widget _buildWorkoutDayCard(PlanWorkout workout) {
     final colors = Theme.of(context).colorScheme;
+    final dimensions = UiDimensions.of(context);
     return Card(
       elevation: 1,
       margin: const EdgeInsets.only(bottom: 8.0),
@@ -2068,13 +2070,13 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(
-            horizontal: 12.0,
+          tilePadding: EdgeInsets.symmetric(
+            horizontal: dimensions.denseCardPadding,
             vertical: 4.0,
           ),
-          childrenPadding: const EdgeInsets.only(
-            left: 12.0,
-            right: 12.0,
+          childrenPadding: EdgeInsets.only(
+            left: dimensions.denseCardPadding,
+            right: dimensions.denseCardPadding,
             bottom: 8.0,
           ),
           title: Row(
@@ -2111,6 +2113,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
 
   Widget _buildExerciseCard(PlanExercise exercise, int index) {
     final colors = Theme.of(context).colorScheme;
+    final dimensions = UiDimensions.of(context);
     final userMaxes = _userMaxesForExercise(exercise);
     final latestUserMax = _latestUserMax(userMaxes);
     final hasNotes =
@@ -2119,7 +2122,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8.0),
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+      padding: EdgeInsets.symmetric(horizontal: dimensions.denseCardPadding, vertical: dimensions.rowGap),
       decoration: BoxDecoration(
         color: colors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(6),
@@ -2299,11 +2302,12 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
 
   Widget _buildPlanInfo(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final dimensions = UiDimensions.of(context);
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: EdgeInsets.all(dimensions.denseCardPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2498,18 +2502,19 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
 
   Widget _buildMesocycleExpansionTile(Mesocycle mesocycle) {
     final colors = Theme.of(context).colorScheme;
+    final dimensions = UiDimensions.of(context);
     return Card(
       elevation: 1,
       margin: const EdgeInsets.only(bottom: 8.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(
-          horizontal: 12.0,
+        tilePadding: EdgeInsets.symmetric(
+          horizontal: dimensions.denseCardPadding,
           vertical: 4.0,
         ),
-        childrenPadding: const EdgeInsets.only(
-          left: 12.0,
-          right: 12.0,
+        childrenPadding: EdgeInsets.only(
+          left: dimensions.denseCardPadding,
+          right: dimensions.denseCardPadding,
           bottom: 8.0,
         ),
         title: Row(
@@ -2575,6 +2580,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
 
   Widget _buildMicrocycleCard(Microcycle microcycle) {
     final colors = Theme.of(context).colorScheme;
+    final dimensions = UiDimensions.of(context);
     final name = microcycle.name.trim();
     final orderIndex = microcycle.orderIndex;
     final orderNumber = orderIndex >= 0 ? orderIndex + 1 : 1;
@@ -2593,13 +2599,13 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       color: colors.surfaceContainerLow,
       child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(
-          horizontal: 12.0,
+        tilePadding: EdgeInsets.symmetric(
+          horizontal: dimensions.denseCardPadding,
           vertical: 2.0,
         ),
-        childrenPadding: const EdgeInsets.only(
-          left: 12.0,
-          right: 12.0,
+        childrenPadding: EdgeInsets.only(
+          left: dimensions.denseCardPadding,
+          right: dimensions.denseCardPadding,
           bottom: 8.0,
         ),
         title: Column(

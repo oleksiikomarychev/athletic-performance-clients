@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
@@ -317,9 +318,9 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
 
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
       itemCount: entries.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 16),
+      separatorBuilder: (_, __) => SizedBox(height: UiDimensions.of(context).rowGap),
       itemBuilder: (context, index) {
         final entry = entries[index];
         final items = [...entry.value]
@@ -332,7 +333,7 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
             borderRadius: BorderRadius.circular(16),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

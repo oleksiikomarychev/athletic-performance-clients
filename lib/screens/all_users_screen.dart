@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
@@ -60,7 +61,7 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => Center(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -110,7 +111,7 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
       return const Center(child: Text('No users yet'));
     }
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding, vertical: UiDimensions.of(context).rowGap),
       itemBuilder: (context, index) {
         final user = users[index];
         return ListTile(
@@ -291,7 +292,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -299,9 +300,9 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Filter Coaches',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   TextButton(
                     onPressed: widget.onClear,

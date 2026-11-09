@@ -56,39 +56,39 @@ class AppGradients {
 
 class AppTextStyles {
   static const TextStyle displayLarge = TextStyle(
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: FontWeight.bold,
     letterSpacing: -0.5,
   );
 
   static const TextStyle displayMedium = TextStyle(
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: FontWeight.bold,
     letterSpacing: -0.5,
   );
 
   static const TextStyle displaySmall = TextStyle(
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: FontWeight.bold,
   );
 
   static const TextStyle headlineMedium = TextStyle(
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: FontWeight.w600,
   );
 
   static const TextStyle headlineSmall = TextStyle(
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: FontWeight.w600,
   );
 
   static const TextStyle titleLarge = TextStyle(
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: FontWeight.w600,
   );
 
   static const TextStyle titleMedium = TextStyle(
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: FontWeight.w500,
   );
 
@@ -98,12 +98,12 @@ class AppTextStyles {
   );
 
   static const TextStyle bodyLarge = TextStyle(
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: FontWeight.normal,
   );
 
   static const TextStyle bodyMedium = TextStyle(
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: FontWeight.normal,
   );
 

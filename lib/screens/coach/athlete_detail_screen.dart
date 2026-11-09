@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -69,16 +70,13 @@ class AthleteDetailScreen extends ConsumerWidget {
                 return SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 24,
-                    ),
+                    padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const SizedBox(height: kToolbarHeight + 24),
+                        SizedBox(height: kToolbarHeight + UiDimensions.of(context).sectionGap),
                         Container(
-                          padding: const EdgeInsets.all(20),
+                          padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
                           decoration: BoxDecoration(
                             color: Theme.of(
                               context,

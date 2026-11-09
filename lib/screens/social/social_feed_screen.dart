@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/services/service_locator.dart' as sl;
@@ -94,7 +95,7 @@ class SocialFeedScreen extends ConsumerWidget {
                     return Card(
                       elevation: 2,
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -195,7 +196,7 @@ class SocialFeedScreen extends ConsumerWidget {
                   border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: UiDimensions.of(context).rowGap),
               DropdownButtonFormField<String>(
                 value: selectedScope,
                 decoration: const InputDecoration(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
 
 import '../config/constants/theme_constants.dart';
+import '../config/theme/ui_dimensions.dart';
 import '../models/user_profile.dart';
 
 class UserProfileView extends StatelessWidget {
@@ -47,7 +48,7 @@ class UserProfileView extends StatelessWidget {
           ),
         ],
         if (showCoachingCard) ...[
-          const SizedBox(height: 24),
+          SizedBox(height: UiDimensions.of(context).sectionGap),
           _buildCoachingCard(context),
         ],
         ...additionalSections,
@@ -65,7 +66,7 @@ class UserProfileView extends StatelessWidget {
           alignment: Alignment.bottomRight,
           children: [
             CircleAvatar(
-              radius: 50,
+              radius: UiDimensions.of(context).avatarRadius,
               backgroundColor: Theme.of(context).colorScheme.primaryContainer,
               backgroundImage: avatarUrl != null
                   ? NetworkImage(avatarUrl)
@@ -76,7 +77,7 @@ class UserProfileView extends StatelessWidget {
                           ? profile.displayName!.substring(0, 1).toUpperCase()
                           : profile.userId.substring(0, 1).toUpperCase(),
                       style: TextStyle(
-                        fontSize: 32,
+                        fontSize: UiDimensions.of(context).avatarRadius * 0.7,
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.onPrimaryContainer,
                       ),
@@ -96,12 +97,12 @@ class UserProfileView extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: UiDimensions.of(context).rowGap),
         Text(
           profile.displayName ?? 'User ${profile.userId}',
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 24,
+            fontSize: UiDimensions.of(context).profileNameFontSize,
             fontWeight: FontWeight.bold,
             color: Theme.of(context).colorScheme.onSurface,
           ),
@@ -116,7 +117,7 @@ class UserProfileView extends StatelessWidget {
           ),
         ),
         if (isOwner && (onEditProfile != null || onManageCoaching != null)) ...[
-          const SizedBox(height: 12),
+          SizedBox(height: UiDimensions.of(context).rowGap),
           Wrap(
             spacing: 12,
             runSpacing: 8,
@@ -148,7 +149,7 @@ class UserProfileView extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),

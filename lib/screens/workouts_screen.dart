@@ -12,6 +12,7 @@ import 'package:workout_app/screens/user_profile_screen.dart';
 import 'package:workout_app/services/base_api_service.dart';
 import 'package:workout_app/config/api_config.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/services/user_analytics_service.dart';
@@ -489,7 +490,7 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
                         currentIndex: _bannerIndex,
                         onPageChanged: (i) => setState(() => _bannerIndex = i),
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: UiDimensions.of(context).sectionGap),
                       Expanded(
                         child: RefreshIndicator(
                           onRefresh: () async {
@@ -506,14 +507,14 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
                             physics: const BouncingScrollPhysics(
                               parent: AlwaysScrollableScrollPhysics(),
                             ),
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                            padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding),
                             children: [
                               _PlansSection(
                                 nextWorkoutAsync: ref.watch(
                                   nextWorkoutProvider,
                                 ),
                               ),
-                              const SizedBox(height: 24),
+                              SizedBox(height: UiDimensions.of(context).sectionGap),
                               _LibrarySection(
                                 manualWorkoutsState: manualWorkoutsState,
                                 onRetry: () => ref
@@ -610,7 +611,7 @@ class _HeroCarousel extends StatelessWidget {
     ];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -622,7 +623,7 @@ class _HeroCarousel extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
               child: AspectRatio(
-                aspectRatio: 335 / 150,
+                aspectRatio: UiDimensions.of(context).heroAspectRatio,
                 child: ScrollConfiguration(
                   behavior: ScrollConfiguration.of(context).copyWith(
                     dragDevices: const {
@@ -688,6 +689,7 @@ class _PlansSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dimensions = UiDimensions.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -712,10 +714,10 @@ class _PlansSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: dimensions.rowGap),
         nextWorkoutAsync.when(
           loading: () => Container(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(dimensions.cardPadding),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(20),
@@ -724,7 +726,7 @@ class _PlansSection extends StatelessWidget {
             child: const Center(child: CircularProgressIndicator()),
           ),
           error: (err, stack) => Container(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(dimensions.cardPadding),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(20),
@@ -758,7 +760,7 @@ class _PlansSection extends StatelessWidget {
                   })();
 
             final card = Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              padding: EdgeInsets.symmetric(horizontal: dimensions.cardPadding, vertical: dimensions.cardPadding),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF20262B) : null,
                 gradient: isDark ? null : AppGradients.blue,
@@ -951,7 +953,7 @@ class _LibrarySection extends StatelessWidget {
             if (workouts.isEmpty) {
               final scheme = Theme.of(context).colorScheme;
               return Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
                 decoration: BoxDecoration(
                   color: scheme.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(16),
@@ -1048,7 +1050,7 @@ class _WorkoutCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
@@ -1147,7 +1149,7 @@ class _SectionTitle extends StatelessWidget {
         const SizedBox(width: 12),
         Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
       ],
     );
