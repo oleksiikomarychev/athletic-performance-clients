@@ -25,22 +25,25 @@ jobs:
 
       - name: Validate deployment configuration
         env:
-          API_URL: ${{ vars.PROD_API_BASE_URL }}
+          API_URL: ${{ vars.PROD_API_BASE_URL || 'https://oleksii-workoutapp.duckdns.org' }}
           CHAT_URL: ${{ vars.CHAT_WS_URL }}
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          COOLIFY_WEBHOOK: ${{ secrets.COOLIFY_WEBHOOK }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
         run: |
           set -euo pipefail
-          [[ "$API_URL" == https://* ]] || { echo 'Set repository variable PROD_API_BASE_URL to the public HTTPS API origin'; exit 1; }
+          [[ "$API_URL" == https://* ]] || { echo 'PROD_API_BASE_URL must be an HTTPS origin'; exit 1; }
           if [[ -n "$CHAT_URL" && "$CHAT_URL" != wss://* ]]; then
             echo 'CHAT_WS_URL must use wss:// when set'
             exit 1
           fi
           [[ -n "$DOCKERHUB_USERNAME" && -n "$DOCKERHUB_TOKEN" ]] || { echo 'Set DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets'; exit 1; }
+          [[ -n "$COOLIFY_WEBHOOK" && -n "$COOLIFY_TOKEN" ]] || { echo 'Set COOLIFY_WEBHOOK and COOLIFY_TOKEN secrets'; exit 1; }
 
       - name: Test and build Flutter web
         env:
-          API_URL: ${{ vars.PROD_API_BASE_URL }}
+          API_URL: ${{ vars.PROD_API_BASE_URL || 'https://oleksii-workoutapp.duckdns.org' }}
           CHAT_URL: ${{ vars.CHAT_WS_URL }}
         run: |
           flutter pub get

@@ -33,15 +33,16 @@ is available.
 The workflow in `.github/workflows/publish-web.yml` builds Flutter Web, pushes
 `oleksiikomarychev/workoutapp-web:latest` and a commit-specific image to Docker
 Hub, then calls the Coolify deploy webhook. Nginx serves the Flutter app on
-port `80`. The browser calls the public HTTPS API directly; configure CORS on
-the API gateway for the web application's domain.
+port `80` and proxies `/api/` to the Coolify gateway domain. The browser uses
+the web app's HTTPS origin for API requests, so it does not need direct access
+to the gateway's HTTP domain.
 
 Configure the following in this repository under **Settings → Secrets and
 variables → Actions**:
 
 | Type | Name | Value |
 | --- | --- | --- |
-| Variable | `PROD_API_BASE_URL` | Public HTTPS API origin, without `/api/v1` or a trailing slash |
+| Variable | `PROD_API_BASE_URL` | Optional override; defaults to `https://oleksii-workoutapp.duckdns.org` |
 | Variable | `CHAT_WS_URL` | Public `wss://` agent origin, if chat is available |
 | Secret | `DOCKERHUB_USERNAME` | Docker Hub username |
 | Secret | `DOCKERHUB_TOKEN` | Docker Hub access token with push access |
@@ -57,4 +58,5 @@ to Docker Hub.
 
 The web build embeds the API and chat URLs at build time. Changing a GitHub
 variable requires a new workflow run. The local `assets/env/app.env` contains
-older URLs; the workflow's `--dart-define` value overrides the API URL.
+older URLs; the workflow's `--dart-define` value overrides the API URL. API
+requests will work once the gateway application is running in Coolify.
