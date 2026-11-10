@@ -257,25 +257,45 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: UiDimensions.of(context).rowGap),
-                  TextFormField(
-                    controller: _sessionIdController,
-                    decoration: const InputDecoration(
-                      labelText: 'Session ID',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) =>
-                        value?.isEmpty == true ? 'Required' : null,
-                  ),
-                  SizedBox(height: UiDimensions.of(context).rowGap),
-                  TextFormField(
-                    controller: _userIdController,
-                    decoration: const InputDecoration(
-                      labelText: 'User ID',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) =>
-                        value?.isEmpty == true ? 'Required' : null,
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final sessionIdField = TextFormField(
+                        controller: _sessionIdController,
+                        decoration: const InputDecoration(
+                          labelText: 'Session ID',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) =>
+                            value?.isEmpty == true ? 'Required' : null,
+                      );
+                      final userIdField = TextFormField(
+                        controller: _userIdController,
+                        decoration: const InputDecoration(
+                          labelText: 'User ID',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) =>
+                            value?.isEmpty == true ? 'Required' : null,
+                      );
+
+                      if (constraints.maxWidth < 340) {
+                        return Column(
+                          children: [
+                            sessionIdField,
+                            SizedBox(height: UiDimensions.of(context).rowGap),
+                            userIdField,
+                          ],
+                        );
+                      }
+                      return Row(
+                        children: [
+                          Expanded(child: sessionIdField),
+                          SizedBox(width: UiDimensions.of(context).rowGap),
+                          Expanded(child: userIdField),
+                        ],
+                      );
+                    },
                   ),
                   SizedBox(height: UiDimensions.of(context).rowGap),
                   TextFormField(

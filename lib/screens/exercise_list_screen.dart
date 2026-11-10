@@ -264,7 +264,9 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: UiDimensions.of(context).pagePadding,
+                    ),
                     itemCount: _muscleGroups.length + 1,
                     itemBuilder: (context, index) {
                       if (index == 0) {
@@ -313,9 +315,24 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: _showAddExerciseDialog,
-            child: const Icon(Icons.add),
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                UiDimensions.of(context).pagePadding,
+                UiDimensions.of(context).rowGap,
+                UiDimensions.of(context).pagePadding,
+                UiDimensions.of(context).rowGap,
+              ),
+              child: SizedBox(
+                height: 48,
+                child: FilledButton.icon(
+                  onPressed: _showAddExerciseDialog,
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.exerciseListAddExerciseTitle),
+                ),
+              ),
+            ),
           ),
         );
       },
@@ -349,7 +366,10 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
 
         final exercise = state.exercises[index];
         return Card(
-          margin: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding, vertical: 8),
+          margin: EdgeInsets.symmetric(
+            horizontal: UiDimensions.of(context).pagePadding,
+            vertical: 8,
+          ),
           child: ListTile(
             title: Text(
               exercise.name ?? '',

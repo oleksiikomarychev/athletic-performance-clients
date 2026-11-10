@@ -1782,33 +1782,37 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
         const SizedBox(height: 2),
         GestureDetector(
           onTap: enabled ? onTap : null,
-          child: InputDecorator(
-            decoration: InputDecoration(
-              suffixIcon: const Icon(
-                Icons.keyboard_arrow_down_rounded,
-                size: 18,
+          behavior: HitTestBehavior.opaque,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: InputDecorator(
+              decoration: InputDecoration(
+                suffixIcon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                ),
+                suffixIconConstraints: const BoxConstraints(
+                  minWidth: 28,
+                  minHeight: 28,
+                ),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
-              suffixIconConstraints: const BoxConstraints(
-                minWidth: 28,
-                minHeight: 28,
-              ),
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 6,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Text(
-              valueText,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: enabled
-                    ? theme.textTheme.bodyMedium?.color
-                    : Colors.grey,
+              child: Text(
+                valueText,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: enabled
+                      ? theme.textTheme.bodyMedium?.color
+                      : Colors.grey,
+                ),
               ),
             ),
           ),
@@ -2474,20 +2478,24 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
             if (_currentPlan.requiredEquipment != null &&
                 _currentPlan.requiredEquipment!.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: _currentPlan.requiredEquipment!
-                    .map(
-                      (e) => Chip(
-                        label: Text(e),
-                        labelPadding: const EdgeInsets.symmetric(horizontal: 2),
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        visualDensity: VisualDensity.compact,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final equipment in _currentPlan.requiredEquipment!) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: Chip(
+                          label: Text(equipment),
+                          labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                       ),
-                    )
-                    .toList(),
+                    ],
+                  ],
+                ),
               ),
             ],
             if (_currentPlan.notes != null &&

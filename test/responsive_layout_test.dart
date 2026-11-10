@@ -1,9 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workout_app/widgets/custom_bottom_nav_bar.dart';
+import 'package:workout_app/widgets/floating_header_bar.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 
 void main() {
+  testWidgets('floating header fits three actions at 320 logical pixels', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: FloatingHeaderBar(
+          title: 'M1-MC2-D1: Day 1 - Workout 1',
+          leading: IconButton(onPressed: () {}, icon: const Icon(Icons.arrow_back)),
+          actions: [
+            IconButton(onPressed: () {}, icon: const Icon(Icons.restaurant)),
+            IconButton(onPressed: () {}, icon: const Icon(Icons.refresh)),
+          ],
+          onProfileTap: () {},
+        ),
+      ),
+    ));
+
+    expect(find.byIcon(Icons.restaurant), findsOneWidget);
+    expect(find.byIcon(Icons.refresh), findsOneWidget);
+    expect(find.byIcon(Icons.account_circle_outlined), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('bottom navigation grows for larger system text', (tester) async {
     await tester.binding.setSurfaceSize(const Size(320, 640));
     addTearDown(() => tester.binding.setSurfaceSize(null));

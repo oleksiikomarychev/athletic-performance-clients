@@ -645,7 +645,23 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Mesocycles', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Row(
+              children: [
+                Expanded(
+                  child: Text('Mesocycles', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                ),
+                IconButton(
+                  onPressed: _addMesocycle,
+                  icon: const Icon(Icons.add),
+                  tooltip: 'Add Mesocycle',
+                ),
+                IconButton(
+                  onPressed: _mesocycles.isEmpty ? null : () => _removeMesocycle(_mesocycles.length - 1),
+                  icon: const Icon(Icons.delete),
+                  tooltip: 'Remove Mesocycle',
+                ),
+              ],
+            ),
             Expanded(
               child: ListView.builder(
                 itemCount: _mesocycles.length,
@@ -653,16 +669,6 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
                   return _buildMesocycleCard(index);
                 },
               ),
-            ),
-            IconButton(
-              onPressed: _addMesocycle,
-              icon: const Icon(Icons.add),
-              tooltip: 'Add Mesocycle',
-            ),
-            IconButton(
-              onPressed: () => _removeMesocycle(_mesocycles.length - 1),
-              icon: const Icon(Icons.delete),
-              tooltip: 'Remove Mesocycle',
             ),
           ],
         ),

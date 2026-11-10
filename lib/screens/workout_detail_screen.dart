@@ -1,5 +1,6 @@
 import '../config/api_config.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/workout.dart';
 import '../models/exercise_instance.dart';
 import '../models/exercise_definition.dart';
@@ -2231,62 +2232,72 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
           );
         }
 
-        return Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          body: Stack(
-            children: [
-              SafeArea(bottom: false, child: _buildBody()),
-              Align(
-                alignment: Alignment.topCenter,
-                child: FloatingHeaderBar(
-                  title: _workout?.name ?? 'Workout Details',
-                  leading: IconButton(
-                    icon: Icon(
-                      Icons.arrow_back,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    onPressed: () => Navigator.of(context).maybePop(),
-                  ),
-                  actions: [
-                    IconButton(
-                      icon: const Icon(Icons.restaurant),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => NutritionPlanCreate(
-                              initialPlan: {
-                                'workout_id': _workout?.id,
-                                'user_id': 1,
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                      color: AppColors.primary,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.refresh),
-                      onPressed: _loadExercises,
-                      color: AppColors.primary,
-                    ),
-                  ],
-                  onProfileTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const UserProfileScreen(),
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: Theme.of(context).brightness == Brightness.light
+              ? SystemUiOverlayStyle.dark
+              : SystemUiOverlayStyle.light,
+          child: Scaffold(
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            body: Stack(
+              children: [
+                SafeArea(bottom: false, child: _buildBody()),
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: FloatingHeaderBar(
+                    title: _workout?.name ?? 'Workout Details',
+                    leading: IconButton(
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
-                    );
-                  },
+                      onPressed: () => Navigator.of(context).maybePop(),
+                    ),
+                    actions: [
+                      IconButton(
+                        icon: const Icon(Icons.restaurant),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => NutritionPlanCreate(
+                                initialPlan: {
+                                  'workout_id': _workout?.id,
+                                  'user_id': 1,
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                        color: AppColors.primary,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.refresh),
+                        onPressed: _loadExercises,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                    onProfileTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const UserProfileScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+            bottomNavigationBar: SafeArea(
+              top: false,
+              child: Padding(
+                padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
+                child: ElevatedButton.icon(
+                  onPressed: _showAddExerciseDialog,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add Exercise'),
                 ),
               ),
-            ],
-          ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: _showAddExerciseDialog,
-            backgroundColor: AppColors.primary,
-            icon: const Icon(Icons.add),
-            label: const Text('Add Exercise'),
+            ),
           ),
         );
       },
@@ -2340,7 +2351,10 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
       );
     } else {
       content = ListView.builder(
-        padding: EdgeInsets.symmetric(horizontal: dimensions.pagePadding, vertical: dimensions.cardPadding),
+        padding: EdgeInsets.symmetric(
+          horizontal: dimensions.pagePadding,
+          vertical: dimensions.cardPadding,
+        ),
         itemCount: _uniqueExercises.length,
         itemBuilder: (context, index) {
           final exercise = _uniqueExercises[index];
@@ -2365,7 +2379,12 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
     if (_workout == null) return const SizedBox.shrink();
 
     return Container(
-      margin: EdgeInsets.fromLTRB(dimensions.pagePadding, dimensions.cardPadding, dimensions.pagePadding, 8),
+      margin: EdgeInsets.fromLTRB(
+        dimensions.pagePadding,
+        dimensions.cardPadding,
+        dimensions.pagePadding,
+        8,
+      ),
       padding: EdgeInsets.all(dimensions.cardPadding),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
@@ -2397,7 +2416,9 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                isNarrow ? 'Готовность · x${_readinessFactor(_readinessSlider).toStringAsFixed(2)}' : 'Готовность к тренировке',
+                isNarrow
+                    ? 'Готовность · x${_readinessFactor(_readinessSlider).toStringAsFixed(2)}'
+                    : 'Готовность к тренировке',
                 maxLines: isNarrow ? 2 : 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.titleMedium.copyWith(
@@ -2406,13 +2427,13 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                 ),
               ),
               if (!isNarrow) ...[
-              const SizedBox(height: 4),
-              Text(
-                'Коэффициент нагрузки: x${_readinessFactor(_readinessSlider).toStringAsFixed(2)}',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                const SizedBox(height: 4),
+                Text(
+                  'Коэффициент нагрузки: x${_readinessFactor(_readinessSlider).toStringAsFixed(2)}',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
               ],
             ],
           );
@@ -2421,8 +2442,8 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                width: 32,
-                height: 32,
+                width: 48,
+                height: 48,
                 child: IconButton(
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -2465,8 +2486,8 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                 ),
               ),
               SizedBox(
-                width: 32,
-                height: 32,
+                width: 48,
+                height: 48,
                 child: IconButton(
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -2556,7 +2577,12 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
     final isActive = _activeSession?.isActive == true;
     return Container(
       width: double.infinity,
-      margin: EdgeInsets.fromLTRB(dimensions.pagePadding, 8, dimensions.pagePadding, dimensions.cardPadding),
+      margin: EdgeInsets.fromLTRB(
+        dimensions.pagePadding,
+        8,
+        dimensions.pagePadding,
+        dimensions.cardPadding,
+      ),
       padding: EdgeInsets.all(dimensions.cardPadding),
       decoration: BoxDecoration(
         color: isActive
@@ -2676,8 +2702,8 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                   color: const Color(0xFF2E7D32),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
+                    minWidth: 48,
+                    minHeight: 48,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -2729,7 +2755,11 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: EdgeInsets.only(left: 4, top: 8, bottom: dimensions.rowGap),
+              padding: EdgeInsets.only(
+                left: 4,
+                top: 8,
+                bottom: dimensions.rowGap,
+              ),
               child: Row(
                 children: [
                   Container(
@@ -2762,7 +2792,9 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                         Text(
                           '${exercise.muscleGroup ?? 'No muscle group'} • ${exercise.equipment ?? 'No equipment'}',
                           style: AppTextStyles.bodySmall.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -2795,7 +2827,12 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(dimensions.cardPadding, dimensions.cardPadding, dimensions.cardPadding, 8),
+            padding: EdgeInsets.fromLTRB(
+              dimensions.cardPadding,
+              dimensions.cardPadding,
+              dimensions.cardPadding,
+              8,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -2816,7 +2853,9 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.bodySmall.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -2882,17 +2921,20 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
             ),
           ),
           if (instance.sets.isNotEmpty) ...[
-            Divider(height: 1, thickness: 1, color: Theme.of(context).colorScheme.outlineVariant),
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
             Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: dimensions.cardPadding,
+                horizontal: dimensions.rowGap * 2,
                 vertical: dimensions.rowGap,
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   SizedBox(
-                    width: 40,
+                    width: 48,
                     child: Text(
                       'DONE',
                       style: AppTextStyles.bodySmall.copyWith(
@@ -2903,39 +2945,50 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  Text(
-                    'SET',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      letterSpacing: 0.5,
+                  SizedBox(
+                    width: 24,
+                    child: Text(
+                      'SET',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
-                  Text(
-                    'WEIGHT',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      letterSpacing: 0.5,
+                  Expanded(
+                    flex: 4,
+                    child: Text(
+                      'WEIGHT',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
-                  Text(
-                    'REPS',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      letterSpacing: 0.5,
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      'REPS',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
-                  Text(
-                    'RPE',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      letterSpacing: 0.5,
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      'RPE',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 24),
+                  const SizedBox(width: 48),
                 ],
               ),
             ),
@@ -2959,11 +3012,11 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
               decoration: BoxDecoration(
                 color: isCompleted
                     ? theme.brightness == Brightness.dark
-                        ? Color.alphaBlend(
-                            AppColors.success.withValues(alpha: 0.16),
-                            theme.colorScheme.surfaceContainerLow,
-                          )
-                        : const Color(0xFFEFF8F2)
+                          ? Color.alphaBlend(
+                              AppColors.success.withValues(alpha: 0.16),
+                              theme.colorScheme.surfaceContainerLow,
+                            )
+                          : const Color(0xFFEFF8F2)
                     : theme.colorScheme.surface.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(12.0),
                 border: Border.all(
@@ -2986,10 +3039,9 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                       vertical: dimensions.rowGap,
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         SizedBox(
-                          width: 40,
+                          width: 48,
                           child: Checkbox(
                             value: isCompleted,
                             onChanged: canToggle
@@ -2998,7 +3050,7 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                           ),
                         ),
                         SizedBox(
-                          width: 40,
+                          width: 24,
                           child: Text(
                             '${entry.key + 1}',
                             style: theme.textTheme.bodyMedium?.copyWith(
@@ -3011,8 +3063,8 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                           ),
                         ),
 
-                        SizedBox(
-                          width: 100,
+                        Expanded(
+                          flex: 4,
                           child: TextField(
                             controller: _getSetEditor(
                               instance,
@@ -3034,11 +3086,19 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                                borderSide: BorderSide(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.outlineVariant,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                                borderSide: BorderSide(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.outlineVariant,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -3049,7 +3109,9 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                               ),
                               hintText: 'kg',
                               hintStyle: AppTextStyles.bodySmall.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ),
                             enabled: !isCompleted,
@@ -3072,8 +3134,8 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                           ),
                         ),
 
-                        SizedBox(
-                          width: 64,
+                        Expanded(
+                          flex: 3,
                           child: TextField(
                             controller: _getSetEditor(
                               instance,
@@ -3092,11 +3154,19 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                                borderSide: BorderSide(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.outlineVariant,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                                borderSide: BorderSide(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.outlineVariant,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -3107,7 +3177,9 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                               ),
                               hintText: 'reps',
                               hintStyle: AppTextStyles.bodySmall.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ),
                             enabled: !isCompleted,
@@ -3130,8 +3202,8 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                           ),
                         ),
 
-                        SizedBox(
-                          width: 64,
+                        Expanded(
+                          flex: 3,
                           child: TextField(
                             controller: _getSetEditor(
                               instance,
@@ -3153,11 +3225,19 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                                borderSide: BorderSide(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.outlineVariant,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                                borderSide: BorderSide(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.outlineVariant,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -3168,7 +3248,9 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                               ),
                               hintText: 'RPE',
                               hintStyle: AppTextStyles.bodySmall.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ),
                             enabled: !isCompleted,
@@ -3198,8 +3280,8 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                               : () => _handleDeleteSet(instance, entry.key),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(
-                            minWidth: 32,
-                            minHeight: 32,
+                            minWidth: 48,
+                            minHeight: 48,
                           ),
                           tooltip: 'Delete set',
                         ),

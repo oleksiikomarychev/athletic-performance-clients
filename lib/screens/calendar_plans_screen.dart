@@ -4,7 +4,6 @@ import 'package:workout_app/services/api_client.dart';
 import 'package:workout_app/services/base_api_service.dart';
 import 'package:workout_app/config/api_config.dart';
 import 'package:workout_app/screens/user_profile_screen.dart';
-import 'package:workout_app/config/constants/theme_constants.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/loading_indicator.dart';
@@ -266,44 +265,101 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                   itemCount: items.length,
                   itemBuilder: (context, index) {
                     final plan = items[index];
-                    final metaParts = <String>[];
-                    if (plan.primaryGoal != null && plan.primaryGoal!.isNotEmpty) {
-                      metaParts.add(plan.primaryGoal!);
-                    }
-                    if (plan.intendedExperienceLevel != null && plan.intendedExperienceLevel!.isNotEmpty) {
-                      metaParts.add(plan.intendedExperienceLevel!);
-                    }
-                    if (plan.intendedFrequencyPerWeek != null) {
-                      metaParts.add('${plan.intendedFrequencyPerWeek}x/week');
-                    }
+                    final weeks = plan.durationWeeks;
+                    final mesocycles = plan.mesocycles.length;
                     final subtitle = [
-                      '${plan.durationWeeks} weeks',
-                      if (plan.mesocycles.isNotEmpty) '${plan.mesocycles.length} mesocycles',
-                      if (metaParts.isNotEmpty) metaParts.join(' • '),
+                      '$weeks ${weeks == 1 ? 'week' : 'weeks'}',
+                      if (mesocycles > 0)
+                        '$mesocycles ${mesocycles == 1 ? 'mesocycle' : 'mesocycles'}',
+                      if (plan.intendedFrequencyPerWeek != null)
+                        '${plan.intendedFrequencyPerWeek}×/week',
                     ].join(' • ');
 
                     return Card(
-                      margin: EdgeInsets.only(bottom: UiDimensions.of(context).rowGap),
-                      child: ListTile(
-                        title: Row(children: [
-                          Flexible(child: Text(plan.name, style: const TextStyle(fontWeight: FontWeight.bold))),
-                          const SizedBox(width: 6),
-                          Icon(plan.isActive ? Icons.check_circle : Icons.circle_outlined,
-                            size: 18, color: plan.isActive ? Colors.green : Colors.grey),
-                        ]),
-                        subtitle: Text(subtitle),
-                        trailing: IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _deletePlan(plan.id),
-                            ),
-                        onTap: () async {
-                          final result = await Navigator.push<bool>(
-                            context,
-                            MaterialPageRoute(builder: (context) => CalendarPlanDetail(plan: plan)),
+                      margin: EdgeInsets.only(
+                        bottom: UiDimensions.of(context).rowGap,
+                      ),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final titleStyle = Theme.of(context)
+                              .textTheme
+                              .titleMedium!
+                              .copyWith(fontWeight: FontWeight.bold);
+                          final titlePainter = TextPainter(
+                            text: TextSpan(text: plan.name, style: titleStyle),
+                            textDirection: Directionality.of(context),
+                            textScaler: MediaQuery.textScalerOf(context),
+                          )..layout(maxWidth: constraints.maxWidth - 104);
+                          final titleWraps =
+                              titlePainter.computeLineMetrics().length > 1;
+
+                          return Stack(
+                            children: [
+                              ListTile(
+                                title: Padding(
+                                  padding: const EdgeInsets.only(right: 48),
+                                  child: Row(
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          plan.name,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Icon(
+                                        plan.isActive
+                                            ? Icons.check_circle
+                                            : Icons.circle_outlined,
+                                        size: 18,
+                                        color: plan.isActive
+                                            ? Colors.green
+                                            : Colors.grey,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                subtitle: Padding(
+                                  padding: EdgeInsets.only(
+                                    right: titleWraps ? 0 : 48,
+                                  ),
+                                  child: Text(subtitle),
+                                ),
+                                onTap: () async {
+                                  final result = await Navigator.push<bool>(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          CalendarPlanDetail(plan: plan),
+                                    ),
+                                  );
+                                  if (result == true) {
+                                    ref
+                                        .read(calendarPlansProvider.notifier)
+                                        .load();
+                                  }
+                                },
+                              ),
+                              Positioned(
+                                right: 8,
+                                width: 48,
+                                top: 0,
+                                bottom: 0,
+                                child: Center(
+                                  child: IconButton(
+                                    tooltip: 'Delete plan',
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
+                                    onPressed: () => _deletePlan(plan.id),
+                                  ),
+                                ),
+                              ),
+                            ],
                           );
-                          if (result == true) {
-                            ref.read(calendarPlansProvider.notifier).load();
-                          }
                         },
                       ),
                     );

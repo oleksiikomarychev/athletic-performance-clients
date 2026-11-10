@@ -210,8 +210,17 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           if (_loading) LoadingIndicator(),
           if (_error != null && _data == null)
             ErrorMessage(message: _error!, onRetry: _fetch),
-          const SizedBox(height: 8),
-          SizedBox(height: 400, child: _buildChartArea()),
+          if (_data == null && !_loading && _error == null)
+            Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: UiDimensions.of(context).sectionGap,
+              ),
+              child: Text(l10n.selectRangeAndMetrics),
+            ),
+          if (_data != null) ...[
+            SizedBox(height: UiDimensions.of(context).rowGap),
+            SizedBox(height: 400, child: _buildChartArea()),
+          ],
         ],
       ),
     );

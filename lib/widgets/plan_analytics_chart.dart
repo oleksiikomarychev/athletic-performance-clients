@@ -168,6 +168,11 @@ class PlanAnalyticsChart extends StatelessWidget {
                 if (idx < 0 || idx >= labels.length)
                   return const SizedBox.shrink();
                 if (idx % effectiveModulo != 0) return const SizedBox.shrink();
+                final previousLabelIndex = idx - effectiveModulo;
+                if (previousLabelIndex >= 0 &&
+                    labels[idx] == labels[previousLabelIndex]) {
+                  return const SizedBox.shrink();
+                }
                 return SideTitleWidget(
                   meta: meta,
                   child: Text(

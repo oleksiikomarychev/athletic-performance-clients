@@ -2296,18 +2296,22 @@ extension _APAnalytics on _ActivePlanScreenState {
             if (totals != null && totals.isNotEmpty)
               Padding(
                 padding: EdgeInsets.only(bottom: dimensions.rowGap),
-                child: Wrap(
-                  spacing: dimensions.rowGap,
-                  runSpacing: 4,
-                  children: totals.entries.map((entry) {
-                    final label = _metricLabel(entry.key);
-                    final value = entry.value;
-                    return Chip(
-                      label: Text('$label: ${value.toStringAsFixed(2)}'),
-                      visualDensity: VisualDensity.compact,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    );
-                  }).toList(),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: totals.entries.map((entry) {
+                      final label = _metricLabel(entry.key);
+                      final value = entry.value;
+                      return Padding(
+                        padding: EdgeInsets.only(right: dimensions.rowGap),
+                        child: Chip(
+                          label: Text('$label: ${value.toStringAsFixed(2)}'),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
             SizedBox(
