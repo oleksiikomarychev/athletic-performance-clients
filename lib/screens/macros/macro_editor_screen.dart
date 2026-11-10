@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/models/macro.dart';
 import 'package:workout_app/providers/macro_providers.dart';
@@ -151,7 +152,7 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
           body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
           children: [
             if (_error != null)
               Padding(
@@ -276,7 +277,7 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
                 return null;
               },
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: UiDimensions.of(context).sectionGap),
             FilledButton.icon(
               onPressed: _save,
               icon: const Icon(Icons.save),

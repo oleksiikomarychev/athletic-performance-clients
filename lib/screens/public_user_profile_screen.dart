@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
@@ -49,11 +50,11 @@ class PublicUserProfileScreen extends ConsumerWidget {
         },
         child: profileAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => _buildErrorState(ref, error),
+          error: (error, _) => _buildErrorState(context, ref, error),
           data: (profile) {
             return aggregatesAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => _buildErrorState(ref, error),
+              error: (error, _) => _buildErrorState(context, ref, error),
               data: (stats) => _buildContent(context, ref, profile, stats),
             );
           },
@@ -64,10 +65,10 @@ class PublicUserProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildErrorState(WidgetRef ref, Object error) {
+  Widget _buildErrorState(BuildContext context, WidgetRef ref, Object error) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -95,7 +96,7 @@ class PublicUserProfileScreen extends ConsumerWidget {
     final canRequestCoaching = !isSelf && coaching != null && coaching.enabled;
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
       children: [
         Center(
           child: ConstrainedBox(
@@ -108,17 +109,18 @@ class PublicUserProfileScreen extends ConsumerWidget {
                   canRequestCoaching ? () => _showRequestDialog(context, ref, profile) : null,
               showCoachingCard: true,
               additionalSections: [
-                const SizedBox(height: 24),
-                ProfileStatsRow(stats: stats),
+                SizedBox(height: UiDimensions.of(context).sectionGap),
+                ProfileStatsRow(stats: stats, padding: EdgeInsets.zero),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 32),
-        ProfileActivitySection(stats: stats),
-        const SizedBox(height: 32),
+        SizedBox(height: UiDimensions.of(context).sectionGap),
+        ProfileActivitySection(stats: stats, padding: EdgeInsets.zero),
+        SizedBox(height: UiDimensions.of(context).sectionGap),
         ProfileCompletedWorkoutsSection(
           sessions: stats.completedSessions,
+          padding: EdgeInsets.zero,
           onSessionTap: (session) {
 
             Navigator.of(context).pushNamed(
@@ -128,7 +130,7 @@ class PublicUserProfileScreen extends ConsumerWidget {
           },
         ),
         if (coaching != null && coaching.enabled) ...[
-          const SizedBox(height: 32),
+          SizedBox(height: UiDimensions.of(context).sectionGap),
           _buildReviewsSection(context, ref, profile),
         ],
       ],
@@ -199,9 +201,9 @@ class PublicUserProfileScreen extends ConsumerWidget {
       children: [
         Row(
           children: [
-            const Text(
+            Text(
               'Reviews',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(width: 8),
             if (coaching != null && coaching.averageRating != null)
@@ -224,10 +226,10 @@ class PublicUserProfileScreen extends ConsumerWidget {
           error: (error, _) => const Center(child: Text('Failed to load reviews')),
           data: (response) {
             if (response.reviews.isEmpty) {
-              return const Card(
+              return Card(
                 child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(
+                  padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
+                  child: const Center(
                     child: Text('No reviews yet'),
                   ),
                 ),

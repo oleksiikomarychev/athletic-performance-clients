@@ -16,38 +16,45 @@ class WorkoutStatusView {
   });
 }
 
-WorkoutStatusView workoutStatusView(Workout workout) {
+WorkoutStatusView workoutStatusView(BuildContext context, Workout workout) {
+  final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;
   final status = (workout.status ?? '').toLowerCase();
   final isCancelled = status == 'cancelled' || status == 'canceled' || status == 'dropped';
   final completed = (status == 'completed') || (workout.completedAt != null && !isCancelled);
   final inProgress = (workout.startedAt != null) && (workout.completedAt == null) && !isCancelled;
   if (completed) {
-    return const WorkoutStatusView(
+    final color = isDark ? Colors.green.shade300 : Colors.green;
+    return WorkoutStatusView(
       label: 'Completed',
-      background: Color(0xFFEFF8F2),
-      textColor: Colors.green,
-      dotColor: Colors.green,
+      background: isDark
+          ? Color.alphaBlend(color.withValues(alpha: 0.16), theme.colorScheme.surfaceContainerLow)
+          : const Color(0xFFEFF8F2),
+      textColor: color,
+      dotColor: color,
     );
   } else if (inProgress) {
     return WorkoutStatusView(
       label: 'In Progress',
-      background: const Color(0xFFEAEFFF),
-      textColor: AppColors.primary,
-      dotColor: AppColors.primary,
+      background: isDark ? theme.colorScheme.primaryContainer : const Color(0xFFEAEFFF),
+      textColor: isDark ? theme.colorScheme.onPrimaryContainer : AppColors.primary,
+      dotColor: isDark ? theme.colorScheme.primary : AppColors.primary,
     );
   } else if (isCancelled) {
-    return const WorkoutStatusView(
+    final color = isDark ? theme.colorScheme.error : Colors.redAccent;
+    return WorkoutStatusView(
       label: 'Cancelled',
-      background: Color(0xFFFFEBEE),
-      textColor: Colors.redAccent,
-      dotColor: Colors.redAccent,
+      background: isDark ? theme.colorScheme.errorContainer : const Color(0xFFFFEBEE),
+      textColor: isDark ? theme.colorScheme.onErrorContainer : color,
+      dotColor: color,
     );
   } else {
-    return const WorkoutStatusView(
+    final color = isDark ? theme.colorScheme.error : Colors.redAccent;
+    return WorkoutStatusView(
       label: 'Planned',
-      background: Color(0xFFFFEBEE),
-      textColor: Colors.redAccent,
-      dotColor: Colors.redAccent,
+      background: isDark ? theme.colorScheme.errorContainer : const Color(0xFFFFEBEE),
+      textColor: isDark ? theme.colorScheme.onErrorContainer : color,
+      dotColor: color,
     );
   }
 }
@@ -60,12 +67,12 @@ class WorkoutStatusCounts {
   const WorkoutStatusCounts({required this.planned, required this.inProgress, required this.completed});
 }
 
-WorkoutStatusCounts workoutStatusCounts(List<Workout> workouts) {
+WorkoutStatusCounts workoutStatusCounts(BuildContext context, List<Workout> workouts) {
   int planned = 0;
   int inProgress = 0;
   int completed = 0;
   for (final w in workouts) {
-    final status = workoutStatusView(w);
+    final status = workoutStatusView(context, w);
     if (status.label == 'Completed') {
       completed++;
     } else if (status.label == 'In Progress') {

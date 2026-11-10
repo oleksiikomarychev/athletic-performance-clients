@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/widgets/coach_rating_display.dart';
@@ -60,7 +62,7 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => Center(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -110,7 +112,7 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
       return const Center(child: Text('No users yet'));
     }
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding, vertical: UiDimensions.of(context).rowGap),
       itemBuilder: (context, index) {
         final user = users[index];
         return ListTile(
@@ -127,22 +129,9 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
           ),
           title: Text(user.displayName ?? 'User ${user.userId}'),
           subtitle: _buildSubtitle(user),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (user.coachingEnabled == true && user.averageRating != null)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: CoachRatingDisplay(
-                    averageRating: user.averageRating,
-                    reviewCount: user.reviewCount,
-                  ),
-                ),
-              user.isPublic
-                  ? const Icon(Icons.lock_open, size: 18, color: AppColors.success)
-                  : Icon(Icons.lock_outline, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
-            ],
-          ),
+          trailing: user.isPublic
+              ? const Icon(Icons.lock_open, size: 18, color: AppColors.success)
+              : Icon(Icons.lock_outline, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
           onTap: () {
             final currentUser = FirebaseAuth.instance.currentUser;
             if (currentUser != null && currentUser.uid == user.userId) {
@@ -171,7 +160,7 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
 
   Widget _buildSubtitle(UserSummary user) {
     final parts = <String>[];
-    parts.add('Created ${user.createdAt.toLocal()}');
+    parts.add('Created ${DateFormat('dd.MM.yyyy HH:mm').format(user.createdAt.toLocal())}');
     
     if (user.coachingEnabled == true) {
       if (user.rateAmountMinor != null) {
@@ -183,7 +172,22 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
       }
     }
     
-    return Text(parts.join(' • '));
+    final hasRating = user.coachingEnabled == true &&
+        user.averageRating != null &&
+        (user.reviewCount ?? 0) > 0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(parts.join(' • ')),
+        if (hasRating) ...[
+          SizedBox(height: UiDimensions.of(context).rowGap),
+          CoachRatingDisplay(
+            averageRating: user.averageRating,
+            reviewCount: user.reviewCount,
+          ),
+        ],
+      ],
+    );
   }
 }
 
@@ -291,7 +295,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -299,9 +303,9 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Filter Coaches',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   TextButton(
                     onPressed: widget.onClear,

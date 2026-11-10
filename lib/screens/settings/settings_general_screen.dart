@@ -4,6 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/providers/app_locale_provider.dart';
 import 'package:workout_app/providers/app_theme_mode_provider.dart';
+import 'package:workout_app/providers/app_ui_density_provider.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/providers/profile_screen_sections_provider.dart';
 import 'package:workout_app/providers/providers.dart';
 import 'package:workout_app/services/service_locator.dart' as sl;
@@ -31,6 +33,7 @@ class SettingsGeneralScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final profileAsync = ref.watch(userProfileProvider);
     final themeMode = ref.watch(appThemeModeProvider);
+    final density = ref.watch(appUiDensityProvider);
     final sectionPrefs = ref.watch(profileScreenSectionsProvider);
 
     return Scaffold(
@@ -422,6 +425,34 @@ class SettingsGeneralScreen extends ConsumerWidget {
             await ref.read(appThemeModeProvider.notifier).setThemeMode(selected);
           }
 
+          Future<void> pickDensity() async {
+            final selected = await showModalBottomSheet<UiDensity>(
+              context: context,
+              builder: (ctx) => SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      title: const Text('Compact'),
+                      subtitle: const Text('Less space between elements'),
+                      trailing: density == UiDensity.compact ? const Icon(Icons.check) : null,
+                      onTap: () => Navigator.of(ctx).pop(UiDensity.compact),
+                    ),
+                    ListTile(
+                      title: const Text('Comfortable'),
+                      subtitle: const Text('More space between elements'),
+                      trailing: density == UiDensity.comfortable ? const Icon(Icons.check) : null,
+                      onTap: () => Navigator.of(ctx).pop(UiDensity.comfortable),
+                    ),
+                  ],
+                ),
+              ),
+            );
+            if (selected != null) {
+              await ref.read(appUiDensityProvider.notifier).setDensity(selected);
+            }
+          }
+
           Future<void> pickLanguage() async {
             final selected = await showModalBottomSheet<String?>(
               context: context,
@@ -611,6 +642,13 @@ class SettingsGeneralScreen extends ConsumerWidget {
                 subtitle: Text(themeSubtitle()),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: pickThemeMode,
+              ),
+              const Divider(height: 1),
+              ListTile(
+                title: const Text('Interface size'),
+                subtitle: Text(density == UiDensity.compact ? 'Compact' : 'Comfortable'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: pickDensity,
               ),
               const Divider(height: 1),
               ListTile(

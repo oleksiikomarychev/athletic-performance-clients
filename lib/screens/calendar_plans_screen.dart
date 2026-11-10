@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/models/calendar_plan.dart';
-import 'package:workout_app/services/api_client.dart';
-import 'package:workout_app/services/base_api_service.dart';
-import 'package:workout_app/config/api_config.dart';
 import 'package:workout_app/screens/user_profile_screen.dart';
-import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/loading_indicator.dart';
 import 'package:workout_app/widgets/error_message.dart';
 import 'package:workout_app/widgets/empty_state.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:workout_app/providers/plan_providers.dart';
+import 'package:workout_app/providers/plan_catalog_provider.dart';
+import 'package:workout_app/services/service_locator.dart';
+import 'package:workout_app/config/api_config.dart';
+import 'package:workout_app/widgets/plan_catalog_filters.dart';
+import 'package:workout_app/widgets/calendar_plan_card.dart';
 import 'calendar_plan_create.dart';
 import 'calendar_plan_detail.dart';
 
@@ -19,14 +20,16 @@ class CalendarPlansScreen extends ConsumerStatefulWidget {
   const CalendarPlansScreen({super.key});
 
   @override
-  ConsumerState<CalendarPlansScreen> createState() => _CalendarPlansScreenState();
+  ConsumerState<CalendarPlansScreen> createState() =>
+      _CalendarPlansScreenState();
 }
 
 class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
-  final ApiClient _apiClient = ApiClient.create();
+  final _search = TextEditingController();
+  int? _openingPlanId;
 
   Future<Map<String, dynamic>?> _buildChatContext() async {
-    final plans = (ref.read(calendarPlansProvider).value ?? const <CalendarPlan>[])
+    final plans = (ref.read(planCatalogProvider).page.items)
         .map(
           (p) => <String, dynamic>{
             'id': p.id,
@@ -47,186 +50,72 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
       'v': 1,
       'app': 'WorkoutApp',
       'screen': 'calendar_plans',
-      'timestamp': DateTime.now().toUtc().toIso8601String(),
-      'entities': <String, dynamic>{
-        'calendar_plans': plans,
+      'search_query': ref.read(planCatalogProvider).query,
+      'filters': {
+        for (final e in ref.read(planCatalogProvider).filters.entries)
+          e.key: e.value.toList(),
       },
+      'total_results': ref.read(planCatalogProvider).page.total,
+      'timestamp': DateTime.now().toUtc().toIso8601String(),
+      'entities': <String, dynamic>{'calendar_plans': plans},
     };
   }
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(calendarPlansProvider.notifier).load();
-    });
+  void dispose() {
+    _search.dispose();
+    super.dispose();
   }
 
-  Future<void> _deletePlan(int planId) async {
-    final confirmed = await showDialog<bool>(
+  Future<void> _openPlan(CalendarPlan summary) async {
+    if (_openingPlanId != null) return;
+    setState(() => _openingPlanId = summary.id);
+    try {
+      // Catalog items deliberately omit the workout hierarchy. Load full data
+      // before opening details so Apply never receives a partial plan.
+      final data = await ref
+          .read(apiClientProvider)
+          .get(
+            ApiConfig.getCalendarPlanEndpoint(summary.id.toString()),
+            context: 'catalog_open_plan',
+          );
+      if (!mounted) return;
+      final plan = CalendarPlan.fromJson(Map<String, dynamic>.from(data));
+      await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => CalendarPlanDetail(plan: plan)),
+      );
+      if (mounted) await ref.read(planCatalogProvider.notifier).refresh();
+    } catch (error) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Не удалось открыть план: $error')),
+        );
+    } finally {
+      if (mounted) setState(() => _openingPlanId = null);
+    }
+  }
+
+  Future<void> _showFilters() async {
+    FocusScope.of(context).unfocus();
+    final filters = await showModalBottomSheet<Map<String, Set<String>>>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Plan'),
-        content: const Text('Are you sure you want to delete this plan?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
-        ],
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => FractionallySizedBox(
+        heightFactor: 0.75,
+        child: PlanCatalogFilters(initial: ref.read(planCatalogProvider)),
       ),
     );
-
-    if (confirmed == true) {
-      Future<void> performDelete({bool cascade = false}) async {
-        final endpoint = ApiConfig.deleteCalendarPlanEndpoint(planId.toString());
-        final queryParams = cascade ? {'cascade': 'true'} : null;
-        await _apiClient.delete(
-          endpoint,
-          queryParams: queryParams,
-          context: 'calendar_plans_delete',
-        );
-      }
-
-      try {
-        await performDelete();
-
-        await _apiClient.invalidateCacheGroups([
-          'plans:list',
-          'plans:detail',
-          'plans:detail:$planId',
-          'plans:variants',
-          'plans:variants:$planId',
-        ]);
-
-        setState(() {
-          ref.read(calendarPlansProvider.notifier).removeLocal(planId);
-        });
-      } on ApiException catch (e) {
-        final message = e.message;
-        final isVariantsError =
-            e.statusCode == 400 && message.contains('Cannot delete the original plan while variants exist');
-
-        if (isVariantsError) {
-          List<Map<String, dynamic>> variantSummaries = [];
-          try {
-            final variantsEndpoint = ApiConfig.listPlanVariantsEndpoint(planId.toString());
-            final variantsResponse = await _apiClient.get(
-              variantsEndpoint,
-              context: 'calendar_plans_variants',
-            );
-
-            if (variantsResponse is List) {
-              variantSummaries = variantsResponse
-                  .whereType<Map<String, dynamic>>()
-                  .toList();
-            }
-          } catch (_) {
-            // Игнорируем ошибку получения списка вариантов, в этом случае покажем общее предупреждение
-          }
-
-          final cascadeConfirmed = await showDialog<bool>(
-            context: context,
-            builder: (context) {
-              Widget content;
-              if (variantSummaries.isEmpty) {
-                content = const Text(
-                  'This plan has variants based on it. Deleting the plan will also permanently delete all its variants and related workouts. Do you want to continue?',
-                );
-              } else {
-                content = SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('This plan has the following variants that will be deleted:'),
-                      const SizedBox(height: 8),
-                      ...variantSummaries.map((v) {
-                        final id = v['id'];
-                        final rawName = v['name'];
-                        final String name =
-                            rawName is String && rawName.trim().isNotEmpty ? rawName.trim() : 'Unnamed plan';
-                        final duration = v['duration_weeks'];
-                        final metaParts = <String>[];
-                        if (duration != null) {
-                          metaParts.add('${duration} weeks');
-                        }
-                        final metaSuffix = metaParts.isNotEmpty ? ' • ${metaParts.join(' • ')}' : '';
-                        return Text('• [$id] $name$metaSuffix');
-                      }),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Deleting the plan will permanently delete all these variants and related workouts. Do you want to continue?',
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              return AlertDialog(
-                title: const Text('Delete plan with variants?'),
-                content: content,
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Delete all'),
-                  ),
-                ],
-              );
-            },
-          );
-
-          if (cascadeConfirmed == true) {
-            try {
-              await performDelete(cascade: true);
-
-              await _apiClient.invalidateCacheGroups([
-                'plans:list',
-                'plans:detail',
-                'plans:detail:$planId',
-                'plans:variants',
-                'plans:variants:$planId',
-                'workouts:list',
-                'workouts:history_all',
-              ]);
-
-              setState(() {
-                ref.read(calendarPlansProvider.notifier).removeLocal(planId);
-              });
-            } on ApiException catch (inner) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Failed to delete plan: ${inner.message}')),
-              );
-            } catch (inner) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Failed to delete plan: $inner')),
-              );
-            }
-          }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete plan: ${e.message}')),
-          );
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete plan: $e')),
-        );
-      }
-    }
+    if (mounted && filters != null)
+      await ref.read(planCatalogProvider.notifier).setFilters(filters);
   }
 
   @override
   Widget build(BuildContext context) {
-    final plansAsync = ref.watch(calendarPlansProvider);
+    final catalog = ref.watch(planCatalogProvider);
+    final controller = ref.read(planCatalogProvider.notifier);
+    final dimensions = UiDimensions.of(context);
 
     return AssistantChatHost(
       contextBuilder: _buildChatContext,
@@ -244,86 +133,171 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
               ),
             ],
           ),
-          body: RefreshIndicator(
-            onRefresh: () => ref.read(calendarPlansProvider.notifier).load(),
-            child: plansAsync.when(
-              loading: () => const LoadingIndicator(),
-              error: (e, _) => ErrorMessage(
-                message: 'Failed to load plans: $e',
-                onRetry: () => ref.read(calendarPlansProvider.notifier).load(),
-              ),
-              data: (items) {
-                if (items.isEmpty) {
-                  return const EmptyState(
-                    icon: Icons.calendar_today,
-                    title: 'No plans available',
-                    description: 'Create your first training plan',
-                  );
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                  itemCount: items.length,
-                  itemBuilder: (context, index) {
-                    final plan = items[index];
-                    final metaParts = <String>[];
-                    if (plan.primaryGoal != null && plan.primaryGoal!.isNotEmpty) {
-                      metaParts.add(plan.primaryGoal!);
-                    }
-                    if (plan.intendedExperienceLevel != null && plan.intendedExperienceLevel!.isNotEmpty) {
-                      metaParts.add(plan.intendedExperienceLevel!);
-                    }
-                    if (plan.intendedFrequencyPerWeek != null) {
-                      metaParts.add('${plan.intendedFrequencyPerWeek}x/week');
-                    }
-                    final subtitle = [
-                      '${plan.durationWeeks} weeks',
-                      if (plan.mesocycles.isNotEmpty) '${plan.mesocycles.length} mesocycles',
-                      if (metaParts.isNotEmpty) metaParts.join(' • '),
-                    ].join(' • ');
-
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 16.0),
-                      child: ListTile(
-                        title: Text(plan.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text(subtitle),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              plan.isActive ? Icons.check_circle : Icons.circle_outlined,
-                              color: plan.isActive ? Colors.green : Colors.grey,
-                            ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _deletePlan(plan.id),
-                            ),
-                          ],
+          body: Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: dimensions.pagePadding,
+                  vertical: 6,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _search,
+                        onChanged: controller.setQuery,
+                        onSubmitted: (_) => controller.refresh(),
+                        decoration: InputDecoration(
+                          hintText: 'Поиск планов',
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: catalog.query.isEmpty
+                              ? null
+                              : IconButton(
+                                  tooltip: 'Очистить поиск',
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () {
+                                    _search.clear();
+                                    controller.setQuery('');
+                                  },
+                                ),
                         ),
-                        onTap: () async {
-                          final result = await Navigator.push<bool>(
-                            context,
-                            MaterialPageRoute(builder: (context) => CalendarPlanDetail(plan: plan)),
-                          );
-                          if (result == true) {
-                            ref.read(calendarPlansProvider.notifier).load();
-                          }
-                        },
                       ),
-                    );
-                  },
-                );
-              },
-            ),
+                    ),
+                    const SizedBox(width: 6),
+                    Badge(
+                      isLabelVisible: catalog.filterCount > 0,
+                      label: Text('${catalog.filterCount}'),
+                      child: IconButton(
+                        tooltip: 'Фильтры',
+                        onPressed: _showFilters,
+                        icon: const Icon(Icons.tune),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (catalog.filterCount > 0)
+                SizedBox(
+                  height: 44 * MediaQuery.textScalerOf(context).scale(1),
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: dimensions.pagePadding,
+                    ),
+                    children: [
+                      for (final facet in catalog.filters.entries)
+                        for (final value in facet.value)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: InputChip(
+                              label: Text(catalogFilterLabel(facet.key, value)),
+                              onDeleted: () {
+                                final next = {
+                                  for (final e in catalog.filters.entries)
+                                    e.key: {...e.value},
+                                };
+                                next[facet.key]!.remove(value);
+                                controller.setFilters(next);
+                              },
+                            ),
+                          ),
+                      TextButton(
+                        onPressed: () => controller.setFilters({}),
+                        child: const Text('Сбросить'),
+                      ),
+                    ],
+                  ),
+                ),
+              if (!catalog.loading && catalog.error == null)
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: dimensions.pagePadding,
+                    vertical: 4,
+                  ),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Найдено: ${catalog.page.total}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: controller.refresh,
+                  child: catalog.loading
+                      ? const LoadingIndicator()
+                      : catalog.error != null && catalog.page.items.isEmpty
+                      ? ErrorMessage(
+                          message:
+                              'Не удалось загрузить планы: ${catalog.error}',
+                          onRetry: controller.refresh,
+                        )
+                      : ListView.separated(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          padding: EdgeInsets.fromLTRB(
+                            dimensions.pagePadding,
+                            dimensions.rowGap,
+                            dimensions.pagePadding,
+                            96 + MediaQuery.paddingOf(context).bottom,
+                          ),
+                          itemCount: catalog.page.items.isEmpty
+                              ? 1
+                              : catalog.page.items.length +
+                                    (catalog.hasMore ? 1 : 0),
+                          separatorBuilder: (_, _) =>
+                              SizedBox(height: dimensions.rowGap),
+                          itemBuilder: (context, index) {
+                            if (catalog.page.items.isEmpty)
+                              return const EmptyState(
+                                icon: Icons.search_off,
+                                title: 'Планы не найдены',
+                                description: 'Измените запрос или фильтры',
+                              );
+                            if (index == catalog.page.items.length)
+                              return catalog.loadingMore
+                                  ? const Center(
+                                      child: CircularProgressIndicator(),
+                                    )
+                                  : TextButton(
+                                      onPressed: controller.loadMore,
+                                      child: Text(
+                                        catalog.error == null
+                                            ? 'Показать ещё'
+                                            : 'Не удалось загрузить. Повторить',
+                                      ),
+                                    );
+                            final plan = catalog.page.items[index];
+                            return Column(
+                              children: [
+                                CalendarPlanCard(
+                                  key: ValueKey(plan.id),
+                                  plan: plan,
+                                  onTap: () => _openPlan(plan),
+                                ),
+                                if (_openingPlanId == plan.id)
+                                  const LinearProgressIndicator(),
+                              ],
+                            );
+                          },
+                        ),
+                ),
+              ),
+            ],
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: () async {
               final result = await Navigator.push<bool>(
                 context,
-                MaterialPageRoute(builder: (context) => const CalendarPlanCreate()),
+                MaterialPageRoute(
+                  builder: (context) => const CalendarPlanCreate(),
+                ),
               );
+              if (!mounted) return;
               if (result == true) {
-                ref.read(calendarPlansProvider.notifier).load();
+                controller.refresh();
               }
             },
             child: const Icon(Icons.add),

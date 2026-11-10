@@ -3,24 +3,26 @@ import 'package:intl/intl.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
 
 import '../config/constants/theme_constants.dart';
+import '../config/theme/ui_dimensions.dart';
 import '../models/user_stats.dart';
 import '../models/workout_session.dart';
+import 'activity_heatmap_colors.dart';
 
 class ProfileStatsRow extends StatelessWidget {
   final UserStats stats;
-  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? padding;
 
   const ProfileStatsRow({
     super.key,
     required this.stats,
-    this.padding = const EdgeInsets.symmetric(horizontal: 24),
+    this.padding,
   });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: padding,
+      padding: padding ?? EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
@@ -82,7 +84,7 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      padding: EdgeInsets.symmetric(vertical: UiDimensions.of(context).rowGap, horizontal: 8),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(12),
@@ -92,7 +94,7 @@ class _StatCard extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: UiDimensions.of(context).statValueFontSize,
               fontWeight: FontWeight.bold,
               color: foregroundColor,
             ),
@@ -111,26 +113,25 @@ class _StatCard extends StatelessWidget {
 
 class ProfileActivitySection extends StatelessWidget {
   final UserStats stats;
-  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? padding;
 
   const ProfileActivitySection({
     super.key,
     required this.stats,
-    this.padding = const EdgeInsets.symmetric(horizontal: 24),
+    this.padding,
   });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: padding,
+      padding: padding ?? EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             l10n.activityTitle,
-            style: TextStyle(
-              fontSize: 20,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.onSurface,
             ),
@@ -240,7 +241,7 @@ class _ActivityGrid extends StatelessWidget {
                           day,
                         );
                         final volume = dayActivity?.volume ?? 0;
-                        final color = _getActivityColor(volume, maxVolume);
+                        final color = ActivityHeatmapColors.forVolume(context, volume, maxVolume);
                         return Tooltip(
                           message: dayActivity != null
                               ? '${DateFormat('MMM d', locale).format(date)}\n${l10n.sessionsCount(dayActivity.sessionCount)}\n${volume.toStringAsFixed(0)} kg'
@@ -265,15 +266,6 @@ class _ActivityGrid extends StatelessWidget {
     );
   }
 
-  Color _getActivityColor(double volume, double maxVolume) {
-    if (volume == 0 || maxVolume == 0) return const Color(0xFFEBEDF0);
-    final intensity = volume / maxVolume;
-    if (intensity <= 0.25) return const Color(0xFFC6E48B);
-    if (intensity <= 0.50) return const Color(0xFF7BC96F);
-    if (intensity <= 0.75) return const Color(0xFF239A3B);
-    return const Color(0xFF196127);
-  }
-
   DayActivity? _getActivityForDate(
     Map<DateTime, DayActivity> map,
     DateTime date,
@@ -292,6 +284,7 @@ class _ActivityLegend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final colors = ActivityHeatmapColors.palette(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -300,15 +293,15 @@ class _ActivityLegend extends StatelessWidget {
           style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         const SizedBox(width: 4),
-        const _LegendBox(Color(0xFFEBEDF0)),
+        _LegendBox(colors[0]),
         const SizedBox(width: 2),
-        const _LegendBox(Color(0xFFC6E48B)),
+        _LegendBox(colors[1]),
         const SizedBox(width: 2),
-        const _LegendBox(Color(0xFF7BC96F)),
+        _LegendBox(colors[2]),
         const SizedBox(width: 2),
-        const _LegendBox(Color(0xFF239A3B)),
+        _LegendBox(colors[3]),
         const SizedBox(width: 2),
-        const _LegendBox(Color(0xFF196127)),
+        _LegendBox(colors[4]),
         const SizedBox(width: 4),
         Text(
           l10n.more,
@@ -338,13 +331,13 @@ class _LegendBox extends StatelessWidget {
 
 class ProfileCompletedWorkoutsSection extends StatelessWidget {
   final List<WorkoutSession> sessions;
-  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? padding;
   final void Function(WorkoutSession session)? onSessionTap;
 
   const ProfileCompletedWorkoutsSection({
     super.key,
     required this.sessions,
-    this.padding = const EdgeInsets.symmetric(horizontal: 24),
+    this.padding,
     this.onSessionTap,
   });
 
@@ -352,7 +345,7 @@ class ProfileCompletedWorkoutsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: padding,
+      padding: padding ?? EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -366,8 +359,7 @@ class ProfileCompletedWorkoutsSection extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 l10n.completedWorkoutsTitle,
-                style: TextStyle(
-                  fontSize: 20,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),

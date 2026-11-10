@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/services/service_locator.dart' as sl;
 import 'package:workout_app/services/social_service.dart';
@@ -77,6 +79,10 @@ class SocialFeedScreen extends ConsumerWidget {
                     final authorPhoto = author?['photo_url']?.toString();
                     final content = post['content']?.toString() ?? '';
                     final createdAt = post['created_at']?.toString();
+                    final createdDate = createdAt == null ? null : DateTime.tryParse(createdAt);
+                    final displayDate = createdDate == null
+                        ? createdAt ?? ''
+                        : DateFormat('dd.MM.yyyy HH:mm').format(createdDate.toLocal());
                     final reactions = post['reactions'] as List<dynamic>? ?? [];
                     final likeReaction = reactions.firstWhere(
                       (r) => r['type'] == 'like',
@@ -94,7 +100,7 @@ class SocialFeedScreen extends ConsumerWidget {
                     return Card(
                       elevation: 2,
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -127,11 +133,17 @@ class SocialFeedScreen extends ConsumerWidget {
                             ],
                             const SizedBox(height: 12),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  createdAt ?? '',
-                                  style: Theme.of(context).textTheme.bodySmall,
+                                Expanded(
+                                  child: Tooltip(
+                                    message: createdAt ?? '',
+                                    child: Text(
+                                      displayDate,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                  ),
                                 ),
                                 Row(
                                   children: [
@@ -164,11 +176,24 @@ class SocialFeedScreen extends ConsumerWidget {
               );
             },
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              _showCreatePostDialog(context, ref);
-            },
-            child: const Icon(Icons.add),
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                UiDimensions.of(context).pagePadding,
+                UiDimensions.of(context).rowGap,
+                UiDimensions.of(context).pagePadding,
+                UiDimensions.of(context).rowGap,
+              ),
+              child: SizedBox(
+                height: 48,
+                child: FilledButton.icon(
+                  onPressed: () => _showCreatePostDialog(context, ref),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Create Post'),
+                ),
+              ),
+            ),
           ),
         );
       },
@@ -195,7 +220,7 @@ class SocialFeedScreen extends ConsumerWidget {
                   border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: UiDimensions.of(context).rowGap),
               DropdownButtonFormField<String>(
                 value: selectedScope,
                 decoration: const InputDecoration(

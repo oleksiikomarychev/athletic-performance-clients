@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/models/exercise_definition.dart';
 import 'package:workout_app/models/exercise_instance.dart';
 import 'package:workout_app/models/exercise_set_dto.dart';
@@ -278,7 +279,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -289,7 +290,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
                       style: Theme.of(context).textTheme.headlineSmall,
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: UiDimensions.of(context).sectionGap),
                     TextFormField(
                       controller: _nameController,
                       decoration: const InputDecoration(
@@ -303,7 +304,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: UiDimensions.of(context).rowGap),
                     DropdownButtonFormField<String>(
                       initialValue: _selectedMuscleGroup,
                       decoration: const InputDecoration(
@@ -334,19 +335,16 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: UiDimensions.of(context).rowGap),
                     _buildTemplateDropdown(),
-                    const SizedBox(height: 24),
-                    const Text(
+                    SizedBox(height: UiDimensions.of(context).sectionGap),
+                    Text(
                       'Sets',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     ..._buildSetRows(),
-                    const SizedBox(height: 16),
+                    SizedBox(height: UiDimensions.of(context).rowGap),
                     ElevatedButton.icon(
                       onPressed: () {
                         setState(() {
@@ -356,7 +354,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
                       icon: const Icon(Icons.add),
                       label: const Text('Add Set'),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: UiDimensions.of(context).rowGap),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.save),
                       label: const Text('Save Exercise'),

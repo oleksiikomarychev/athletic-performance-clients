@@ -7,6 +7,7 @@ import 'package:workout_app/config/constants/route_names.dart';
 import 'package:workout_app/screens/coach_athlete_plan_screen.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 
 final coachAthletesAnalyticsProvider = FutureProvider<CoachAthletesAnalyticsModel>((ref) async {
   final svc = ref.watch(sl.crmAnalyticsServiceProvider);
@@ -115,6 +116,7 @@ class _FilterPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final segmentFilter = ref.watch(segmentFilterProvider);
+    final dimensions = UiDimensions.of(context);
     final minSessions = ref.watch(minSessionsPerWeekProvider);
     final minAdherence = ref.watch(minPlanAdherenceProvider);
     final sortOption = ref.watch(sortOptionProvider);
@@ -122,7 +124,7 @@ class _FilterPanel extends ConsumerWidget {
     const segments = ['top_performer', 'on_track', 'at_risk', 'new'];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: EdgeInsets.fromLTRB(dimensions.pagePadding, dimensions.cardPadding, dimensions.pagePadding, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -231,7 +233,7 @@ class _AthleteCard extends ConsumerWidget {
     );
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding, vertical: 8),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => Navigator.of(context).push(
@@ -243,7 +245,7 @@ class _AthleteCard extends ConsumerWidget {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -269,7 +271,7 @@ class _AthleteCard extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.blueGrey.shade50,
+                        color: Theme.of(context).colorScheme.surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(

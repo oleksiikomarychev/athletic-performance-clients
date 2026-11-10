@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:provider/provider.dart';
 import '../models/progression_template.dart';
 import '../services/progression_service.dart';
@@ -72,11 +73,11 @@ class _ProgressionDetailScreenState extends State<ProgressionDetailScreen> {
                         final template = templateSnapshot.data!;
 
                         return SingleChildScrollView(
-                              padding: const EdgeInsets.only(
-                                top: kToolbarHeight + 16,
-                                left: 16,
-                                right: 16,
-                                bottom: 16,
+                              padding: EdgeInsets.only(
+                                top: kToolbarHeight + UiDimensions.of(context).pagePadding,
+                                left: UiDimensions.of(context).pagePadding,
+                                right: UiDimensions.of(context).pagePadding,
+                                bottom: UiDimensions.of(context).pagePadding,
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,7 +87,7 @@ class _ProgressionDetailScreenState extends State<ProgressionDetailScreen> {
                                     template.name,
                                     style: Theme.of(context).textTheme.headlineMedium,
                                   ),
-                                  const SizedBox(height: 16),
+                                  SizedBox(height: UiDimensions.of(context).sectionGap),
 
 
                                   if (template.description != null && template.description!.isNotEmpty)
@@ -102,7 +103,7 @@ class _ProgressionDetailScreenState extends State<ProgressionDetailScreen> {
                                           template.description!,
                                           style: Theme.of(context).textTheme.bodyMedium,
                                         ),
-                                        const SizedBox(height: 16),
+                                        SizedBox(height: UiDimensions.of(context).sectionGap),
                                       ],
                                     ),
 
@@ -116,7 +117,7 @@ class _ProgressionDetailScreenState extends State<ProgressionDetailScreen> {
                                   _buildParameterRow('Интенсивность', '${template.intensity}%'),
                                   _buildParameterRow('Усилие (RPE)', template.effort.toString()),
                                   _buildParameterRow('Объем (повторения)', template.volume?.toString() ?? 'Не указано'),
-                                  const SizedBox(height: 16),
+                                  SizedBox(height: UiDimensions.of(context).sectionGap),
                                 ],
                               ),
                             );

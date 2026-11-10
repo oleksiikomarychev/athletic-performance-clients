@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/services/service_locator.dart' as sl;
 import 'package:workout_app/services/messaging_service.dart';
@@ -116,7 +117,7 @@ class _CoachChatScreenState extends ConsumerState<CoachChatScreen> {
                 }
                 return ListView.builder(
                   reverse: true,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding, vertical: UiDimensions.of(context).rowGap),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final msg = messages[index];
@@ -143,7 +144,7 @@ class _CoachChatScreenState extends ConsumerState<CoachChatScreen> {
           ),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
               child: Row(
                 children: [
                   Expanded(

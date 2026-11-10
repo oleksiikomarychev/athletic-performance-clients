@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 
 import '../models/chat_message.dart';
 import '../providers/chat_provider.dart';
@@ -160,11 +161,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ),
         if (chatState.isTyping)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding, vertical: 8),
             child: _TypingIndicator(sessionId: chatState.sessionId),
           ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          padding: EdgeInsets.fromLTRB(UiDimensions.of(context).pagePadding, 8, UiDimensions.of(context).pagePadding, UiDimensions.of(context).cardPadding),
           child: _buildInputArea(canSend),
         ),
       ],
@@ -206,10 +207,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildMessageList(List<ChatMessage> messages) {
+  final dimensions = UiDimensions.of(context);
   if (messages.isEmpty) {
-    return const Center(
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(dimensions.pagePadding),
         ),
       );
     }
@@ -219,8 +221,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   return ListView.builder(
     controller: _scrollController,
     padding: EdgeInsets.symmetric(
-      horizontal: 16,
-      vertical: transparent ? 24 : 16,
+      horizontal: dimensions.pagePadding,
+      vertical: transparent ? dimensions.sectionGap : dimensions.cardPadding,
     ),
     itemCount: messages.length,
     itemBuilder: (context, index) {
@@ -228,7 +230,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       final isUser = message.role == ChatRole.user;
       return Padding(
         key: ValueKey('${message.id}_$index'),
-        padding: const EdgeInsets.only(bottom: 12),
+        padding: EdgeInsets.only(bottom: dimensions.rowGap),
         child: Align(
           alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
           child: ConstrainedBox(
@@ -245,7 +247,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             .withOpacity(0.9)
                         : Theme.of(context).colorScheme.primary)
                     : (transparent
-                        ? Colors.white.withOpacity(0.92)
+                        ? Theme.of(context).colorScheme.surfaceContainerLow.withValues(alpha: 0.96)
                         : Theme.of(context).colorScheme.surface),
                 borderRadius: BorderRadius.circular(22).copyWith(
                   bottomLeft: const Radius.circular(10),
@@ -316,7 +318,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           child: transparent
               ? Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
+                    color: theme.colorScheme.surfaceContainerLow.withValues(alpha: 0.96),
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
@@ -329,15 +331,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   child: TextField(
                     controller: _inputController,
                     focusNode: _inputFocusNode,
+                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface),
                     minLines: 1,
                     maxLines: 4,
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _handleSend(),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Введите сообщение...',
+                      hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                      filled: false,
                       border: InputBorder.none,
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
                   ),
                 )

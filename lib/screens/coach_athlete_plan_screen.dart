@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -180,7 +181,7 @@ class _CoachAthletePlanScreenState extends ConsumerState<CoachAthletePlanScreen>
     return Card(
       elevation: 1,
       color: Theme.of(context).colorScheme.surfaceContainerLow,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -267,9 +268,9 @@ class _CoachAthletePlanScreenState extends ConsumerState<CoachAthletePlanScreen>
 
     final l10n = AppLocalizations.of(context);
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding, vertical: 8),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -421,7 +422,7 @@ class _CoachAthletePlanScreenState extends ConsumerState<CoachAthletePlanScreen>
     final title = DateFormat('EEEE, MMM d, yyyy').format(_selectedDay);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -441,13 +442,13 @@ class _CoachAthletePlanScreenState extends ConsumerState<CoachAthletePlanScreen>
           workoutsAsync.when(
             loading: () => const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator())),
             error: (err, _) => Padding(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
               child: Text('${AppLocalizations.of(context).activePlanLoadError(err.toString())}'),
             ),
             data: (_) {
               if (selectedList.isEmpty) {
                 return Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
                   child: Text(AppLocalizations.of(context).activePlanNoWorkoutsOnDay),
                 );
               }
@@ -605,7 +606,7 @@ class _CoachAthletePlanScreenState extends ConsumerState<CoachAthletePlanScreen>
         final exercises = workout.exerciseInstances;
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            padding: EdgeInsets.fromLTRB(UiDimensions.of(ctx).pagePadding, UiDimensions.of(ctx).rowGap, UiDimensions.of(ctx).pagePadding, UiDimensions.of(ctx).sectionGap),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -127,7 +128,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
           body: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
                 child: Row(
                   children: [
                     Expanded(

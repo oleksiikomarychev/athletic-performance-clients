@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:workout_app/widgets/calendar_plan_delete_dialog.dart';
 import 'package:workout_app/src/widgets/snack_utils.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 import 'package:workout_app/models/exercise_definition.dart';
@@ -15,6 +17,7 @@ import 'package:workout_app/src/widgets/apply_plan_widget.dart'
 import 'package:workout_app/models/calendar_plan_summary.dart';
 import 'package:workout_app/screens/plan_editor_screen.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/plan_analytics_chart.dart';
 import 'package:workout_app/screens/user_profile_screen.dart';
@@ -250,7 +253,7 @@ class _SingleSelectSheetState<T> extends State<_SingleSelectSheet<T>> {
   }
 }
 
-enum _HeaderMenuAction { editPlan, recalcSets, profile }
+enum _HeaderMenuAction { editPlan, recalcSets, profile, deletePlan }
 
 class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
   late final CalendarPlan _originalPlan;
@@ -260,6 +263,10 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
   bool _prefetchingVariants = false;
   bool _changingVariant = false;
   bool _updatingPublic = false;
+  bool _deletingPlan = false;
+
+  bool get _canDeletePlan =>
+      _currentPlan.isOwnedBy(FirebaseAuth.instance.currentUser?.uid);
   List<UserMax> _userMaxList = [];
   Map<int, List<UserMax>> _userMaxesByExerciseId = {};
   Map<String, List<UserMax>> _userMaxesByName = {};
@@ -314,10 +321,37 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     return '${title.substring(0, maxChars - 1)}…';
   }
 
-  Widget _buildOverflowMenu() {
+  Future<void> _deletePlan(WidgetRef ref) async {
+    if (_deletingPlan || _changingVariant || !_canDeletePlan) return;
+    final plan = _currentPlan;
+    setState(() => _deletingPlan = true);
+    try {
+      final deleted = await confirmAndDeleteCalendarPlan(
+        context,
+        plan: plan,
+        apiClient: _apiClient,
+      );
+      if (!mounted || !deleted) return;
+      ref.read(calendarPlansProvider.notifier).removeLocal(plan.id);
+      ref.read(calendarPlansProvider.notifier).load();
+      ref.invalidate(activeAppliedPlanProvider);
+      ref.invalidate(activeAppliedPlanSWRProvider);
+      setState(() => _deletingPlan = false);
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      if (mounted) {
+        showAppSnackBar(context, 'Не удалось удалить план: $error', isError: true);
+      }
+    } finally {
+      if (mounted) setState(() => _deletingPlan = false);
+    }
+  }
+
+  Widget _buildOverflowMenu(WidgetRef ref) {
     return PopupMenuButton<_HeaderMenuAction>(
       icon: const Icon(Icons.more_vert),
       tooltip: 'Дополнительные действия',
+      enabled: !_deletingPlan,
       onSelected: (action) {
         switch (action) {
           case _HeaderMenuAction.editPlan:
@@ -327,6 +361,9 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
             if (!_recalcInProgress) {
               _recalcPlanSets();
             }
+            break;
+          case _HeaderMenuAction.deletePlan:
+            _deletePlan(ref);
             break;
           case _HeaderMenuAction.profile:
             Navigator.of(context).push(
@@ -370,6 +407,25 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
             dense: true,
           ),
         ),
+        if (_canDeletePlan) ...[
+          const PopupMenuDivider(),
+          PopupMenuItem(
+            enabled: !_changingVariant && !_recalcInProgress,
+            value: _HeaderMenuAction.deletePlan,
+            child: ListTile(
+              leading: Icon(
+                Icons.delete_outline,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              title: Text(
+                'Удалить план',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -661,6 +717,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     _planAnalytics = _computePlanAnalytics(_currentPlan);
     _loadExerciseMeta();
     _fetchVariants();
+    _subscribePlanById(_currentPlan.id);
   }
 
   @override
@@ -982,71 +1039,91 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
             };
           },
           builder: (context, openChat) {
-            return Scaffold(
-              appBar: PrimaryAppBar(
-                title: _shortPlanTitle(_currentPlan.name),
-                onTitleTap: openChat,
-                showBack: true,
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.check),
-                    onPressed: () => _applyPlan(context, ref),
-                    tooltip: 'Apply Plan',
+            return PopScope(
+              canPop: !_deletingPlan,
+              child: AbsorbPointer(
+                absorbing: _deletingPlan,
+                child: Scaffold(
+                  appBar: PrimaryAppBar(
+                    title: _shortPlanTitle(_currentPlan.name),
+                    onTitleTap: openChat,
+                    showBack: true,
+                    actions: [
+                      IconButton(
+                        icon: const Icon(Icons.check),
+                        onPressed: _deletingPlan ? null : () => _applyPlan(context, ref),
+                        tooltip: 'Apply Plan',
+                      ),
+                      _buildOverflowMenu(ref),
+                    ],
                   ),
-                  _buildOverflowMenu(),
-                ],
-              ),
-              body: RefreshIndicator(
-                onRefresh: () async => _subscribePlanById(_currentPlan.id),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildPlanInfo(context),
-                      const SizedBox(height: 12),
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 10,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Варианты',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                  body: RefreshIndicator(
+                    onRefresh: () async => _subscribePlanById(_currentPlan.id),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.all(UiDimensions.of(context).densePagePadding),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_deletingPlan) const LinearProgressIndicator(),
+                          _buildPlanInfo(context),
+                          SizedBox(height: UiDimensions.of(context).rowGap),
+                          Card(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 10,
                               ),
-                              const SizedBox(height: 8),
-                              if (_variantsLoading || _changingVariant)
-                                const LinearProgressIndicator(minHeight: 2)
-                              else if (_variantsError != null)
-                                Text(
-                                  _variantsError!,
-                                  style: const TextStyle(
-                                    color: Colors.redAccent,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Варианты',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                )
-                              else
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 6,
-                                  children: [
-                                    InputChip(
-                                      avatar: const Icon(
-                                        Icons.star,
-                                        size: 18,
-                                        color: Colors.orange,
+                                  const SizedBox(height: 8),
+                                  if (_variantsLoading || _changingVariant)
+                                    const LinearProgressIndicator(minHeight: 2)
+                                  else if (_variantsError != null)
+                                    Text(
+                                      _variantsError!,
+                                      style: const TextStyle(
+                                        color: Colors.redAccent,
                                       ),
-                                      label: const Text('Оригинал'),
-                                      selected: (() {
-                                        final origId = _variants
-                                            .firstWhere(
+                                    )
+                                  else
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 6,
+                                      children: [
+                                        InputChip(
+                                          avatar: const Icon(
+                                            Icons.star,
+                                            size: 18,
+                                            color: Colors.orange,
+                                          ),
+                                          label: const Text('Оригинал'),
+                                          selected: (() {
+                                            final origId = _variants
+                                                .firstWhere(
+                                                  (v) => v.isOriginal,
+                                                  orElse: () => CalendarPlanSummary(
+                                                    id: _rootPlanId,
+                                                    name: '',
+                                                    durationWeeks: 0,
+                                                    isActive: true,
+                                                    rootPlanId: _rootPlanId,
+                                                    isOriginal: true,
+                                                  ),
+                                                )
+                                                .id;
+                                            return _currentPlan.id == origId;
+                                          })(),
+                                          onPressed: () async {
+                                            final orig = _variants.firstWhere(
                                               (v) => v.isOriginal,
                                               orElse: () => CalendarPlanSummary(
                                                 id: _rootPlanId,
@@ -1056,67 +1133,54 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                                                 rootPlanId: _rootPlanId,
                                                 isOriginal: true,
                                               ),
-                                            )
-                                            .id;
-                                        return _currentPlan.id == origId;
-                                      })(),
-                                      onPressed: () async {
-                                        final orig = _variants.firstWhere(
-                                          (v) => v.isOriginal,
-                                          orElse: () => CalendarPlanSummary(
-                                            id: _rootPlanId,
-                                            name: '',
-                                            durationWeeks: 0,
-                                            isActive: true,
-                                            rootPlanId: _rootPlanId,
-                                            isOriginal: true,
-                                          ),
-                                        );
-                                        if (_currentPlan.id == orig.id) return;
-                                        _subscribePlanById(orig.id);
-                                      },
-                                    ),
-                                    ..._variants
-                                        .where((v) => !v.isOriginal)
-                                        .map(
-                                          (v) => InputChip(
-                                            avatar: const Icon(
-                                              Icons.fork_right,
-                                              size: 18,
-                                            ),
-                                            label: Text(v.name),
-                                            selected: v.id == _currentPlan.id,
-                                            onPressed: v.id == _currentPlan.id
-                                                ? null
-                                                : () => _switchToVariant(v),
-                                          ),
+                                            );
+                                            if (_currentPlan.id == orig.id) return;
+                                            _subscribePlanById(orig.id);
+                                          },
                                         ),
-                                    ActionChip(
-                                      avatar: const Icon(Icons.add, size: 18),
-                                      label: const Text('Добавить variant+'),
-                                      onPressed: _createVariantDialog,
+                                        ..._variants
+                                            .where((v) => !v.isOriginal)
+                                            .map(
+                                              (v) => InputChip(
+                                                avatar: const Icon(
+                                                  Icons.fork_right,
+                                                  size: 18,
+                                                ),
+                                                label: Text(v.name),
+                                                selected: v.id == _currentPlan.id,
+                                                onPressed: v.id == _currentPlan.id
+                                                    ? null
+                                                    : () => _switchToVariant(v),
+                                              ),
+                                            ),
+                                        ActionChip(
+                                          avatar: const Icon(Icons.add, size: 18),
+                                          label: const Text('Добавить variant+'),
+                                          onPressed: _createVariantDialog,
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                            ],
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 12),
+                          _buildAnalyticsSection(context),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Mesocycles',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          ..._currentPlan.mesocycles.map(
+                            (mesocycle) => _buildMesocycleExpansionTile(mesocycle),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      _buildAnalyticsSection(context),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Mesocycles',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      ..._currentPlan.mesocycles.map(
-                        (mesocycle) => _buildMesocycleExpansionTile(mesocycle),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -1472,12 +1536,12 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
           ),
           borderRadius: BorderRadius.circular(16),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).cardPadding, vertical: UiDimensions.of(context).rowGap),
         child: LayoutBuilder(
           builder: (context, constraints) {
             const spacing = 10.0;
             final width = constraints.maxWidth;
-            final twoColumnBreakpoint = 420.0;
+            final twoColumnBreakpoint = 330.0;
             final useTwoColumns = width >= twoColumnBreakpoint;
             final fieldWidth = useTwoColumns
                 ? ((width - spacing) / 2).clamp(0.0, 280.0)
@@ -1501,7 +1565,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
             final expandedContent = Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 8),
+                SizedBox(height: UiDimensions.of(context).rowGap),
                 Wrap(
                   spacing: spacing,
                   runSpacing: spacing,
@@ -1516,7 +1580,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: UiDimensions.of(context).rowGap),
                 Wrap(
                   spacing: spacing,
                   runSpacing: spacing,
@@ -1602,9 +1666,9 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                     );
                   },
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: UiDimensions.of(context).rowGap),
                 SizedBox(
-                  height: useTwoColumns ? 220 : 240,
+                  height: useTwoColumns ? 200 : 220,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: DecoratedBox(
@@ -1781,31 +1845,37 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
         const SizedBox(height: 2),
         GestureDetector(
           onTap: enabled ? onTap : null,
-          child: InputDecorator(
-            decoration: InputDecoration(
-              suffixIcon: const Icon(
-                Icons.keyboard_arrow_down_rounded,
-                size: 18,
+          behavior: HitTestBehavior.opaque,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: InputDecorator(
+              decoration: InputDecoration(
+                suffixIcon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                ),
+                suffixIconConstraints: const BoxConstraints(
+                  minWidth: 28,
+                  minHeight: 28,
+                ),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
-              suffixIconConstraints: const BoxConstraints(
-                minWidth: 28,
-                minHeight: 28,
-              ),
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 6,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Text(
-              valueText,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: enabled
-                    ? theme.textTheme.bodyMedium?.color
-                    : Colors.grey,
+              child: Text(
+                valueText,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: enabled
+                      ? theme.textTheme.bodyMedium?.color
+                      : Colors.grey,
+                ),
               ),
             ),
           ),
@@ -2061,6 +2131,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
 
   Widget _buildWorkoutDayCard(PlanWorkout workout) {
     final colors = Theme.of(context).colorScheme;
+    final dimensions = UiDimensions.of(context);
     return Card(
       elevation: 1,
       margin: const EdgeInsets.only(bottom: 8.0),
@@ -2068,13 +2139,13 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(
-            horizontal: 12.0,
+          tilePadding: EdgeInsets.symmetric(
+            horizontal: dimensions.denseCardPadding,
             vertical: 4.0,
           ),
-          childrenPadding: const EdgeInsets.only(
-            left: 12.0,
-            right: 12.0,
+          childrenPadding: EdgeInsets.only(
+            left: dimensions.denseCardPadding,
+            right: dimensions.denseCardPadding,
             bottom: 8.0,
           ),
           title: Row(
@@ -2111,6 +2182,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
 
   Widget _buildExerciseCard(PlanExercise exercise, int index) {
     final colors = Theme.of(context).colorScheme;
+    final dimensions = UiDimensions.of(context);
     final userMaxes = _userMaxesForExercise(exercise);
     final latestUserMax = _latestUserMax(userMaxes);
     final hasNotes =
@@ -2119,7 +2191,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8.0),
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+      padding: EdgeInsets.symmetric(horizontal: dimensions.denseCardPadding, vertical: dimensions.rowGap),
       decoration: BoxDecoration(
         color: colors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(6),
@@ -2299,11 +2371,12 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
 
   Widget _buildPlanInfo(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final dimensions = UiDimensions.of(context);
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: EdgeInsets.all(dimensions.denseCardPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2468,18 +2541,24 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
             if (_currentPlan.requiredEquipment != null &&
                 _currentPlan.requiredEquipment!.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: _currentPlan.requiredEquipment!
-                    .map(
-                      (e) => Chip(
-                        label: Text(e),
-                        visualDensity: VisualDensity.compact,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final equipment in _currentPlan.requiredEquipment!) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: Chip(
+                          label: Text(equipment),
+                          labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                       ),
-                    )
-                    .toList(),
+                    ],
+                  ],
+                ),
               ),
             ],
             if (_currentPlan.notes != null &&
@@ -2498,18 +2577,19 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
 
   Widget _buildMesocycleExpansionTile(Mesocycle mesocycle) {
     final colors = Theme.of(context).colorScheme;
+    final dimensions = UiDimensions.of(context);
     return Card(
       elevation: 1,
       margin: const EdgeInsets.only(bottom: 8.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(
-          horizontal: 12.0,
+        tilePadding: EdgeInsets.symmetric(
+          horizontal: dimensions.denseCardPadding,
           vertical: 4.0,
         ),
-        childrenPadding: const EdgeInsets.only(
-          left: 12.0,
-          right: 12.0,
+        childrenPadding: EdgeInsets.only(
+          left: dimensions.denseCardPadding,
+          right: dimensions.denseCardPadding,
           bottom: 8.0,
         ),
         title: Row(
@@ -2575,6 +2655,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
 
   Widget _buildMicrocycleCard(Microcycle microcycle) {
     final colors = Theme.of(context).colorScheme;
+    final dimensions = UiDimensions.of(context);
     final name = microcycle.name.trim();
     final orderIndex = microcycle.orderIndex;
     final orderNumber = orderIndex >= 0 ? orderIndex + 1 : 1;
@@ -2593,13 +2674,13 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       color: colors.surfaceContainerLow,
       child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(
-          horizontal: 12.0,
+        tilePadding: EdgeInsets.symmetric(
+          horizontal: dimensions.denseCardPadding,
           vertical: 2.0,
         ),
-        childrenPadding: const EdgeInsets.only(
-          left: 12.0,
-          right: 12.0,
+        childrenPadding: EdgeInsets.only(
+          left: dimensions.denseCardPadding,
+          right: dimensions.denseCardPadding,
           bottom: 8.0,
         ),
         title: Column(

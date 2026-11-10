@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -160,7 +161,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(12.0),
+      padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -183,15 +184,15 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             },
             onPageChanged: (fd) => _focusedDay = fd,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: UiDimensions.of(context).sectionGap),
           Row(
             children: [
               Expanded(child: _buildMetricPicker(l10n.axisX, true)),
-              const SizedBox(width: 12),
+              SizedBox(width: UiDimensions.of(context).rowGap),
               Expanded(child: _buildMetricPicker(l10n.axisY, false)),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: UiDimensions.of(context).sectionGap),
           Wrap(
             spacing: 12,
             runSpacing: 8,
@@ -205,12 +206,21 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 Text('${df.format(_rangeStart!)} — ${df.format(_rangeEnd!)}'),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: UiDimensions.of(context).sectionGap),
           if (_loading) LoadingIndicator(),
           if (_error != null && _data == null)
             ErrorMessage(message: _error!, onRetry: _fetch),
-          const SizedBox(height: 8),
-          SizedBox(height: 400, child: _buildChartArea()),
+          if (_data == null && !_loading && _error == null)
+            Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: UiDimensions.of(context).sectionGap,
+              ),
+              child: Text(l10n.selectRangeAndMetrics),
+            ),
+          if (_data != null) ...[
+            SizedBox(height: UiDimensions.of(context).rowGap),
+            SizedBox(height: 400, child: _buildChartArea()),
+          ],
         ],
       ),
     );

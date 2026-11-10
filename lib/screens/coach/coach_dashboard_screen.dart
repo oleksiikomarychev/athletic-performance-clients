@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
 import 'package:workout_app/models/crm_analytics.dart';
@@ -31,11 +32,11 @@ class CoachDashboardScreen extends ConsumerWidget {
                 return SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                    padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const SizedBox(height: kToolbarHeight + 24),
+                        SizedBox(height: kToolbarHeight + UiDimensions.of(context).sectionGap),
                         Row(
                           children: [
                             Expanded(
@@ -58,7 +59,7 @@ class CoachDashboardScreen extends ConsumerWidget {
                           label: 'Inactive athletes',
                           value: summary.inactiveAthletesCount.toString(),
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: UiDimensions.of(context).sectionGap),
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -112,7 +113,7 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),

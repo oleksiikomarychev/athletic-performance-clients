@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:provider/provider.dart';
 import 'package:workout_app/config/api_config.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/services/api_client.dart';
 
 class SettingsImportScreen extends StatefulWidget {
@@ -140,17 +141,18 @@ class _SettingsImportScreenState extends State<SettingsImportScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final dimensions = UiDimensions.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Import workouts')),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(dimensions.pagePadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(dimensions.cardPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -167,7 +169,7 @@ class _SettingsImportScreenState extends State<SettingsImportScreen> {
                       'Go to Hevy app → Settings → Export data to get the file.',
                       style: theme.textTheme.bodySmall,
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: dimensions.rowGap),
                     OutlinedButton.icon(
                       onPressed: _importing ? null : _pickFile,
                       icon: const Icon(Icons.file_upload_outlined),
@@ -177,7 +179,7 @@ class _SettingsImportScreenState extends State<SettingsImportScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: dimensions.rowGap),
             if (_selectedFile != null && _result == null)
               FilledButton.icon(
                 onPressed: _importing ? null : _startImport,
@@ -210,7 +212,7 @@ class _SettingsImportScreenState extends State<SettingsImportScreen> {
                 child: Card(
                   color: colorScheme.errorContainer,
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(dimensions.cardPadding),
                     child: Row(
                       children: [
                         Icon(Icons.error_outline, color: colorScheme.error),
@@ -232,7 +234,7 @@ class _SettingsImportScreenState extends State<SettingsImportScreen> {
                 child: Card(
                   color: colorScheme.primaryContainer,
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(dimensions.cardPadding),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:intl/intl.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/models/plan_analytics.dart';
 import 'package:workout_app/models/workout.dart';
 import 'package:workout_app/models/workout_session.dart';
@@ -19,6 +20,7 @@ import 'dart:typed_data';
 import 'package:workout_app/widgets/floating_header_bar.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/widgets/plan_analytics_chart.dart';
+import 'package:workout_app/widgets/activity_heatmap_colors.dart';
 import 'package:workout_app/providers/profile_screen_sections_provider.dart';
 import '../widgets/user_profile_view.dart';
 
@@ -729,6 +731,7 @@ class UserProfileScreen extends ConsumerWidget {
     UserProfile profile,
   ) {
     final sectionPrefs = ref.watch(profileScreenSectionsProvider);
+    final dimensions = UiDimensions.of(context);
 
     void openAvatarTool() {
       showModalBottomSheet<void>(
@@ -757,12 +760,12 @@ class UserProfileScreen extends ConsumerWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
         children: [
-          const SizedBox(height: kToolbarHeight + 24),
+          SizedBox(height: kToolbarHeight + dimensions.sectionGap),
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 720),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: EdgeInsets.symmetric(horizontal: dimensions.pagePadding),
                 child: UserProfileView(
                   profile: profile,
                   isOwner: true,
@@ -774,7 +777,7 @@ class UserProfileScreen extends ConsumerWidget {
                   onAvatarTool: openAvatarTool,
                   showCoachingCard: false,
                   additionalSections: [
-                    const SizedBox(height: 16),
+                    SizedBox(height: dimensions.rowGap),
                     Text(
                       user?.email ?? '',
                       textAlign: TextAlign.center,
@@ -792,7 +795,7 @@ class UserProfileScreen extends ConsumerWidget {
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: dimensions.sectionGap),
                     Center(
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 520),
@@ -800,7 +803,7 @@ class UserProfileScreen extends ConsumerWidget {
                       ),
                     ),
                     if (sectionPrefs.showWorkoutAnalytics) ...[
-                      const SizedBox(height: 24),
+                      SizedBox(height: dimensions.sectionGap),
                       const _UserHistoryAnalyticsSection(),
                     ],
                   ],
@@ -808,30 +811,30 @@ class UserProfileScreen extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: dimensions.sectionGap),
           if (sectionPrefs.showActivityChart) ...[
             Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 720),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: EdgeInsets.symmetric(horizontal: dimensions.pagePadding),
                   child: _buildActivitySection(context, stats),
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: dimensions.sectionGap),
           ],
           if (sectionPrefs.showWorkoutHistory) ...[
             Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 720),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: EdgeInsets.symmetric(horizontal: dimensions.pagePadding),
                   child: _buildCompletedWorkouts(context, ref),
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: dimensions.sectionGap),
           ],
         ],
       ),
@@ -1007,7 +1010,7 @@ class UserProfileScreen extends ConsumerWidget {
           Text(
             value,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: UiDimensions.of(context).statValueFontSize,
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.onSurface,
             ),
@@ -1032,8 +1035,7 @@ class UserProfileScreen extends ConsumerWidget {
       children: [
         Text(
           'Activity',
-          style: TextStyle(
-            fontSize: 20,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: Theme.of(context).colorScheme.onSurface,
           ),
@@ -1138,7 +1140,7 @@ class UserProfileScreen extends ConsumerWidget {
                           normalized,
                         );
                         final volume = dayActivity?.volume ?? 0;
-                        final color = _getActivityColor(volume, maxVolume);
+                        final color = ActivityHeatmapColors.forVolume(context, volume, maxVolume);
                         return Tooltip(
                           message: dayActivity != null
                               ? '${DateFormat('MMM d').format(date)}\n${dayActivity.sessionCount} session(s)\n${volume.toStringAsFixed(0)} kg'
@@ -1163,18 +1165,6 @@ class UserProfileScreen extends ConsumerWidget {
     );
   }
 
-  Color _getActivityColor(double volume, double maxVolume) {
-    if (volume == 0) return const Color(0xFFEBEDF0);
-    if (maxVolume == 0) return const Color(0xFFEBEDF0);
-
-    final intensity = volume / maxVolume;
-
-    if (intensity <= 0.25) return const Color(0xFFC6E48B);
-    if (intensity <= 0.50) return const Color(0xFF7BC96F);
-    if (intensity <= 0.75) return const Color(0xFF239A3B);
-    return const Color(0xFF196127);
-  }
-
   DayActivity? _getActivityForDate(
     Map<DateTime, DayActivity> map,
     DateTime date,
@@ -1189,6 +1179,7 @@ class UserProfileScreen extends ConsumerWidget {
   }
 
   Widget _buildActivityLegend(BuildContext context, double maxVolume) {
+    final colors = ActivityHeatmapColors.palette(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -1197,15 +1188,15 @@ class UserProfileScreen extends ConsumerWidget {
           style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         const SizedBox(width: 4),
-        _legendBox(const Color(0xFFEBEDF0)),
+        _legendBox(colors[0]),
         const SizedBox(width: 2),
-        _legendBox(const Color(0xFFC6E48B)),
+        _legendBox(colors[1]),
         const SizedBox(width: 2),
-        _legendBox(const Color(0xFF7BC96F)),
+        _legendBox(colors[2]),
         const SizedBox(width: 2),
-        _legendBox(const Color(0xFF239A3B)),
+        _legendBox(colors[3]),
         const SizedBox(width: 2),
-        _legendBox(const Color(0xFF196127)),
+        _legendBox(colors[4]),
         const SizedBox(width: 4),
         Text(
           'More',
@@ -1237,8 +1228,7 @@ class UserProfileScreen extends ConsumerWidget {
             SizedBox(width: 8),
             Text(
               'Completed Workouts',
-              style: TextStyle(
-                fontSize: 20,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.onSurface,
               ),
@@ -1652,7 +1642,7 @@ class _UserHistoryAnalyticsSectionState
                   if (options.isEmpty)
                     Text(
                       'Нет опций',
-                      style: TextStyle(color: Colors.black54),
+                      style: TextStyle(color: Theme.of(ctx2).colorScheme.onSurfaceVariant),
                     )
                   else
                     SizedBox(

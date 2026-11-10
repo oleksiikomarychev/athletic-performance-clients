@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/providers/plan_providers.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 
 class NutritionPlanActive extends ConsumerWidget {
   const NutritionPlanActive({super.key});
@@ -33,16 +34,16 @@ class NutritionPlanActive extends ConsumerWidget {
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Plan: ${activePlan.calendarPlan.name}',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 16),
-                _buildNutritionPlanContent(nutritionPlan),
+                SizedBox(height: UiDimensions.of(context).sectionGap),
+                _buildNutritionPlanContent(context, nutritionPlan),
               ],
             ),
           );
@@ -51,21 +52,22 @@ class NutritionPlanActive extends ConsumerWidget {
     );
   }
 
-  Widget _buildNutritionPlanContent(Map<String, dynamic> nutritionPlan) {
+  Widget _buildNutritionPlanContent(BuildContext context, Map<String, dynamic> nutritionPlan) {
+    final dimensions = UiDimensions.of(context);
     final children = <Widget>[];
 
     nutritionPlan.forEach((key, value) {
       children.add(
         Card(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: EdgeInsets.only(bottom: dimensions.rowGap),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(dimensions.cardPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   key,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 if (value is Map<String, dynamic>)

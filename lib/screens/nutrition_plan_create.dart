@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/src/api/nutrition_api.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
@@ -247,36 +248,56 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
           body: Form(
             key: _formKey,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Session Configuration',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _sessionIdController,
-                    decoration: const InputDecoration(
-                      labelText: 'Session ID',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) =>
-                        value?.isEmpty == true ? 'Required' : null,
+                  SizedBox(height: UiDimensions.of(context).rowGap),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final sessionIdField = TextFormField(
+                        controller: _sessionIdController,
+                        decoration: const InputDecoration(
+                          labelText: 'Session ID',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) =>
+                            value?.isEmpty == true ? 'Required' : null,
+                      );
+                      final userIdField = TextFormField(
+                        controller: _userIdController,
+                        decoration: const InputDecoration(
+                          labelText: 'User ID',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) =>
+                            value?.isEmpty == true ? 'Required' : null,
+                      );
+
+                      if (constraints.maxWidth < 340) {
+                        return Column(
+                          children: [
+                            sessionIdField,
+                            SizedBox(height: UiDimensions.of(context).rowGap),
+                            userIdField,
+                          ],
+                        );
+                      }
+                      return Row(
+                        children: [
+                          Expanded(child: sessionIdField),
+                          SizedBox(width: UiDimensions.of(context).rowGap),
+                          Expanded(child: userIdField),
+                        ],
+                      );
+                    },
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _userIdController,
-                    decoration: const InputDecoration(
-                      labelText: 'User ID',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) =>
-                        value?.isEmpty == true ? 'Required' : null,
-                  ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: UiDimensions.of(context).rowGap),
                   TextFormField(
                     controller: _workoutIdController,
                     decoration: const InputDecoration(
@@ -285,7 +306,7 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
                     ),
                     keyboardType: TextInputType.number,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: UiDimensions.of(context).rowGap),
                   TextFormField(
                     controller: _appliedPlanWorkoutIdController,
                     decoration: const InputDecoration(
@@ -294,7 +315,7 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
                     ),
                     keyboardType: TextInputType.number,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: UiDimensions.of(context).rowGap),
                   InkWell(
                     onTap: () async {
                       final picked = await showDatePicker(
@@ -320,10 +341,10 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
-                  const Text(
+                  SizedBox(height: UiDimensions.of(context).sectionGap),
+                  Text(
                     'Selected Entries',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   if (_selectedEntries.isEmpty)
@@ -349,10 +370,10 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
                         ),
                       );
                     }).toList(),
-                  const SizedBox(height: 32),
-                  const Text(
+                  SizedBox(height: UiDimensions.of(context).sectionGap),
+                  Text(
                     'Available Items',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   if (_isLoadingItems)
@@ -375,7 +396,7 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
                       'medication',
                     ),
                   ],
-                  const SizedBox(height: 32),
+                  SizedBox(height: UiDimensions.of(context).sectionGap),
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -397,7 +418,7 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
                             ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: UiDimensions.of(context).sectionGap),
                 ],
               ),
             ),

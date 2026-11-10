@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:heroicons/heroicons.dart';
@@ -266,7 +267,7 @@ class _WorkoutListScreenState extends ConsumerState<WorkoutListScreen> {
         }
 
         return ListView(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: EdgeInsets.symmetric(vertical: UiDimensions.of(context).rowGap),
           children: [
             _buildNextWorkoutCard(),
             ...workouts.map((workout) => _buildWorkoutTile(workout)),
@@ -279,7 +280,7 @@ class _WorkoutListScreenState extends ConsumerState<WorkoutListScreen> {
   Widget _buildNextWorkoutCard() {
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding, vertical: 4),
       child: FutureBuilder<Workout?>(
         future: _nextWorkoutFuture,
         builder: (context, snap) {

@@ -65,7 +65,10 @@ class DebugScreen extends StatelessWidget {
       'Calendar Plan Detail (stub)': (context) =>
           CalendarPlanDetail(plan: _stubCalendarPlan()),
       'Calendar Plans': (context) => const CalendarPlansScreen(),
-      'Chat Screen (embedded)': (context) => const ChatScreen(embedded: true),
+      'Chat Screen (embedded)': (context) => Scaffold(
+        appBar: AppBar(title: const Text('Chat Screen (embedded)')),
+        body: const ChatScreen(embedded: true),
+      ),
       'Exercise Selection': (context) => ExerciseSelectionScreen(),
       'Exercise Form (stub)': (context) =>
           ExerciseFormScreen(exercise: _stubExerciseDefinition(), workoutId: 0),

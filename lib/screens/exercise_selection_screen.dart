@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import '../models/exercise_definition.dart';
 import '../services/exercise_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,7 +69,7 @@ class _ExerciseSelectionScreenState extends ConsumerState<ExerciseSelectionScree
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).densePagePadding),
               child: Row(
                 children: [
                   const BackButton(),
@@ -84,7 +85,7 @@ class _ExerciseSelectionScreenState extends ConsumerState<ExerciseSelectionScree
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(UiDimensions.of(context).densePagePadding),
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(

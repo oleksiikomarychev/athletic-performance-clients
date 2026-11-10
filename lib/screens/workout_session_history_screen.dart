@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:workout_app/models/workout_session.dart';
@@ -30,7 +31,7 @@ class _WorkoutSessionHistoryScreenState extends ConsumerState<WorkoutSessionHist
       }
     }
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+      margin: EdgeInsets.symmetric(vertical: 6, horizontal: UiDimensions.of(context).pagePadding),
       child: ListTile(
         title: Text('Session #${s.id ?? '-'} | ${s.status.toUpperCase()}'),
         subtitle: Column(

@@ -69,10 +69,31 @@ final textTheme = Theme.of(context).textTheme;
 Для констант використовуйте `lib/config/constants/theme_constants.dart`:
 - **Кольори**: `AppColors.primary`, `AppColors.error`
 - **Типографіка**: `AppTextStyles.titleLarge`
-- **Відступи**: `AppSpacing.md` (16.0)
+- **Геометрія екрана**: `UiDimensions.of(context)` з `lib/config/theme/ui_dimensions.dart`
 - **Радіуси**: `AppBorderRadius.lg` (16.0)
 
 > ⚠️ Не використовуйте `Colors.red`, `Colors.grey` напряму — беріть із теми (`colorScheme.error`, `colorScheme.onSurfaceVariant`), інакше зламається dark mode.
+
+### Щільність інтерфейсу
+
+Для повторюваної геометрії використовуйте ролі `UiDimensions.of(context)`:
+
+```dart
+final dimensions = UiDimensions.of(context);
+return Padding(
+  padding: EdgeInsets.all(dimensions.pagePadding),
+  child: Card(
+    child: Padding(
+      padding: EdgeInsets.all(dimensions.cardPadding),
+      child: content,
+    ),
+  ),
+);
+```
+
+`pagePadding` задає зовнішній край екрана, `cardPadding` — вміст картки, `sectionGap` — відстань між блоками, `rowGap` — між рядками та елементами в одному блоці. Для щільних таблиць використовуйте `densePagePadding` і `denseCardPadding`. Обидві теми отримують ті самі розміри; вибір `Compact` / `Comfortable` зберігається в загальних налаштуваннях.
+
+Залишайте локальні розміри для графіків, індикаторів і областей натискання, якщо вони випливають із вмісту або вимог доступності. Не зменшуйте системний масштаб тексту чи область натискання заради компактності.
 
 ---
 

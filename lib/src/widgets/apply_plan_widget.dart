@@ -396,6 +396,8 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final filteredUserMaxes = widget.userMaxList
         .where(_isExerciseAllowed)
         .toList();
@@ -503,9 +505,9 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: isDark ? theme.colorScheme.primaryContainer : Colors.blue.shade50,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.shade200),
+                        border: Border.all(color: isDark ? theme.colorScheme.primary : Colors.blue.shade200),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -515,7 +517,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                               Icon(
                                 Icons.info_outline,
                                 size: 18,
-                                color: Colors.blue.shade700,
+                                color: isDark ? theme.colorScheme.onPrimaryContainer : Colors.blue.shade700,
                               ),
                               const SizedBox(width: 8),
                               Text(
@@ -523,7 +525,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
-                                  color: Colors.blue.shade700,
+                                  color: isDark ? theme.colorScheme.onPrimaryContainer : Colors.blue.shade700,
                                 ),
                               ),
                             ],
@@ -543,9 +545,10 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                                       children: [
                                         Text(
                                           exercise.exerciseName,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 13,
                                             fontWeight: FontWeight.w500,
+                                            color: isDark ? theme.colorScheme.onPrimaryContainer : null,
                                           ),
                                         ),
                                         if (latestUserMax != null)
@@ -553,7 +556,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                                             '${latestUserMax.maxWeight} кг × ${latestUserMax.repMax}',
                                             style: TextStyle(
                                               fontSize: 11,
-                                              color: Colors.green.shade700,
+                                              color: isDark ? Colors.green.shade300 : Colors.green.shade700,
                                             ),
                                           )
                                         else
@@ -561,7 +564,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                                             'Максимум не задан',
                                             style: TextStyle(
                                               fontSize: 11,
-                                              color: Colors.grey.shade600,
+                                              color: isDark ? theme.colorScheme.onPrimaryContainer : Colors.grey.shade600,
                                             ),
                                           ),
                                       ],

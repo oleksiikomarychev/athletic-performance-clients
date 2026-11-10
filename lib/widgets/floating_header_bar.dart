@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 
 class FloatingHeaderBar extends StatelessWidget {
   final String title;
@@ -22,11 +23,14 @@ class FloatingHeaderBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final VoidCallback? effectiveOnTitleTap = onTitleTap ?? AssistantChatHost.of(context)?.openChat;
+    final dimensions = UiDimensions.of(context);
+    final VoidCallback? effectiveOnTitleTap =
+        onTitleTap ?? AssistantChatHost.of(context)?.openChat;
 
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final textStyle = theme.textTheme.titleMedium?.copyWith(
+    final textStyle =
+        theme.textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.w700,
           color: Colors.white,
         ) ??
@@ -54,10 +58,16 @@ class FloatingHeaderBar extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (effectiveOnTitleTap != null) ...[
-          const Icon(Icons.auto_awesome_outlined, size: 18, color: Color(0xFF9CB7B1)),
+          const Icon(
+            Icons.auto_awesome_outlined,
+            size: 18,
+            color: Color(0xFF9CB7B1),
+          ),
           const SizedBox(width: 8),
         ],
-        Flexible(child: Text(title, style: textStyle, overflow: TextOverflow.ellipsis)),
+        Flexible(
+          child: Text(title, style: textStyle, overflow: TextOverflow.ellipsis),
+        ),
       ],
     );
     if (effectiveOnTitleTap != null) {
@@ -74,7 +84,7 @@ class FloatingHeaderBar extends StatelessWidget {
     final decoratedActions = effectiveActions
         .map(
           (widget) => Container(
-            margin: const EdgeInsets.only(left: 6),
+            margin: const EdgeInsets.only(left: 4),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(999),
               color: isDark
@@ -92,7 +102,6 @@ class FloatingHeaderBar extends StatelessWidget {
     final Widget? decoratedLeading = leading == null
         ? null
         : Container(
-            margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(999),
               color: isDark
@@ -108,7 +117,12 @@ class FloatingHeaderBar extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        padding: EdgeInsets.fromLTRB(
+          dimensions.headerInset,
+          8,
+          dimensions.headerInset,
+          8,
+        ),
         child: Align(
           alignment: Alignment.topCenter,
           child: ClipRRect(
@@ -119,8 +133,10 @@ class FloatingHeaderBar extends StatelessWidget {
                 sigmaY: isDark ? 0 : 22,
               ),
               child: Container(
-                height: 56,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                height: dimensions.headerHeight,
+                padding: EdgeInsets.symmetric(
+                  horizontal: dimensions.headerInset,
+                ),
                 decoration: BoxDecoration(
                   color: theme.brightness == Brightness.dark
                       ? AppColors.darkChrome
@@ -128,43 +144,32 @@ class FloatingHeaderBar extends StatelessWidget {
                   gradient: theme.brightness == Brightness.dark
                       ? null
                       : AppGradients.blue,
-                  boxShadow: isDark ? null : const [
-                    BoxShadow(
-                      color: Color(0x331B1F3B),
-                      blurRadius: 36,
-                      offset: Offset(0, 22),
-                      spreadRadius: 4,
-                    ),
-                    BoxShadow(
-                      color: Color(0x14000000),
-                      blurRadius: 16,
-                      offset: Offset(0, 6),
-                    ),
-                  ],
+                  boxShadow: isDark
+                      ? null
+                      : const [
+                          BoxShadow(
+                            color: Color(0x331B1F3B),
+                            blurRadius: 36,
+                            offset: Offset(0, 22),
+                            spreadRadius: 4,
+                          ),
+                          BoxShadow(
+                            color: Color(0x14000000),
+                            blurRadius: 16,
+                            offset: Offset(0, 6),
+                          ),
+                        ],
                 ),
                 child: Row(
                   children: [
-                    Flexible(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: decoratedLeading ?? const SizedBox.shrink(),
+                    if (decoratedLeading != null)
+                      SizedBox(width: 48, child: decoratedLeading),
+                    Expanded(child: Center(child: titleWidget)),
+                    if (decoratedActions.isNotEmpty)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: decoratedActions,
                       ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Center(child: titleWidget),
-                    ),
-                    Flexible(
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: decoratedActions.isEmpty
-                            ? const SizedBox.shrink()
-                            : Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: decoratedActions,
-                              ),
-                      ),
-                    ),
                   ],
                 ),
               ),

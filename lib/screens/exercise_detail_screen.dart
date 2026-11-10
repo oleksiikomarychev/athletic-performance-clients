@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
@@ -76,11 +77,11 @@ class ExerciseDetailScreen extends ConsumerWidget {
                     ..sort((a, b) => a.name.compareTo(b.name));
 
               return ListView(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
                 children: [
                   Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -140,7 +141,7 @@ class ExerciseDetailScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: UiDimensions.of(context).rowGap),
 
                   if (parent != null)
                     Card(
