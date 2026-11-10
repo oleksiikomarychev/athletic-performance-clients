@@ -10,6 +10,7 @@ import 'package:workout_app/providers/app_theme_mode_provider.dart';
 import 'package:workout_app/providers/app_ui_density_provider.dart';
 import 'package:workout_app/firebase_options.dart';
 import 'package:workout_app/features/auth/auth_gate.dart';
+import 'package:workout_app/features/auth/auth_provider.dart';
 import 'package:workout_app/features/auth/auth_service.dart';
 import 'package:workout_app/services/api_client.dart';
 import 'package:workout_app/services/exercise_service.dart';
@@ -85,7 +86,10 @@ class MyApp extends ConsumerWidget {
     final appLocale = ref.watch(appLocaleProvider);
     final themeMode = ref.watch(appThemeModeProvider);
     final density = ref.watch(appUiDensityProvider);
-    return pv.MultiProvider(
+    final accountId = ref.watch(authStateProvider).asData?.value?.uid;
+    return ProviderScope(
+      key: ValueKey('account:${accountId ?? 'signed-out'}'),
+      child: pv.MultiProvider(
       providers: [
         pv.Provider<ApiClient>.value(value: apiClient),
         pv.Provider<ExerciseService>(create: (_) => ExerciseService(apiClient)),
@@ -193,6 +197,7 @@ class MyApp extends ConsumerWidget {
           }
           return null;
         },
+      ),
       ),
     );
   }

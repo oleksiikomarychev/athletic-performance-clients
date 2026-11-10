@@ -19,6 +19,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/providers/workout_provider.dart';
+import 'package:workout_app/features/auth/auth_gate.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/widgets/floating_header_bar.dart';
@@ -94,7 +95,42 @@ class WorkoutDetailScreen extends ConsumerWidget {
       body: workoutAsync.when(
         data: (workout) => _WorkoutDetailContent(workout: workout),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Error: $error')),
+        error: (error, stack) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, size: 40),
+                const SizedBox(height: 12),
+                const Text(
+                  'Не удалось открыть тренировку',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                FilledButton.tonalIcon(
+                  onPressed: () =>
+                      ref.invalidate(workoutSWRProvider(workoutId)),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Повторить'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    final navigator = Navigator.of(context);
+                    if (navigator.canPop()) {
+                      navigator.pop();
+                    } else {
+                      navigator.pushReplacement(
+                        MaterialPageRoute(builder: (_) => const AuthGate()),
+                      );
+                    }
+                  },
+                  child: const Text('Назад'),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

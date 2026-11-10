@@ -2,6 +2,7 @@ import 'mesocycle.dart';
 
 class CalendarPlan {
   final int id;
+  final String? userId;
   final String name;
 
   final Map<String, dynamic> schedule;
@@ -26,6 +27,7 @@ class CalendarPlan {
 
   CalendarPlan({
     required this.id,
+    this.userId,
     required this.name,
     required this.schedule,
     required this.durationWeeks,
@@ -49,17 +51,28 @@ class CalendarPlan {
   factory CalendarPlan.fromJson(Map<String, dynamic> json) {
     return CalendarPlan(
       id: (json['id'] as int?) ?? 0,
+      userId: json['user_id'] as String?,
       name: json['name'] ?? '',
       schedule: Map<String, dynamic>.from(json['schedule'] ?? {}),
       durationWeeks: (json['duration_weeks'] as int?) ?? 0,
       isActive: json['is_active'] ?? false,
       rootPlanId: json['root_plan_id'] as int?,
-      isOriginal: (json['is_original'] as bool?) ?? (json['root_plan_id'] == null || json['root_plan_id'] == json['id']),
+      isOriginal:
+          (json['is_original'] as bool?) ??
+          (json['root_plan_id'] == null || json['root_plan_id'] == json['id']),
       isPublic: json['is_public'] as bool? ?? false,
-      startDate: json['start_date'] != null ? DateTime.parse(json['start_date']) : null,
-      endDate: json['end_date'] != null ? DateTime.parse(json['end_date']) : null,
+      startDate: json['start_date'] != null
+          ? DateTime.parse(json['start_date'])
+          : null,
+      endDate: json['end_date'] != null
+          ? DateTime.parse(json['end_date'])
+          : null,
       mesocycles: (json['mesocycles'] as List<dynamic>? ?? [])
-          .map((e) => e != null ? Mesocycle.fromJson(e as Map<String, dynamic>) : Mesocycle(id: 0, name: '', orderIndex: 0))
+          .map(
+            (e) => e != null
+                ? Mesocycle.fromJson(e as Map<String, dynamic>)
+                : Mesocycle(id: 0, name: '', orderIndex: 0),
+          )
           .toList(),
       primaryGoal: json['primary_goal'] as String?,
       intendedExperienceLevel: json['intended_experience_level'] as String?,
@@ -79,6 +92,7 @@ class CalendarPlan {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'user_id': userId,
       'name': name,
       'schedule': schedule,
       'duration_weeks': durationWeeks,
@@ -99,4 +113,9 @@ class CalendarPlan {
       'nutrition_plan': nutritionPlan,
     };
   }
+
+  bool isOwnedBy(String? currentUserId) =>
+      currentUserId != null &&
+      currentUserId.isNotEmpty &&
+      userId == currentUserId;
 }

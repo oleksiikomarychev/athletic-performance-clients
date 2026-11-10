@@ -8,6 +8,9 @@ import 'package:workout_app/providers/app_theme_mode_provider.dart';
 import 'package:workout_app/providers/app_ui_density_provider.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/widgets/profile_sections.dart';
+import 'package:workout_app/widgets/calendar_plan_card.dart';
+import 'package:workout_app/models/calendar_plan.dart';
+import 'package:workout_app/models/mesocycle.dart';
 
 void main() {
   testWidgets('plan rows fit a narrow screen in both densities', (tester) async {
@@ -18,21 +21,25 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         theme: AppTheme.darkTheme(density: density),
         home: MediaQuery(
-          data: const MediaQueryData(textScaler: TextScaler.linear(1.4)),
+          data: const MediaQueryData(textScaler: TextScaler.linear(2)),
           child: Scaffold(
             body: ListView(
               padding: const EdgeInsets.all(10),
               children: [
-                Card(
-                  child: ListTile(
-                    key: const Key('plan-tile'),
-                    title: const Text('Power Hypertrophy Adaptive Training'),
-                    subtitle: const Text('12 weeks • 3 mesocycles • strength • intermediate'),
-                    trailing: IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.delete),
-                    ),
+                CalendarPlanCard(
+                  key: const Key('plan-tile'),
+                  plan: CalendarPlan(
+                    id: 1,
+                    name: 'Power Hypertrophy Adaptive Training',
+                    schedule: {},
+                    durationWeeks: 12,
+                    primaryGoal: 'strength_hypertrophy',
+                    intendedExperienceLevel: 'intermediate-advanced',
+                    intendedFrequencyPerWeek: 5,
+                    sessionDurationTargetMin: 90,
+                    mesocycles: [Mesocycle(id: 1, name: 'Base', orderIndex: 0)],
                   ),
+                  onTap: () {},
                 ),
               ],
             ),
@@ -41,6 +48,9 @@ void main() {
       ));
       await tester.pump();
       expect(tester.takeException(), isNull);
+      expect(find.byIcon(Icons.delete), findsNothing);
+      expect(find.byIcon(Icons.check_circle), findsNothing);
+      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
       expect(tester.getSize(find.byKey(const Key('plan-tile'))).height, greaterThanOrEqualTo(48));
     }
   });

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:workout_app/widgets/calendar_plan_delete_dialog.dart';
 import 'package:workout_app/src/widgets/snack_utils.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 import 'package:workout_app/models/exercise_definition.dart';
@@ -251,7 +253,7 @@ class _SingleSelectSheetState<T> extends State<_SingleSelectSheet<T>> {
   }
 }
 
-enum _HeaderMenuAction { editPlan, recalcSets, profile }
+enum _HeaderMenuAction { editPlan, recalcSets, profile, deletePlan }
 
 class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
   late final CalendarPlan _originalPlan;
@@ -261,6 +263,10 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
   bool _prefetchingVariants = false;
   bool _changingVariant = false;
   bool _updatingPublic = false;
+  bool _deletingPlan = false;
+
+  bool get _canDeletePlan =>
+      _currentPlan.isOwnedBy(FirebaseAuth.instance.currentUser?.uid);
   List<UserMax> _userMaxList = [];
   Map<int, List<UserMax>> _userMaxesByExerciseId = {};
   Map<String, List<UserMax>> _userMaxesByName = {};
@@ -315,10 +321,37 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     return '${title.substring(0, maxChars - 1)}…';
   }
 
-  Widget _buildOverflowMenu() {
+  Future<void> _deletePlan(WidgetRef ref) async {
+    if (_deletingPlan || _changingVariant || !_canDeletePlan) return;
+    final plan = _currentPlan;
+    setState(() => _deletingPlan = true);
+    try {
+      final deleted = await confirmAndDeleteCalendarPlan(
+        context,
+        plan: plan,
+        apiClient: _apiClient,
+      );
+      if (!mounted || !deleted) return;
+      ref.read(calendarPlansProvider.notifier).removeLocal(plan.id);
+      ref.read(calendarPlansProvider.notifier).load();
+      ref.invalidate(activeAppliedPlanProvider);
+      ref.invalidate(activeAppliedPlanSWRProvider);
+      setState(() => _deletingPlan = false);
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      if (mounted) {
+        showAppSnackBar(context, 'Не удалось удалить план: $error', isError: true);
+      }
+    } finally {
+      if (mounted) setState(() => _deletingPlan = false);
+    }
+  }
+
+  Widget _buildOverflowMenu(WidgetRef ref) {
     return PopupMenuButton<_HeaderMenuAction>(
       icon: const Icon(Icons.more_vert),
       tooltip: 'Дополнительные действия',
+      enabled: !_deletingPlan,
       onSelected: (action) {
         switch (action) {
           case _HeaderMenuAction.editPlan:
@@ -328,6 +361,9 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
             if (!_recalcInProgress) {
               _recalcPlanSets();
             }
+            break;
+          case _HeaderMenuAction.deletePlan:
+            _deletePlan(ref);
             break;
           case _HeaderMenuAction.profile:
             Navigator.of(context).push(
@@ -371,6 +407,25 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
             dense: true,
           ),
         ),
+        if (_canDeletePlan) ...[
+          const PopupMenuDivider(),
+          PopupMenuItem(
+            enabled: !_changingVariant && !_recalcInProgress,
+            value: _HeaderMenuAction.deletePlan,
+            child: ListTile(
+              leading: Icon(
+                Icons.delete_outline,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              title: Text(
+                'Удалить план',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -662,6 +717,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     _planAnalytics = _computePlanAnalytics(_currentPlan);
     _loadExerciseMeta();
     _fetchVariants();
+    _subscribePlanById(_currentPlan.id);
   }
 
   @override
@@ -983,71 +1039,91 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
             };
           },
           builder: (context, openChat) {
-            return Scaffold(
-              appBar: PrimaryAppBar(
-                title: _shortPlanTitle(_currentPlan.name),
-                onTitleTap: openChat,
-                showBack: true,
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.check),
-                    onPressed: () => _applyPlan(context, ref),
-                    tooltip: 'Apply Plan',
+            return PopScope(
+              canPop: !_deletingPlan,
+              child: AbsorbPointer(
+                absorbing: _deletingPlan,
+                child: Scaffold(
+                  appBar: PrimaryAppBar(
+                    title: _shortPlanTitle(_currentPlan.name),
+                    onTitleTap: openChat,
+                    showBack: true,
+                    actions: [
+                      IconButton(
+                        icon: const Icon(Icons.check),
+                        onPressed: _deletingPlan ? null : () => _applyPlan(context, ref),
+                        tooltip: 'Apply Plan',
+                      ),
+                      _buildOverflowMenu(ref),
+                    ],
                   ),
-                  _buildOverflowMenu(),
-                ],
-              ),
-              body: RefreshIndicator(
-                onRefresh: () async => _subscribePlanById(_currentPlan.id),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: EdgeInsets.all(UiDimensions.of(context).densePagePadding),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildPlanInfo(context),
-                      SizedBox(height: UiDimensions.of(context).rowGap),
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 10,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Варианты',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                  body: RefreshIndicator(
+                    onRefresh: () async => _subscribePlanById(_currentPlan.id),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.all(UiDimensions.of(context).densePagePadding),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_deletingPlan) const LinearProgressIndicator(),
+                          _buildPlanInfo(context),
+                          SizedBox(height: UiDimensions.of(context).rowGap),
+                          Card(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 10,
                               ),
-                              const SizedBox(height: 8),
-                              if (_variantsLoading || _changingVariant)
-                                const LinearProgressIndicator(minHeight: 2)
-                              else if (_variantsError != null)
-                                Text(
-                                  _variantsError!,
-                                  style: const TextStyle(
-                                    color: Colors.redAccent,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Варианты',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                )
-                              else
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 6,
-                                  children: [
-                                    InputChip(
-                                      avatar: const Icon(
-                                        Icons.star,
-                                        size: 18,
-                                        color: Colors.orange,
+                                  const SizedBox(height: 8),
+                                  if (_variantsLoading || _changingVariant)
+                                    const LinearProgressIndicator(minHeight: 2)
+                                  else if (_variantsError != null)
+                                    Text(
+                                      _variantsError!,
+                                      style: const TextStyle(
+                                        color: Colors.redAccent,
                                       ),
-                                      label: const Text('Оригинал'),
-                                      selected: (() {
-                                        final origId = _variants
-                                            .firstWhere(
+                                    )
+                                  else
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 6,
+                                      children: [
+                                        InputChip(
+                                          avatar: const Icon(
+                                            Icons.star,
+                                            size: 18,
+                                            color: Colors.orange,
+                                          ),
+                                          label: const Text('Оригинал'),
+                                          selected: (() {
+                                            final origId = _variants
+                                                .firstWhere(
+                                                  (v) => v.isOriginal,
+                                                  orElse: () => CalendarPlanSummary(
+                                                    id: _rootPlanId,
+                                                    name: '',
+                                                    durationWeeks: 0,
+                                                    isActive: true,
+                                                    rootPlanId: _rootPlanId,
+                                                    isOriginal: true,
+                                                  ),
+                                                )
+                                                .id;
+                                            return _currentPlan.id == origId;
+                                          })(),
+                                          onPressed: () async {
+                                            final orig = _variants.firstWhere(
                                               (v) => v.isOriginal,
                                               orElse: () => CalendarPlanSummary(
                                                 id: _rootPlanId,
@@ -1057,67 +1133,54 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                                                 rootPlanId: _rootPlanId,
                                                 isOriginal: true,
                                               ),
-                                            )
-                                            .id;
-                                        return _currentPlan.id == origId;
-                                      })(),
-                                      onPressed: () async {
-                                        final orig = _variants.firstWhere(
-                                          (v) => v.isOriginal,
-                                          orElse: () => CalendarPlanSummary(
-                                            id: _rootPlanId,
-                                            name: '',
-                                            durationWeeks: 0,
-                                            isActive: true,
-                                            rootPlanId: _rootPlanId,
-                                            isOriginal: true,
-                                          ),
-                                        );
-                                        if (_currentPlan.id == orig.id) return;
-                                        _subscribePlanById(orig.id);
-                                      },
-                                    ),
-                                    ..._variants
-                                        .where((v) => !v.isOriginal)
-                                        .map(
-                                          (v) => InputChip(
-                                            avatar: const Icon(
-                                              Icons.fork_right,
-                                              size: 18,
-                                            ),
-                                            label: Text(v.name),
-                                            selected: v.id == _currentPlan.id,
-                                            onPressed: v.id == _currentPlan.id
-                                                ? null
-                                                : () => _switchToVariant(v),
-                                          ),
+                                            );
+                                            if (_currentPlan.id == orig.id) return;
+                                            _subscribePlanById(orig.id);
+                                          },
                                         ),
-                                    ActionChip(
-                                      avatar: const Icon(Icons.add, size: 18),
-                                      label: const Text('Добавить variant+'),
-                                      onPressed: _createVariantDialog,
+                                        ..._variants
+                                            .where((v) => !v.isOriginal)
+                                            .map(
+                                              (v) => InputChip(
+                                                avatar: const Icon(
+                                                  Icons.fork_right,
+                                                  size: 18,
+                                                ),
+                                                label: Text(v.name),
+                                                selected: v.id == _currentPlan.id,
+                                                onPressed: v.id == _currentPlan.id
+                                                    ? null
+                                                    : () => _switchToVariant(v),
+                                              ),
+                                            ),
+                                        ActionChip(
+                                          avatar: const Icon(Icons.add, size: 18),
+                                          label: const Text('Добавить variant+'),
+                                          onPressed: _createVariantDialog,
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                            ],
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 12),
+                          _buildAnalyticsSection(context),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Mesocycles',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          ..._currentPlan.mesocycles.map(
+                            (mesocycle) => _buildMesocycleExpansionTile(mesocycle),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      _buildAnalyticsSection(context),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Mesocycles',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      ..._currentPlan.mesocycles.map(
-                        (mesocycle) => _buildMesocycleExpansionTile(mesocycle),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
