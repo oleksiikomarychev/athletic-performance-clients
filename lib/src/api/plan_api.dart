@@ -14,10 +14,13 @@ class PlanApi {
     required bool computeWeights,
     required double roundingStep,
     required String roundingMode,
+    bool replaceActive = false,
+    ApiClient? apiClient,
   }) async {
     final endpoint = ApiConfig.applyPlanAsyncEndpoint(planId.toString());
     final query = {
       'user_max_ids': userMaxIds.join(','),
+      if (replaceActive) 'replace_active': 'true',
     };
     final payload = {
       'name': 'Applied Plan',
@@ -26,7 +29,7 @@ class PlanApi {
       'rounding_mode': roundingMode == 'up' ? 'ceil' : roundingMode == 'down' ? 'floor' : roundingMode,
       'generate_workouts': true,
     };
-    final data = await _apiClient.post(
+    final data = await (apiClient ?? _apiClient).post(
       endpoint,
       payload,
       queryParams: query,
@@ -63,10 +66,13 @@ class PlanApi {
     required bool computeWeights,
     required double roundingStep,
     required String roundingMode,
+    bool replaceActive = false,
+    ApiClient? apiClient,
   }) async {
     final endpoint = ApiConfig.applyPlanEndpoint(planId.toString());
     final query = {
       'user_max_ids': userMaxIds.join(','),
+      if (replaceActive) 'replace_active': 'true',
     };
     final payload = {
       'name': 'Applied Plan',
@@ -75,7 +81,7 @@ class PlanApi {
       'rounding_mode': roundingMode == 'up' ? 'ceil' : roundingMode == 'down' ? 'floor' : roundingMode,
       'generate_workouts': true,
     };
-    final data = await _apiClient.post(
+    final data = await (apiClient ?? _apiClient).post(
       endpoint,
       payload,
       queryParams: query,
@@ -83,7 +89,7 @@ class PlanApi {
       context: 'applyPlan',
     ) as List<dynamic>;
 
-    await _apiClient.invalidateCacheGroups(const [
+    await (apiClient ?? _apiClient).invalidateCacheGroups(const [
       'plans:active',
       'plans:list',
       'plans:variants',
