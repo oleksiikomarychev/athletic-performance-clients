@@ -44,6 +44,10 @@ class SettingsHomeScreen extends StatelessWidget {
           const Divider(height: 1),
           ListTile(
             title: const Text('Privacy policy & Terms'),
+            subtitle: const Text(
+              'Privacy Policy, Terms of Service & Health Disclaimer',
+            ),
+            leading: const Icon(Icons.gavel_outlined),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.of(context).pushNamed(RouteNames.settingsLegal);

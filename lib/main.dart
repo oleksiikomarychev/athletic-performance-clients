@@ -29,6 +29,7 @@ import 'package:workout_app/screens/settings/settings_general_screen.dart';
 import 'package:workout_app/screens/settings/settings_home_screen.dart';
 import 'package:workout_app/screens/settings/settings_import_screen.dart';
 import 'package:workout_app/screens/settings/settings_legal_screen.dart';
+import 'package:workout_app/config/constants/legal_constants.dart';
 import 'package:workout_app/screens/debug/amplitude_test_screen.dart';
 import 'package:workout_app/config/constants/route_names.dart';
 import 'package:workout_app/services/amplitude_service.dart';
@@ -200,8 +201,13 @@ class MyApp extends ConsumerWidget {
                 settings: settings,
               );
             case RouteNames.settingsLegal:
+              final initialDoc = settings.arguments is LegalDocumentType
+                  ? settings.arguments as LegalDocumentType
+                  : null;
               return MaterialPageRoute(
-                builder: (_) => const SettingsLegalScreen(),
+                builder: (_) => SettingsLegalScreen(
+                  initialDocument: initialDoc,
+                ),
                 settings: settings,
               );
             case RouteNames.amplitudeTest:
