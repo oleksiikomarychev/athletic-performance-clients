@@ -1,0 +1,7 @@
+services:
+  web:
+    image: oleksiikomarychev/workoutapp-web:latest
+    pull_policy: always
+    restart: unless-stopped
+    expose:
+      - "80"

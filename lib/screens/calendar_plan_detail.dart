@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:workout_app/widgets/calendar_plan_delete_dialog.dart';
+import 'package:workout_app/widgets/calendar_plan_apply_confirmation.dart';
 import 'package:workout_app/src/widgets/snack_utils.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 import 'package:workout_app/models/exercise_definition.dart';
@@ -947,13 +948,18 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
             try {
               final onProgress = settings['on_progress'];
 
-              final submission = await PlanApi.applyPlanAsync(
-                planId: _currentPlan.id,
-                userMaxIds: settings['user_max_ids'],
-                computeWeights: settings['compute_weights'],
-                roundingStep: settings['rounding_step'],
-                roundingMode: settings['rounding_mode'],
+              final submission = await applyPlanWithConfirmation<Map<String, dynamic>>(
+                context,
+                submit: (replaceActive) => PlanApi.applyPlanAsync(
+                  planId: _currentPlan.id,
+                  userMaxIds: settings['user_max_ids'],
+                  computeWeights: settings['compute_weights'],
+                  roundingStep: settings['rounding_step'],
+                  roundingMode: settings['rounding_mode'],
+                  replaceActive: replaceActive,
+                ),
               );
+              if (submission == null) return;
               final taskId = (submission['task_id'] ?? '').toString();
               if (taskId.isEmpty) {
                 throw Exception('No task_id returned');
