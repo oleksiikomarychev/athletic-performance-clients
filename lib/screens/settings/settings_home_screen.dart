@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/constants/route_names.dart';
+import 'package:workout_app/config/theme/responsive.dart';
+import 'package:workout_app/widgets/responsive_container.dart';
 
 class SettingsHomeScreen extends StatelessWidget {
   const SettingsHomeScreen({super.key});
@@ -10,7 +12,9 @@ class SettingsHomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Settings'),
       ),
-      body: ListView(
+      body: ResponsiveContainer(
+        maxWidth: Breakpoints.maxContentWidthNarrow,
+        child: ListView(
         children: [
           ListTile(
             title: const Text('General'),
@@ -47,6 +51,7 @@ class SettingsHomeScreen extends StatelessWidget {
           ),
           const Divider(height: 1),
         ],
+      ),
       ),
     );
   }

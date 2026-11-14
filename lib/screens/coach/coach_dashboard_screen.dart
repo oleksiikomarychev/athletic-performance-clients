@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/widgets/responsive_container.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
 import 'package:workout_app/models/crm_analytics.dart';
@@ -31,8 +33,10 @@ class CoachDashboardScreen extends ConsumerWidget {
               data: (summary) {
                 return SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  child: Padding(
-                    padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
+                  child: ResponsiveContainer(
+                    maxWidth: Breakpoints.maxContentWidthMedium,
+                    child: Padding(
+                      padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -82,6 +86,7 @@ class CoachDashboardScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
+                  ),
                   ),
                 );
               },

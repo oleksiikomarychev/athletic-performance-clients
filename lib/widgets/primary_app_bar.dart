@@ -1,8 +1,10 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 
 class PrimaryAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -169,46 +171,51 @@ class PrimaryAppBar extends StatelessWidget implements PreferredSizeWidget {
         padding: EdgeInsets.fromLTRB(dimensions.headerInset, 8, dimensions.headerInset, 8),
           child: Align(
             alignment: Alignment.topCenter,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(28),
-              child: BackdropFilter(
-                  filter: ImageFilter.blur(
-                    sigmaX: isDark ? 0 : 22,
-                    sigmaY: isDark ? 0 : 22,
-                  ),
-                child: Container(
-                  height: dimensions.headerHeight,
-                  padding: EdgeInsets.symmetric(horizontal: dimensions.headerInset),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkChrome : null,
-                    gradient: isDark ? null : AppGradients.blue,
-                    boxShadow: isDark ? null : [
-                      BoxShadow(
-                        color: Color(0x331B1F3B),
-                        blurRadius: 36,
-                        offset: Offset(0, 22),
-                        spreadRadius: 4,
-                      ),
-                      BoxShadow(
-                        color: Color(0x14000000),
-                        blurRadius: 16,
-                        offset: Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: CustomMultiChildLayout(
-                    delegate: _HeaderLayoutDelegate(centerTitle: centerTitle),
-                    children: [
-                      if (resolvedLeading != null)
-                        LayoutId(id: _HeaderSlot.leading, child: resolvedLeading!),
-                      if (resolvedTitle != null)
-                        LayoutId(id: _HeaderSlot.title, child: resolvedTitle),
-                      if (wrappedActions.isNotEmpty)
-                        LayoutId(
-                          id: _HeaderSlot.actions,
-                          child: Row(mainAxisSize: MainAxisSize.min, children: wrappedActions),
+            child: ConstrainedBox(
+              constraints: kIsWeb
+                  ? const BoxConstraints(maxWidth: Breakpoints.maxContentWidthWide)
+                  : const BoxConstraints(),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: BackdropFilter(
+                    filter: ImageFilter.blur(
+                      sigmaX: isDark ? 0 : 22,
+                      sigmaY: isDark ? 0 : 22,
+                    ),
+                  child: Container(
+                    height: dimensions.headerHeight,
+                    padding: EdgeInsets.symmetric(horizontal: dimensions.headerInset),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.darkChrome : null,
+                      gradient: isDark ? null : AppGradients.blue,
+                      boxShadow: isDark ? null : [
+                        BoxShadow(
+                          color: Color(0x331B1F3B),
+                          blurRadius: 36,
+                          offset: Offset(0, 22),
+                          spreadRadius: 4,
                         ),
-                    ],
+                        BoxShadow(
+                          color: Color(0x14000000),
+                          blurRadius: 16,
+                          offset: Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: CustomMultiChildLayout(
+                      delegate: _HeaderLayoutDelegate(centerTitle: centerTitle),
+                      children: [
+                        if (resolvedLeading != null)
+                          LayoutId(id: _HeaderSlot.leading, child: resolvedLeading!),
+                        if (resolvedTitle != null)
+                          LayoutId(id: _HeaderSlot.title, child: resolvedTitle),
+                        if (wrappedActions.isNotEmpty)
+                          LayoutId(
+                            id: _HeaderSlot.actions,
+                            child: Row(mainAxisSize: MainAxisSize.min, children: wrappedActions),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),

@@ -21,7 +21,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/providers/workout_provider.dart';
 import 'package:workout_app/features/auth/auth_gate.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/widgets/responsive_container.dart';
 import 'package:workout_app/widgets/floating_header_bar.dart';
 import 'package:workout_app/screens/user_profile_screen.dart';
 import 'nutrition_plan_create.dart';
@@ -2276,7 +2278,13 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
             backgroundColor: Theme.of(context).colorScheme.surface,
             body: Stack(
               children: [
-                SafeArea(bottom: false, child: _buildBody()),
+                SafeArea(
+                  bottom: false,
+                  child: ResponsiveContainer(
+                    maxWidth: Breakpoints.maxContentWidthMedium,
+                    child: _buildBody(),
+                  ),
+                ),
                 Align(
                   alignment: Alignment.topCenter,
                   child: FloatingHeaderBar(
@@ -2325,12 +2333,15 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
             ),
             bottomNavigationBar: SafeArea(
               top: false,
-              child: Padding(
-                padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
-                child: ElevatedButton.icon(
-                  onPressed: _showAddExerciseDialog,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Exercise'),
+              child: ResponsiveContainer(
+                maxWidth: Breakpoints.maxContentWidthMedium,
+                child: Padding(
+                  padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
+                  child: ElevatedButton.icon(
+                    onPressed: _showAddExerciseDialog,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Exercise'),
+                  ),
                 ),
               ),
             ),

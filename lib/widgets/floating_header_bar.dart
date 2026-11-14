@@ -1,8 +1,10 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 
 class FloatingHeaderBar extends StatelessWidget {
@@ -125,8 +127,12 @@ class FloatingHeaderBar extends StatelessWidget {
         ),
         child: Align(
           alignment: Alignment.topCenter,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(isDark ? 16 : 28),
+          child: ConstrainedBox(
+            constraints: kIsWeb
+                ? const BoxConstraints(maxWidth: Breakpoints.maxContentWidthWide)
+                : const BoxConstraints(),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(isDark ? 16 : 28),
             child: BackdropFilter(
               filter: ImageFilter.blur(
                 sigmaX: isDark ? 0 : 22,
@@ -174,6 +180,7 @@ class FloatingHeaderBar extends StatelessWidget {
                 ),
               ),
             ),
+          ),
           ),
         ),
       ),

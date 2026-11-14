@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -77,6 +78,19 @@ Future<void> main() async {
   );
 }
 
+class _AppScrollBehavior extends MaterialScrollBehavior {
+  const _AppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => const {
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.unknown,
+  };
+}
+
 class MyApp extends ConsumerWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -98,6 +112,7 @@ class MyApp extends ConsumerWidget {
       ],
       child: MaterialApp(
         scaffoldMessengerKey: rootScaffoldMessengerKey,
+        scrollBehavior: kIsWeb ? const _AppScrollBehavior() : null,
         onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
         theme: AppTheme.lightTheme(density: density),
         darkTheme: AppTheme.darkTheme(density: density),

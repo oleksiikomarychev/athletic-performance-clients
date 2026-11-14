@@ -12,7 +12,9 @@ import 'package:workout_app/services/service_locator.dart' as sl;
 import 'package:workout_app/features/auth/auth_service.dart';
 import 'package:workout_app/models/user_profile.dart';
 import 'package:workout_app/services/base_api_service.dart';
+import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/services/user_analytics_service.dart';
+import 'package:workout_app/widgets/responsive_container.dart';
 
 class SettingsGeneralScreen extends ConsumerWidget {
   const SettingsGeneralScreen({super.key});
@@ -40,7 +42,9 @@ class SettingsGeneralScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('General settings'),
       ),
-      body: profileAsync.when(
+      body: ResponsiveContainer(
+        maxWidth: Breakpoints.maxContentWidthNarrow,
+        child: profileAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Failed to load profile: $e')),
         data: (profile) {
@@ -751,6 +755,7 @@ class SettingsGeneralScreen extends ConsumerWidget {
             ],
           );
         },
+      ),
       ),
     );
   }
