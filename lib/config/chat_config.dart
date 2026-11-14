@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 
@@ -16,6 +16,12 @@ class ChatConfig {
 
     if (_overrideUrl.isNotEmpty) {
       return _overrideUrl;
+    }
+
+    if (kIsWeb && kReleaseMode) {
+      final scheme = Uri.base.scheme == 'https' ? 'wss' : 'ws';
+      final portPart = Uri.base.hasPort ? ':${Uri.base.port}' : '';
+      return '$scheme://${Uri.base.host}$portPart';
     }
 
     if (envUrl.isNotEmpty) {

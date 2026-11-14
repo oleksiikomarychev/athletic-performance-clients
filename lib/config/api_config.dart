@@ -1,9 +1,10 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiConfig {
-  static bool useProd = false;
+  static bool useProd =
+      const bool.fromEnvironment('USE_PROD', defaultValue: kIsWeb && kReleaseMode);
 
   static const String _productionUrlOverride =
       String.fromEnvironment('PROD_API_BASE_URL', defaultValue: '');
@@ -24,9 +25,27 @@ class ApiConfig {
     return dotenv.maybeGet('LOCAL_API_BASE_URL') ?? 'http://192.168.31.151:8000';
   }
 
-  static final String productionBaseUrl = _productionUrlOverride.isNotEmpty
-      ? _productionUrlOverride
-      : dotenv.maybeGet('PROD_API_BASE_URL') ?? 'http://46.62.207.163:8000';
+  static String _stripWww(String host) =>
+      host.startsWith('www.') ? host.substring(4) : host;
+
+  static String get productionBaseUrl {
+    if (kIsWeb) {
+      if (_productionUrlOverride.isEmpty ||
+          _productionUrlOverride == 'same-origin') {
+        return Uri.base.origin;
+      }
+      final overrideUri = Uri.tryParse(_productionUrlOverride);
+      if (overrideUri != null &&
+          overrideUri.host.isNotEmpty &&
+          _stripWww(overrideUri.host) == _stripWww(Uri.base.host)) {
+        return Uri.base.origin;
+      }
+      return _productionUrlOverride;
+    }
+    return _productionUrlOverride.isNotEmpty
+        ? _productionUrlOverride
+        : dotenv.maybeGet('PROD_API_BASE_URL') ?? 'http://46.62.207.163:8000';
+  }
 
   static const int connectionTimeout = 60;
   static const int receiveTimeout = 60;

@@ -46,6 +46,7 @@ jobs:
           flutter pub get
           flutter test test/exercise_set_dto_test.dart
           flutter build web --release --no-wasm-dry-run \
+            --dart-define="USE_PROD=true" \
             --dart-define="PROD_API_BASE_URL=$API_URL" \
             --dart-define="CHAT_WS_URL=$CHAT_URL"
 
