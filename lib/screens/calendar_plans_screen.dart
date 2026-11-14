@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 import 'package:workout_app/screens/user_profile_screen.dart';
+import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
+import 'package:workout_app/widgets/responsive_container.dart';
 import 'package:workout_app/widgets/loading_indicator.dart';
 import 'package:workout_app/widgets/error_message.dart';
 import 'package:workout_app/widgets/empty_state.dart';
@@ -133,8 +135,10 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
               ),
             ],
           ),
-          body: Column(
-            children: [
+          body: ResponsiveContainer(
+            maxWidth: Breakpoints.maxContentWidthWide,
+            child: Column(
+              children: [
               Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: dimensions.pagePadding,
@@ -233,6 +237,14 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                               'Не удалось загрузить планы: ${catalog.error}',
                           onRetry: controller.refresh,
                         )
+                      : Responsive.isWide(context) &&
+                            catalog.page.items.isNotEmpty
+                      ? _buildWideCatalogList(
+                          context,
+                          catalog,
+                          controller,
+                          dimensions,
+                        )
                       : ListView.separated(
                           physics: const AlwaysScrollableScrollPhysics(),
                           keyboardDismissBehavior:
@@ -286,6 +298,7 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                 ),
               ),
             ],
+            ),
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: () async {
@@ -303,6 +316,74 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
             child: const Icon(Icons.add),
             tooltip: 'Create new calendar plan',
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildWideCatalogList(
+    BuildContext context,
+    dynamic catalog,
+    dynamic controller,
+    UiDimensions dimensions,
+  ) {
+    final columns = Responsive.gridColumns(
+      context,
+      compact: 1,
+      medium: 2,
+      expanded: 3,
+    );
+    final items = catalog.page.items;
+    final rowCount = (items.length / columns).ceil();
+    final totalRows = rowCount + (catalog.hasMore ? 1 : 0);
+
+    return ListView.separated(
+      physics: const AlwaysScrollableScrollPhysics(),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: EdgeInsets.fromLTRB(
+        dimensions.pagePadding,
+        dimensions.rowGap,
+        dimensions.pagePadding,
+        96 + MediaQuery.paddingOf(context).bottom,
+      ),
+      itemCount: totalRows,
+      separatorBuilder: (_, _) => SizedBox(height: dimensions.rowGap),
+      itemBuilder: (context, rowIndex) {
+        if (rowIndex == rowCount) {
+          return catalog.loadingMore
+              ? const Center(child: CircularProgressIndicator())
+              : TextButton(
+                  onPressed: controller.loadMore,
+                  child: Text(
+                    catalog.error == null
+                        ? 'Показать ещё'
+                        : 'Не удалось загрузить. Повторить',
+                  ),
+                );
+        }
+        final start = rowIndex * columns;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var c = 0; c < columns; c++) ...[
+              if (c > 0) SizedBox(width: dimensions.rowGap),
+              Expanded(
+                child: start + c < items.length
+                    ? Column(
+                        children: [
+                          CalendarPlanCard(
+                            key: ValueKey(items[start + c].id),
+                            plan: items[start + c],
+                            onTap: () => _openPlan(items[start + c]),
+                          ),
+                          if (_openingPlanId == items[start + c].id)
+                            const LinearProgressIndicator(),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ],
         );
       },
     );

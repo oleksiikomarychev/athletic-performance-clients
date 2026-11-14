@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/providers/chat_provider.dart';
 import 'package:workout_app/screens/chat_screen.dart';
 
@@ -77,6 +78,8 @@ class _AssistantChatOverlayState extends State<AssistantChatOverlay> {
       return const SizedBox.shrink();
     }
 
+    final isWide = Responsive.isWide(context);
+
     return Positioned.fill(
       child: Stack(
         children: [
@@ -85,21 +88,31 @@ class _AssistantChatOverlayState extends State<AssistantChatOverlay> {
               behavior: HitTestBehavior.translucent,
               onTap: widget.onClose,
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                filter: ImageFilter.blur(sigmaX: isWide ? 6 : 16, sigmaY: isWide ? 6 : 16),
                 child: Container(
-                  color: Colors.black.withOpacity(0.10),
+                  color: Colors.black.withOpacity(isWide ? 0.20 : 0.10),
                 ),
               ),
             ),
           ),
-          const SafeArea(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(12, 8, 12, 12),
-              child: Material(
-                type: MaterialType.transparency,
-                child: ChatScreen(
-                  embedded: true,
-                  transparentBackground: true,
+          SafeArea(
+            child: Align(
+              alignment: isWide ? Alignment.centerRight : Alignment.center,
+              child: ConstrainedBox(
+                constraints: isWide
+                    ? const BoxConstraints(maxWidth: 460)
+                    : const BoxConstraints(),
+                child: Padding(
+                  padding: isWide
+                      ? const EdgeInsets.fromLTRB(12, 12, 16, 12)
+                      : const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                  child: const Material(
+                    type: MaterialType.transparency,
+                    child: ChatScreen(
+                      embedded: true,
+                      transparentBackground: true,
+                    ),
+                  ),
                 ),
               ),
             ),

@@ -12,8 +12,10 @@ import 'package:workout_app/screens/user_profile_screen.dart';
 import 'package:workout_app/services/base_api_service.dart';
 import 'package:workout_app/config/api_config.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
+import 'package:workout_app/widgets/responsive_container.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/services/user_analytics_service.dart';
 import 'active_plan_screen.dart';
@@ -482,8 +484,10 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
 
                 return Container(
                   color: Theme.of(context).colorScheme.surface,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                  child: ResponsiveContainer(
+                    maxWidth: Breakpoints.maxContentWidthWide,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _HeroCarousel(
                         controller: _bannerController,
@@ -573,6 +577,7 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
                       ),
                     ],
                   ),
+                  ),
                 );
               },
             ),
@@ -622,36 +627,15 @@ class _HeroCarousel extends StatelessWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
-              child: AspectRatio(
-                aspectRatio: UiDimensions.of(context).heroAspectRatio,
-                child: ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(context).copyWith(
-                    dragDevices: const {
-                      PointerDeviceKind.touch,
-                      PointerDeviceKind.mouse,
-                      PointerDeviceKind.trackpad,
-                    },
-                  ),
-                  child: PageView.builder(
-                    controller: controller,
-                    onPageChanged: onPageChanged,
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      return Image.asset(
-                        items[index],
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              gradient: gradients[index % gradients.length],
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ),
+              child: Responsive.isWide(context)
+                  ? SizedBox(
+                      height: 220,
+                      child: _buildCarouselPageView(context, items, gradients),
+                    )
+                  : AspectRatio(
+                      aspectRatio: UiDimensions.of(context).heroAspectRatio,
+                      child: _buildCarouselPageView(context, items, gradients),
+                    ),
             ),
           ),
           const SizedBox(height: 12),
@@ -676,6 +660,40 @@ class _HeroCarousel extends StatelessWidget {
             }),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCarouselPageView(
+    BuildContext context,
+    List<String> items,
+    List<LinearGradient> gradients,
+  ) {
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        dragDevices: const {
+          PointerDeviceKind.touch,
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.trackpad,
+        },
+      ),
+      child: PageView.builder(
+        controller: controller,
+        onPageChanged: onPageChanged,
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          return Image.asset(
+            items[index],
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: gradients[index % gradients.length],
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -979,40 +997,61 @@ class _LibrarySection extends StatelessWidget {
             }
 
             final notifier = readNotifier();
+            final isWide = Responsive.isWide(context);
+
+            Widget buildCard(Workout workout) => _WorkoutCard(
+              workout: workout,
+              onTap: () => onOpenWorkout(workout.id!),
+              onDelete: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Delete workout?'),
+                    content: const Text(
+                      'Are you sure you want to delete this manual workout?',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                        child: const Text('Delete'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed == true) {
+                  await notifier.deleteWorkout(workout.id!);
+                }
+              },
+            );
+
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final workout in workouts) ...[
-                  _WorkoutCard(
-                    workout: workout,
-                    onTap: () => onOpenWorkout(workout.id!),
-                    onDelete: () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          title: const Text('Delete workout?'),
-                          content: const Text(
-                            'Are you sure you want to delete this manual workout?',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(ctx).pop(false),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(ctx).pop(true),
-                              child: const Text('Delete'),
-                            ),
-                          ],
+                if (isWide)
+                  for (var i = 0; i < workouts.length; i += 2) ...[
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: buildCard(workouts[i])),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: i + 1 < workouts.length
+                              ? buildCard(workouts[i + 1])
+                              : const SizedBox.shrink(),
                         ),
-                      );
-                      if (confirmed == true) {
-                        await notifier.deleteWorkout(workout.id!);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ]
+                else
+                  for (final workout in workouts) ...[
+                    buildCard(workout),
+                    const SizedBox(height: 16),
+                  ],
                 if (notifier.isLoadingMore)
                   const Center(
                     child: Padding(

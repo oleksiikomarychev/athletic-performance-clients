@@ -7,7 +7,9 @@ import 'package:workout_app/config/constants/route_names.dart';
 import 'package:workout_app/screens/coach_athlete_plan_screen.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
+import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/widgets/responsive_container.dart';
 
 final coachAthletesAnalyticsProvider = FutureProvider<CoachAthletesAnalyticsModel>((ref) async {
   final svc = ref.watch(sl.crmAnalyticsServiceProvider);
@@ -81,7 +83,9 @@ class CoachAthletesScreen extends ConsumerWidget {
             }
           });
 
-          return ListView.builder(
+          return ResponsiveContainer(
+            maxWidth: Breakpoints.maxContentWidthWide,
+            child: ListView.builder(
             padding: const EdgeInsets.only(bottom: 24),
             itemCount: filtered.length + 1,
             itemBuilder: (context, index) {
@@ -98,6 +102,7 @@ class CoachAthletesScreen extends ConsumerWidget {
                 displayNameAsync: displayNameAsync,
               );
             },
+          ),
           );
         },
       ),

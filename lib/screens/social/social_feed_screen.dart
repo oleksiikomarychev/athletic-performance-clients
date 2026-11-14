@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/widgets/responsive_container.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
@@ -67,7 +69,9 @@ class SocialFeedScreen extends ConsumerWidget {
                 onRefresh: () async {
                   await ref.refresh(socialFeedProvider.future);
                 },
-                child: ListView.separated(
+                child: ResponsiveContainer(
+                  maxWidth: Breakpoints.maxContentWidthNarrow,
+                  child: ListView.separated(
                   padding: const EdgeInsets.all(12),
                   itemCount: posts.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -173,24 +177,28 @@ class SocialFeedScreen extends ConsumerWidget {
                     );
                   },
                 ),
+                ),
               );
             },
           ),
           bottomNavigationBar: SafeArea(
             top: false,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                UiDimensions.of(context).pagePadding,
-                UiDimensions.of(context).rowGap,
-                UiDimensions.of(context).pagePadding,
-                UiDimensions.of(context).rowGap,
-              ),
-              child: SizedBox(
-                height: 48,
-                child: FilledButton.icon(
-                  onPressed: () => _showCreatePostDialog(context, ref),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Create Post'),
+            child: ResponsiveContainer(
+              maxWidth: Breakpoints.maxContentWidthNarrow,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  UiDimensions.of(context).pagePadding,
+                  UiDimensions.of(context).rowGap,
+                  UiDimensions.of(context).pagePadding,
+                  UiDimensions.of(context).rowGap,
+                ),
+                child: SizedBox(
+                  height: 48,
+                  child: FilledButton.icon(
+                    onPressed: () => _showCreatePostDialog(context, ref),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Create Post'),
+                  ),
                 ),
               ),
             ),

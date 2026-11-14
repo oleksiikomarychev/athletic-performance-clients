@@ -6,7 +6,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/widgets/responsive_container.dart';
 import 'package:workout_app/models/applied_calendar_plan.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 import 'package:workout_app/models/workout.dart';
@@ -207,20 +209,47 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
                     ),
                   );
                 }
+                final isWide = Responsive.isWide(context);
                 return SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.only(bottom: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 8),
-                      _buildAnalyticsAsyncSection(analyticsAsync),
-                      const SizedBox(height: 8),
-                      _buildCalendar(eventsByDay),
-                      const SizedBox(height: 4),
-                      _buildDayHeader(),
-                      _buildDayList(eventsByDay),
-                    ],
+                  child: ResponsiveContainer(
+                    maxWidth: Breakpoints.maxContentWidthWide,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 8),
+                        _buildAnalyticsAsyncSection(analyticsAsync),
+                        const SizedBox(height: 8),
+                        if (isWide)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                flex: 5,
+                                child: _buildCalendar(eventsByDay),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                flex: 5,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    _buildDayHeader(),
+                                    _buildDayList(eventsByDay),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          _buildCalendar(eventsByDay),
+                          const SizedBox(height: 4),
+                          _buildDayHeader(),
+                          _buildDayList(eventsByDay),
+                        ],
+                      ],
+                    ),
                   ),
                 );
               },

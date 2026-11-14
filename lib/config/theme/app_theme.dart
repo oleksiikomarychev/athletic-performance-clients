@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
 import 'ui_dimensions.dart';
@@ -87,6 +88,12 @@ class AppTheme {
           ),
         ),
       ),
+      bottomSheetTheme: kIsWeb
+          ? const BottomSheetThemeData(constraints: BoxConstraints(maxWidth: 640))
+          : null,
+      dialogTheme: kIsWeb
+          ? const DialogThemeData(constraints: BoxConstraints(maxWidth: 640))
+          : null,
     );
   }
 
@@ -150,6 +157,12 @@ class AppTheme {
           ),
         ),
       ),
+      bottomSheetTheme: kIsWeb
+          ? const BottomSheetThemeData(constraints: BoxConstraints(maxWidth: 640))
+          : null,
+      dialogTheme: kIsWeb
+          ? const DialogThemeData(constraints: BoxConstraints(maxWidth: 640))
+          : null,
     );
   }
 }
