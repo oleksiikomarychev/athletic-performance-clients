@@ -1,26 +1,14 @@
 import 'package:flutter/material.dart';
-
+import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
 
 class EmptyState extends StatelessWidget {
-
   final IconData icon;
-
-
   final String title;
-
-
   final String description;
-
-
   final Widget? action;
-
-
   final double? iconSize;
-
-
   final Color? iconColor;
-
-
   final EdgeInsetsGeometry? padding;
 
   const EmptyState({
@@ -29,7 +17,7 @@ class EmptyState extends StatelessWidget {
     required this.title,
     required this.description,
     this.action,
-    this.iconSize = 64.0,
+    this.iconSize = 56.0,
     this.iconColor,
     this.padding,
   });
@@ -39,74 +27,62 @@ class EmptyState extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
+    final instrument = InstrumentTheme.of(context);
+    final effectiveColor = iconColor ?? instrument.workingAura;
 
     return Center(
-      child: Padding(
-        padding: padding ?? const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: (iconColor ?? colorScheme.primary).withOpacity(0.1),
-                shape: BoxShape.circle,
+      child: SingleChildScrollView(
+        padding: padding ?? const EdgeInsets.all(24.0),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 420),
+          padding: const EdgeInsets.all(24),
+          decoration: InstrumentTheme.instrumentCardDecoration(
+            context,
+            accentColor: effectiveColor,
+            radius: 22,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: effectiveColor.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: iconSize, color: effectiveColor),
               ),
-              child: Icon(
-                icon,
-                size: iconSize,
-                color: iconColor ?? colorScheme.primary,
+              const SizedBox(height: 18),
+              Text(
+                title,
+                style: textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: colorScheme.onSurface,
+                ),
+                textAlign: TextAlign.center,
               ),
-            ),
-
-            const SizedBox(height: 24),
-
-
-            Text(
-              title,
-              style: textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
+              const SizedBox(height: 8),
+              Text(
+                description,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-
-            const SizedBox(height: 8),
-
-
-            Text(
-              description,
-              style: textTheme.bodyLarge?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-
-
-            if (action != null) ...[
-              const SizedBox(height: 24),
-              action!,
+              if (action != null) ...[const SizedBox(height: 20), action!],
             ],
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-
 class ErrorState extends StatelessWidget {
-
   final String message;
-
-
   final VoidCallback? onRetry;
-
-
   final String? retryButtonText;
-
-
   final EdgeInsetsGeometry? padding;
 
   const ErrorState({
@@ -121,56 +97,61 @@ class ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final danger = instrument.peakEffortColor;
 
     return Center(
-      child: Padding(
-        padding: padding ?? const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: colorScheme.error,
-            ),
-
-            const SizedBox(height: 16),
-
-
-            Text(
-              'Something went wrong',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(
-              message,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-
-
-            if (onRetry != null) ...[
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
-                label: Text(retryButtonText!), // ignore: avoid-non-null-assertion
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.errorContainer,
-                  foregroundColor: colorScheme.onErrorContainer,
+      child: SingleChildScrollView(
+        padding: padding ?? const EdgeInsets.all(24.0),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 420),
+          padding: const EdgeInsets.all(24),
+          decoration: InstrumentTheme.instrumentCardDecoration(
+            context,
+            accentColor: danger,
+            radius: 22,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: danger.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
                 ),
+                child: Icon(Icons.error_outline, size: 48, color: danger),
               ),
+              const SizedBox(height: 16),
+              Text(
+                'Something went wrong',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (onRetry != null) ...[
+                const SizedBox(height: 20),
+                InstrumentActionButton(
+                  label: retryButtonText ?? 'Retry',
+                  icon: Icons.refresh,
+                  variant: InstrumentActionVariant.destructive,
+                  accentColor: danger,
+                  onPressed: onRetry,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

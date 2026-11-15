@@ -148,6 +148,8 @@ class ApiConfig {
       buildEndpoint('/workouts/sessions/$workoutId/start');
   static String getActiveSessionEndpoint(String workoutId) =>
       buildEndpoint('/workouts/sessions/$workoutId/active');
+  static String macroSuggestionEndpoint(String workoutId) =>
+      buildEndpoint('/workouts/sessions/$workoutId/macro-suggestion');
   static String getSessionHistoryEndpoint(String workoutId) =>
       buildEndpoint('/workouts/sessions/$workoutId/history');
   static String getAllSessionsHistoryEndpoint() =>

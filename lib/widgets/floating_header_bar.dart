@@ -1,13 +1,14 @@
-import 'dart:ui';
-
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:workout_app/widgets/assistant_chat_host.dart';
-import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/widgets/assistant_chat_host.dart';
+import 'package:workout_app/widgets/primary_app_bar.dart';
 
-class FloatingHeaderBar extends StatelessWidget {
+/// Detached translucent glass header with circular action orbs and a compact
+/// center AI/title pill floating directly over the ambient canvas.
+class FloatingHeaderBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final VoidCallback? onTitleTap;
   final VoidCallback? onProfileTap;
@@ -24,20 +25,24 @@ class FloatingHeaderBar extends StatelessWidget {
   });
 
   @override
+  Size get preferredSize => const Size.fromHeight(72);
+
+  @override
   Widget build(BuildContext context) {
     final dimensions = UiDimensions.of(context);
+    final instrument = InstrumentTheme.of(context);
     final VoidCallback? effectiveOnTitleTap =
         onTitleTap ?? AssistantChatHost.of(context)?.openChat;
 
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final textStyle =
         theme.textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
           color: Colors.white,
         ) ??
         const TextStyle(
-          fontSize: 18,
+          fontSize: 16,
           fontWeight: FontWeight.w700,
           color: Colors.white,
         );
@@ -56,64 +61,45 @@ class FloatingHeaderBar extends StatelessWidget {
       if (profileButton != null) profileButton,
     ];
 
-    Widget titleWidget = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (effectiveOnTitleTap != null) ...[
-          const Icon(
-            Icons.auto_awesome_outlined,
-            size: 18,
-            color: Color(0xFF9CB7B1),
+    final Widget titlePill = FloatingTitleCapsule(
+      onTap: effectiveOnTitleTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (effectiveOnTitleTap != null) ...[
+            Icon(
+              Icons.auto_awesome_outlined,
+              size: 16,
+              color: instrument.workingAura,
+            ),
+            const SizedBox(width: 6),
+          ],
+          Flexible(
+            child: Text(
+              title,
+              style: textStyle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-          const SizedBox(width: 8),
         ],
-        Flexible(
-          child: Text(title, style: textStyle, overflow: TextOverflow.ellipsis),
-        ),
-      ],
+      ),
     );
-    if (effectiveOnTitleTap != null) {
-      titleWidget = Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: effectiveOnTitleTap,
-          borderRadius: BorderRadius.circular(999),
-          child: titleWidget,
-        ),
-      );
-    }
 
     final decoratedActions = effectiveActions
         .map(
-          (widget) => Container(
-            margin: const EdgeInsets.only(left: 4),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(999),
-              color: isDark
-                  ? Colors.transparent
-                  : Colors.white.withOpacity(0.12),
-            ),
-            child: IconTheme(
-              data: const IconThemeData(color: Colors.white),
-              child: widget,
-            ),
+          (widget) => Padding(
+            padding: const EdgeInsets.only(left: 2),
+            child: DetachedGlassOrb(child: widget),
           ),
         )
         .toList(growable: false);
 
     final Widget? decoratedLeading = leading == null
         ? null
-        : Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(999),
-              color: isDark
-                  ? Colors.transparent
-                  : Colors.white.withOpacity(0.12),
-            ),
-            child: IconTheme(
-              data: const IconThemeData(color: Colors.white),
-              child: leading!,
-            ),
+        : Padding(
+            padding: const EdgeInsets.only(right: 2),
+            child: DetachedGlassOrb(child: leading!),
           );
 
     return SafeArea(
@@ -131,56 +117,25 @@ class FloatingHeaderBar extends StatelessWidget {
             constraints: kIsWeb
                 ? const BoxConstraints(maxWidth: Breakpoints.maxContentWidthWide)
                 : const BoxConstraints(),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(isDark ? 16 : 28),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(
-                sigmaX: isDark ? 0 : 22,
-                sigmaY: isDark ? 0 : 22,
-              ),
-              child: Container(
-                height: dimensions.headerHeight,
-                padding: EdgeInsets.symmetric(
-                  horizontal: dimensions.headerInset,
-                ),
-                decoration: BoxDecoration(
-                  color: theme.brightness == Brightness.dark
-                      ? AppColors.darkChrome
-                      : null,
-                  gradient: theme.brightness == Brightness.dark
-                      ? null
-                      : AppGradients.blue,
-                  boxShadow: isDark
-                      ? null
-                      : const [
-                          BoxShadow(
-                            color: Color(0x331B1F3B),
-                            blurRadius: 36,
-                            offset: Offset(0, 22),
-                            spreadRadius: 4,
-                          ),
-                          BoxShadow(
-                            color: Color(0x14000000),
-                            blurRadius: 16,
-                            offset: Offset(0, 6),
-                          ),
-                        ],
-                ),
-                child: Row(
-                  children: [
-                    if (decoratedLeading != null)
-                      SizedBox(width: 48, child: decoratedLeading),
-                    Expanded(child: Center(child: titleWidget)),
-                    if (decoratedActions.isNotEmpty)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: decoratedActions,
-                      ),
-                  ],
-                ),
+            child: SizedBox(
+              height: dimensions.headerHeight,
+              child: Row(
+                children: [
+                  if (decoratedLeading != null) decoratedLeading,
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Center(child: titlePill),
+                    ),
+                  ),
+                  if (decoratedActions.isNotEmpty)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: decoratedActions,
+                    ),
+                ],
               ),
             ),
-          ),
           ),
         ),
       ),

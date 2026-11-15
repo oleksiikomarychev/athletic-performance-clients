@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workout_app/config/theme/app_theme.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/user_stats.dart';
 import 'package:workout_app/providers/app_theme_mode_provider.dart';
@@ -102,17 +103,25 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      final instrument =
+          theme.extension<InstrumentTheme>() ??
+          (mode == ThemeMode.light
+              ? InstrumentTheme.light
+              : InstrumentTheme.dark);
       final value = tester.widget<Text>(find.text('8'));
-      expect(value.style?.color, theme.colorScheme.onTertiaryContainer);
+      expect(value.style?.color, instrument.workingAura);
+      expect(find.text('PROFILE TELEMETRY'), findsOneWidget);
       final card = tester.widget<Container>(
         find
-            .ancestor(of: find.text('8'), matching: find.byType(Container))
+            .ancestor(of: find.text('PROFILE TELEMETRY'), matching: find.byType(Container))
             .first,
       );
+      final decoration = card.decoration as BoxDecoration;
       expect(
-        (card.decoration as BoxDecoration).color,
-        theme.colorScheme.tertiaryContainer,
+        decoration.color,
+        theme.colorScheme.surfaceContainerLow,
       );
+      expect(decoration.border, isNotNull);
     }
   });
 }

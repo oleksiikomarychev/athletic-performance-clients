@@ -2,13 +2,10 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/providers/chat_provider.dart';
 import 'package:workout_app/screens/chat_screen.dart';
-
-
-
-
 
 class AssistantChatOverlay extends StatefulWidget {
   const AssistantChatOverlay({
@@ -53,17 +50,18 @@ class _AssistantChatOverlayState extends State<AssistantChatOverlay> {
     if (_seeded || !mounted) return;
     _seeded = true;
 
-    final contextPayload = widget.contextBuilder != null ? await widget.contextBuilder!() : null;
+    final contextPayload = widget.contextBuilder != null
+        ? await widget.contextBuilder!()
+        : null;
 
     await Future.microtask(() {
+      if (!mounted) return;
       final container = ProviderScope.containerOf(context, listen: false);
       final controller = container.read(chatControllerProvider.notifier);
-
 
       if (contextPayload != null) {
         controller.sendContext(contextPayload);
       }
-
 
       final message = widget.initialMessage?.trim();
       if (message != null && message.isNotEmpty) {
@@ -79,22 +77,31 @@ class _AssistantChatOverlayState extends State<AssistantChatOverlay> {
     }
 
     final isWide = Responsive.isWide(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    final scrimColor = Colors.black.withValues(alpha: isWide ? 0.28 : 0.34);
+
+    final scrim = GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: widget.onClose,
+      child: disableAnimations
+          ? Container(color: scrimColor)
+          : BackdropFilter(
+              filter: ImageFilter.blur(
+                sigmaX: isWide ? 6 : 16,
+                sigmaY: isWide ? 6 : 16,
+              ),
+              child: Container(color: scrimColor),
+            ),
+    );
 
     return Positioned.fill(
       child: Stack(
         children: [
-          Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: widget.onClose,
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: isWide ? 6 : 16, sigmaY: isWide ? 6 : 16),
-                child: Container(
-                  color: Colors.black.withOpacity(isWide ? 0.20 : 0.10),
-                ),
-              ),
-            ),
-          ),
+          Positioned.fill(child: scrim),
           SafeArea(
             child: Align(
               alignment: isWide ? Alignment.centerRight : Alignment.center,
@@ -106,11 +113,24 @@ class _AssistantChatOverlayState extends State<AssistantChatOverlay> {
                   padding: isWide
                       ? const EdgeInsets.fromLTRB(12, 12, 16, 12)
                       : const EdgeInsets.fromLTRB(12, 8, 12, 12),
-                  child: const Material(
-                    type: MaterialType.transparency,
-                    child: ChatScreen(
-                      embedded: true,
-                      transparentBackground: true,
+                  child: Container(
+                    decoration: InstrumentTheme.instrumentCardDecoration(
+                      context,
+                      accentColor: instrument.workingAura,
+                      radius: 24,
+                      fillColor: isDark
+                          ? InstrumentPalette.obsidianCardLow.withValues(
+                              alpha: 0.94,
+                            )
+                          : scheme.surface.withValues(alpha: 0.95),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: const Material(
+                      type: MaterialType.transparency,
+                      child: ChatScreen(
+                        embedded: true,
+                        transparentBackground: true,
+                      ),
                     ),
                   ),
                 ),

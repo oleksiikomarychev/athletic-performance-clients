@@ -20,7 +20,6 @@ class AccountService extends BaseApiService {
       return <String, dynamic>{'ok': true};
     } catch (e, st) {
       handleError('Failed to purge account', e, st);
-      rethrow;
     }
   }
 }

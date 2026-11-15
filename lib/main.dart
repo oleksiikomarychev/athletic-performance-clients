@@ -12,7 +12,6 @@ import 'package:workout_app/providers/app_ui_density_provider.dart';
 import 'package:workout_app/firebase_options.dart';
 import 'package:workout_app/features/auth/auth_gate.dart';
 import 'package:workout_app/features/auth/auth_provider.dart';
-import 'package:workout_app/features/auth/auth_service.dart';
 import 'package:workout_app/services/api_client.dart';
 import 'package:workout_app/services/exercise_service.dart';
 import 'package:workout_app/services/rpe_service.dart';
@@ -29,10 +28,11 @@ import 'package:workout_app/screens/settings/settings_general_screen.dart';
 import 'package:workout_app/screens/settings/settings_home_screen.dart';
 import 'package:workout_app/screens/settings/settings_import_screen.dart';
 import 'package:workout_app/screens/settings/settings_legal_screen.dart';
+import 'package:workout_app/config/constants/legal_constants.dart';
 import 'package:workout_app/screens/debug/amplitude_test_screen.dart';
 import 'package:workout_app/config/constants/route_names.dart';
-import 'package:workout_app/services/amplitude_service.dart';
 import 'package:workout_app/src/widgets/snack_utils.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -121,6 +121,10 @@ class MyApp extends ConsumerWidget {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         locale: appLocale,
+        builder: (context, child) {
+          if (child == null) return const SizedBox.shrink();
+          return GlobalAmbientStage(child: child);
+        },
 
         home: const AuthGate(),
         onGenerateRoute: (settings) {
@@ -200,8 +204,13 @@ class MyApp extends ConsumerWidget {
                 settings: settings,
               );
             case RouteNames.settingsLegal:
+              final initialDoc = settings.arguments is LegalDocumentType
+                  ? settings.arguments as LegalDocumentType
+                  : null;
               return MaterialPageRoute(
-                builder: (_) => const SettingsLegalScreen(),
+                builder: (_) => SettingsLegalScreen(
+                  initialDocument: initialDoc,
+                ),
                 settings: settings,
               );
             case RouteNames.amplitudeTest:

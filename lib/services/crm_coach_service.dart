@@ -5,11 +5,8 @@ import 'package:workout_app/models/exercise_instance.dart';
 import 'package:workout_app/models/plan_analytics.dart';
 import 'package:workout_app/services/api_client.dart';
 import 'package:workout_app/services/base_api_service.dart';
-import 'package:workout_app/services/logger_service.dart';
 
 class CrmCoachService extends BaseApiService {
-  final LoggerService _logger = LoggerService('CrmCoachService');
-
   CrmCoachService(ApiClient apiClient) : super(apiClient);
 
   Future<AppliedCalendarPlan?> getAthleteActivePlan(String athleteId) async {
@@ -62,7 +59,6 @@ class CrmCoachService extends BaseApiService {
       return null;
     } catch (e, st) {
       handleError('Failed to fetch athlete active plan analytics', e, st);
-      return null;
     }
   }
 

@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:workout_app/models/crm_coach_athlete_link.dart';
-import 'package:workout_app/services/service_locator.dart' as sl;
 import 'package:workout_app/config/constants/route_names.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/models/crm_coach_athlete_link.dart';
+import 'package:workout_app/providers/ambient_environment_provider.dart';
 import 'package:workout_app/screens/coach/coach_chat_screen.dart';
-import 'package:workout_app/widgets/primary_app_bar.dart';
-import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/services/base_api_service.dart';
+import 'package:workout_app/services/service_locator.dart' as sl;
+import 'package:workout_app/src/widgets/snack_utils.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
+import 'package:workout_app/widgets/assistant_chat_host.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
+import 'package:workout_app/widgets/primary_app_bar.dart';
 
 final myCoachesProvider = FutureProvider<List<CoachAthleteLink>>((ref) async {
   final svc = ref.watch(sl.crmRelationshipsServiceProvider);
@@ -15,27 +21,29 @@ final myCoachesProvider = FutureProvider<List<CoachAthleteLink>>((ref) async {
   return links;
 });
 
-final coachSubscriptionStatusProvider = FutureProvider.family<Map<String, dynamic>, int>((ref, linkId) async {
-  final billing = ref.watch(sl.crmBillingServiceProvider);
-  try {
-    final status = await billing.getSubscriptionStatus(linkId);
-    return status;
-  } catch (_) {
-    return const <String, dynamic>{};
-  }
-});
+final coachSubscriptionStatusProvider =
+    FutureProvider.family<Map<String, dynamic>, int>((ref, linkId) async {
+      final billing = ref.watch(sl.crmBillingServiceProvider);
+      try {
+        final status = await billing.getSubscriptionStatus(linkId);
+        return status;
+      } catch (_) {
+        return const <String, dynamic>{};
+      }
+    });
 
-final coachDisplayNameProvider = FutureProvider.family<String, String>((ref, coachId) async {
-  final profileService = ref.watch(sl.profileServiceProvider);
-  try {
-    final profile = await profileService.fetchProfileById(coachId);
-    final displayName = profile.displayName;
-    if (displayName != null && displayName.trim().isNotEmpty) {
-      return displayName;
-    }
-  } catch (_) {}
-  return coachId;
-});
+final coachDisplayNameProvider =
+    FutureProvider.family<String, String>((ref, coachId) async {
+      final profileService = ref.watch(sl.profileServiceProvider);
+      try {
+        final profile = await profileService.fetchProfileById(coachId);
+        final displayName = profile.displayName;
+        if (displayName != null && displayName.trim().isNotEmpty) {
+          return displayName;
+        }
+      } catch (_) {}
+      return coachId;
+    });
 
 class MyCoachesScreen extends ConsumerWidget {
   const MyCoachesScreen({super.key});
@@ -43,133 +51,303 @@ class MyCoachesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncLinks = ref.watch(myCoachesProvider);
+    final env = ref.watch(activeTrainingEnvironmentProvider(null));
+    final instrument = InstrumentTheme.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final dims = UiDimensions.of(context);
+    final hairline =
+        (theme.brightness == Brightness.dark
+                ? instrument.hairlineBorder
+                : scheme.outlineVariant)
+            .withValues(alpha: 0.65);
 
     return AssistantChatHost(
       builder: (context, openChat) {
-        return Scaffold(
+        return AmbientScaffoldShell(
+          environment: env,
           appBar: PrimaryAppBar(
             title: 'My Coaches',
             onTitleTap: openChat,
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh),
+                tooltip: 'Refresh',
                 onPressed: () => ref.refresh(myCoachesProvider),
               ),
             ],
           ),
           body: asyncLinks.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Error: $error')),
-        data: (links) {
-          if (links.isEmpty) {
-            return const Center(child: Text('No coaches yet'));
-          }
-          return RefreshIndicator(
-            onRefresh: () async {
-              final refreshedLinks = await ref.refresh(myCoachesProvider.future);
-              for (final link in refreshedLinks) {
-                ref.invalidate(coachSubscriptionStatusProvider(link.id));
-              }
-            },
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: links.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final link = links[index];
-                final hasChannel = (link.channelId ?? '').isNotEmpty;
-                final status = link.status.toUpperCase();
-                final displayNameAsync = ref.watch(coachDisplayNameProvider(link.coachId));
-                final subscriptionAsync = ref.watch(coachSubscriptionStatusProvider(link.id));
-                return ListTile(
-                  title: displayNameAsync.when(
-                    data: (value) => Text(value),
-                    loading: () => Text(link.coachId),
-                    error: (_, __) => Text(link.coachId),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, _) => Center(
+              child: Padding(
+                padding: EdgeInsets.all(dims.pagePadding),
+                child: Text(
+                  'Error: $error',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
                   ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Status: $status'),
-                      if ((link.note ?? '').isNotEmpty)
-                        Text('Note: ${link.note}'),
-                      Text('Channel: ${link.channelId ?? 'not created'}'),
-                      const SizedBox(height: 4),
-                      subscriptionAsync.when(
-                        loading: () => const Text('Subscription: loading...'),
-                        error: (error, _) => Text('Subscription error: $error'),
-                        data: (sub) {
-                          final active = sub['active'] == true;
-                          final validUntil = sub['valid_until']?.toString();
-                          if (!active) {
-                            return const Text('Subscription: inactive');
-                          }
-                          return Text('Subscription: active until ${validUntil ?? 'unknown'}');
-                        },
-                      ),
-                    ],
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.insights_outlined),
-                        tooltip: 'My analytics',
-                        onPressed: () {
-                          Navigator.of(context).pushNamed(
-                            RouteNames.coachAthleteDetail,
-                            arguments: link.athleteId,
-                          );
-                        },
-                      ),
-                      TextButton.icon(
-                        icon: const Icon(Icons.chat_bubble_outline),
-                        label: const Text('Chat'),
-                        onPressed: hasChannel
-                            ? () {
-                                Navigator.of(context).pushNamed(
-                                  RouteNames.coachChat,
-                                  arguments: CoachChatScreenArgs(
-                                    channelId: link.channelId!,
-                                    title: link.coachId,
-                                  ),
-                                );
-                              }
-                            : null,
-                      ),
-                      const SizedBox(width: 8),
-                      TextButton(
-                        onPressed: link.status.toLowerCase() == 'active'
-                            ? () async {
-                                await _startCheckoutForLink(context, ref, link.id);
-                                ref.invalidate(coachSubscriptionStatusProvider(link.id));
-                              }
-                            : null,
-                        child: const Text('Subscribe'),
-                      ),
-                    ],
+                ),
+              ),
+            ),
+            data: (links) {
+              if (links.isEmpty) {
+                return Center(
+                  child: Text(
+                    'No coaches yet',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 );
-              },
-            ),
-          );
-        },
-      ),
+              }
+              return RefreshIndicator(
+                onRefresh: () async {
+                  final refreshedLinks = await ref.refresh(
+                    myCoachesProvider.future,
+                  );
+                  for (final link in refreshedLinks) {
+                    ref.invalidate(coachSubscriptionStatusProvider(link.id));
+                  }
+                },
+                child: ListView.separated(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(
+                    dims.pagePadding,
+                    AmbientScaffoldShell.topContentInset(context),
+                    dims.pagePadding,
+                    AmbientScaffoldShell.bottomContentInset(context),
+                  ),
+                  itemCount: links.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final link = links[index];
+                    final hasChannel = (link.channelId ?? '').isNotEmpty;
+                    final statusLower = link.status.toLowerCase();
+                    final statusUpper = link.status.toUpperCase();
+                    final statusAccent = switch (statusLower) {
+                      'active' => instrument.successColor,
+                      'pending' => instrument.moderateEffortColor,
+                      'paused' => instrument.workingAura,
+                      _ => scheme.onSurfaceVariant,
+                    };
+                    final displayNameAsync = ref.watch(
+                      coachDisplayNameProvider(link.coachId),
+                    );
+                    final coachTitle = displayNameAsync.when(
+                      data: (value) => value,
+                      loading: () => link.coachId,
+                      error: (_, __) => link.coachId,
+                    );
+                    final subscriptionAsync = ref.watch(
+                      coachSubscriptionStatusProvider(link.id),
+                    );
+
+                    return Container(
+                      decoration: InstrumentTheme.instrumentCardDecoration(
+                        context,
+                        accentColor: statusLower == 'active'
+                            ? instrument.successColor
+                            : null,
+                        radius: 22,
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              dims.cardPadding,
+                              dims.cardPadding,
+                              dims.cardPadding,
+                              12,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'COACH LINK · #${index + 1}',
+                                            style: InstrumentTheme.tabular(
+                                              InstrumentTheme.microLabel(
+                                                context,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            coachTitle,
+                                            style: theme.textTheme.titleMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      statusUpper,
+                                      style: InstrumentTheme.microLabel(
+                                        context,
+                                        color: statusAccent,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Channel: ${link.channelId ?? 'not created'}',
+                                  style: InstrumentTheme.tabular(
+                                    (theme.textTheme.bodySmall ??
+                                            const TextStyle())
+                                        .copyWith(
+                                          color: scheme.onSurfaceVariant,
+                                        ),
+                                  ),
+                                ),
+                                if ((link.note ?? '').isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Note: ${link.note}',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 6),
+                                subscriptionAsync.when(
+                                  loading: () => Text(
+                                    'Subscription: loading...',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  error: (error, _) => Text(
+                                    'Subscription error: $error',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: instrument.peakEffortColor,
+                                    ),
+                                  ),
+                                  data: (sub) {
+                                    final active = sub['active'] == true;
+                                    final validUntil = sub['valid_until']
+                                        ?.toString();
+                                    return Text(
+                                      active
+                                          ? 'Subscription: active until ${validUntil ?? 'unknown'}'
+                                          : 'Subscription: inactive',
+                                      style: InstrumentTheme.tabular(
+                                        (theme.textTheme.bodySmall ??
+                                                const TextStyle())
+                                            .copyWith(
+                                              color: active
+                                                  ? instrument.successColor
+                                                  : scheme.onSurfaceVariant,
+                                              fontWeight: active
+                                                  ? FontWeight.w600
+                                                  : FontWeight.w400,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(height: 1, color: hairline),
+                          Padding(
+                            padding: EdgeInsets.all(dims.cardPadding),
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                InstrumentActionButton(
+                                  label: 'Analytics',
+                                  icon: Icons.insights_outlined,
+                                  variant: InstrumentActionVariant.secondary,
+                                  onPressed: () {
+                                    Navigator.of(context).pushNamed(
+                                      RouteNames.coachAthleteDetail,
+                                      arguments: link.athleteId,
+                                    );
+                                  },
+                                ),
+                                InstrumentActionButton(
+                                  label: 'Chat',
+                                  icon: Icons.chat_bubble_outline,
+                                  variant: InstrumentActionVariant.secondary,
+                                  onPressed: hasChannel
+                                      ? () {
+                                          Navigator.of(context).pushNamed(
+                                            RouteNames.coachChat,
+                                            arguments: CoachChatScreenArgs(
+                                              channelId: link.channelId!,
+                                              title: coachTitle,
+                                            ),
+                                          );
+                                        }
+                                      : null,
+                                ),
+                                InstrumentActionButton(
+                                  label: 'Subscribe',
+                                  icon: Icons.credit_card_outlined,
+                                  variant: InstrumentActionVariant.primary,
+                                  onPressed: statusLower == 'active'
+                                      ? () async {
+                                          await _startCheckoutForLink(
+                                            context,
+                                            ref,
+                                            link.id,
+                                          );
+                                          ref.invalidate(
+                                            coachSubscriptionStatusProvider(
+                                              link.id,
+                                            ),
+                                          );
+                                        }
+                                      : null,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
         );
       },
     );
   }
 }
 
-Future<void> _startCheckoutForLink(BuildContext context, WidgetRef ref, int linkId) async {
+Future<void> _startCheckoutForLink(
+  BuildContext context,
+  WidgetRef ref,
+  int linkId,
+) async {
   try {
     final billing = ref.read(sl.crmBillingServiceProvider);
     final result = await billing.createCheckoutSession(linkId);
     final urlStr = (result['checkout_url'] ?? result['url'])?.toString();
     if (urlStr == null || urlStr.isEmpty) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to create checkout session')),
+        showAppSnackBar(
+          context,
+          'Failed to create checkout session',
+          isError: true,
         );
       }
       return;
@@ -177,33 +355,24 @@ Future<void> _startCheckoutForLink(BuildContext context, WidgetRef ref, int link
     final uri = Uri.tryParse(urlStr);
     if (uri == null) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid checkout URL')),
-        );
+        showAppSnackBar(context, 'Invalid checkout URL', isError: true);
       }
       return;
     }
     final canLaunch = await canLaunchUrl(uri);
     if (!canLaunch) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cannot open checkout URL')),
-        );
+        showAppSnackBar(context, 'Cannot open checkout URL', isError: true);
       }
       return;
     }
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   } catch (e) {
     if (context.mounted) {
-      String message;
-      if (e is ApiException) {
-        message = e.message;
-      } else {
-        message = 'Failed to start checkout: $e';
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      final message = e is ApiException
+          ? e.message
+          : 'Failed to start checkout: $e';
+      showAppSnackBar(context, message, isError: true);
     }
   }
 }

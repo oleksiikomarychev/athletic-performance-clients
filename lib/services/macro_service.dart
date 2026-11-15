@@ -2,12 +2,10 @@ import 'package:workout_app/config/api_config.dart';
 import 'package:workout_app/models/macro.dart';
 import 'package:workout_app/services/api_client.dart';
 import 'package:workout_app/services/base_api_service.dart';
-import 'package:workout_app/services/logger_service.dart';
 
 class MacroService extends BaseApiService {
   @override
   final ApiClient apiClient;
-  final _log = LoggerService('MacroService');
 
   MacroService({required this.apiClient}) : super(apiClient);
 
@@ -41,7 +39,7 @@ class MacroService extends BaseApiService {
       if (list != null) {
         return list
             .whereType<Map>()
-            .map((j) => PlanMacro.fromJson(Map<String, dynamic>.from(j as Map)))
+            .map((j) => PlanMacro.fromJson(Map<String, dynamic>.from(j)))
             .toList();
       }
       if (m.containsKey('id')) {
@@ -101,19 +99,20 @@ class MacroService extends BaseApiService {
     );
   }
 
-  Future<Map<String, dynamic>> runPreview({required int appliedPlanId}) async {
+  Future<Map<String, dynamic>> runPreview({required int appliedPlanId, int? observationWorkoutId, Map<String, dynamic>? legacyWeights}) async {
     final res = await apiClient.post(
-      ApiConfig.runMacrosEndpoint(appliedPlanId.toString()),
-      <String, dynamic>{},
+      ApiConfig.runMacrosEndpoint(appliedPlanId.toString()) +
+          (observationWorkoutId == null ? '' : '?observation_workout_id=$observationWorkoutId'),
+      {if (legacyWeights != null) 'legacy_weights': legacyWeights},
       context: 'MacroService.runPreview',
     );
     return (res as Map).cast<String, dynamic>();
   }
 
-  Future<Map<String, dynamic>> applyMacros({required int appliedPlanId}) async {
+  Future<Map<String, dynamic>> applyMacros({required int appliedPlanId, String? previewId, bool mesocyclesOnly = false}) async {
     final res = await apiClient.post(
       ApiConfig.applyMacrosEndpoint(appliedPlanId.toString()),
-      <String, dynamic>{},
+      {if (previewId != null) 'preview_id': previewId, if (mesocyclesOnly) 'mesocycles_only': true},
       context: 'MacroService.applyMacros',
     );
     return (res as Map).cast<String, dynamic>();

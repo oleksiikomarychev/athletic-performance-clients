@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
-
-import '../config/constants/theme_constants.dart';
-import '../config/theme/ui_dimensions.dart';
-import '../models/user_stats.dart';
-import '../models/workout_session.dart';
-import 'activity_heatmap_colors.dart';
+import 'package:workout_app/models/user_stats.dart';
+import 'package:workout_app/models/workout_session.dart';
+import 'package:workout_app/providers/interface_maker_provider.dart';
+import 'package:workout_app/widgets/activity_heatmap_colors.dart';
+import 'package:workout_app/widgets/instrument_metric_matrix.dart';
 
 class ProfileStatsRow extends StatelessWidget {
   final UserStats stats;
@@ -21,91 +22,53 @@ class ProfileStatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final instrument = InstrumentTheme.of(context);
+    final dims = UiDimensions.of(context);
+
     return Padding(
-      padding: padding ?? EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding),
+      padding: padding ?? EdgeInsets.symmetric(horizontal: dims.pagePadding),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: Row(
-            children: [
-              Expanded(
-                child: _StatCard(
-                  value: '${stats.totalWorkouts}',
-                  label: l10n.statsTotalWorkouts,
-                  color: Theme.of(context).colorScheme.tertiaryContainer,
-                  foregroundColor: Theme.of(
-                    context,
-                  ).colorScheme.onTertiaryContainer,
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: Container(
+            decoration: InstrumentTheme.instrumentCardDecoration(
+              context,
+              radius: 20,
+            ),
+            padding: EdgeInsets.all(dims.cardPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'PROFILE TELEMETRY',
+                  style: InstrumentTheme.microLabel(context),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _StatCard(
-                  value: stats.totalVolume.toStringAsFixed(0),
-                  label: l10n.statsVolumeKg,
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  foregroundColor: Theme.of(
-                    context,
-                  ).colorScheme.onPrimaryContainer,
+                const SizedBox(height: 10),
+                InstrumentMetricMatrix(
+                  cells: [
+                    InstrumentMetricCellData(
+                      slot: MetricSlot.setsCount,
+                      label: l10n.statsTotalWorkouts.toUpperCase(),
+                      value: '${stats.totalWorkouts}',
+                      valueColor: instrument.workingAura,
+                    ),
+                    InstrumentMetricCellData(
+                      slot: MetricSlot.tonnage,
+                      label: l10n.statsVolumeKg.toUpperCase(),
+                      value: stats.totalVolume.toStringAsFixed(0),
+                    ),
+                    InstrumentMetricCellData(
+                      slot: MetricSlot.frequencyPerWeek,
+                      label: l10n.statsActiveDays.toUpperCase(),
+                      value: '${stats.activeDays}',
+                      valueColor: instrument.successColor,
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _StatCard(
-                  value: '${stats.activeDays}',
-                  label: l10n.statsActiveDays,
-                  color: Theme.of(context).colorScheme.secondaryContainer,
-                  foregroundColor: Theme.of(
-                    context,
-                  ).colorScheme.onSecondaryContainer,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final String value;
-  final String label;
-  final Color color;
-  final Color foregroundColor;
-
-  const _StatCard({
-    required this.value,
-    required this.label,
-    required this.color,
-    required this.foregroundColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: UiDimensions.of(context).rowGap, horizontal: 8),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: UiDimensions.of(context).statValueFontSize,
-              fontWeight: FontWeight.bold,
-              color: foregroundColor,
+              ],
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 11, color: foregroundColor),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -124,48 +87,63 @@ class ProfileActivitySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final dims = UiDimensions.of(context);
+
     return Padding(
-      padding: padding ?? EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.activityTitle,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
+      padding: padding ?? EdgeInsets.symmetric(horizontal: dims.pagePadding),
+      child: Container(
+        decoration: InstrumentTheme.instrumentCardDecoration(
+          context,
+          radius: 22,
+        ),
+        padding: EdgeInsets.all(dims.cardPadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.activityTitle,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: scheme.onSurface,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                l10n.lastWeeks(stats.weeks),
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 12,
+              runSpacing: 4,
+              alignment: WrapAlignment.spaceBetween,
+              children: [
+                Text(
+                  l10n.lastWeeks(stats.weeks),
+                  style: InstrumentTheme.tabular(
+                    (theme.textTheme.bodySmall ?? const TextStyle()).copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
                 ),
-              ),
-              Text(
-                l10n.maxKgPerDay(stats.maxDayVolume.toStringAsFixed(0)),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
+                Text(
+                  l10n.maxKgPerDay(stats.maxDayVolume.toStringAsFixed(0)),
+                  style: InstrumentTheme.tabular(
+                    (theme.textTheme.bodySmall ?? const TextStyle()).copyWith(
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _ActivityGrid(
-            activityMap: stats.activityMap,
-            maxVolume: stats.maxDayVolume,
-            weeks: stats.weeks,
-          ),
-          const SizedBox(height: 8),
-          _ActivityLegend(),
-        ],
+              ],
+            ),
+            const SizedBox(height: 14),
+            _ActivityGrid(
+              activityMap: stats.activityMap,
+              maxVolume: stats.maxDayVolume,
+              weeks: stats.weeks,
+            ),
+            const SizedBox(height: 10),
+            _ActivityLegend(),
+          ],
+        ),
       ),
     );
   }
@@ -186,6 +164,7 @@ class _ActivityGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).languageCode;
+    final scheme = Theme.of(context).colorScheme;
     final today = DateTime.now();
     final endDate = DateTime(today.year, today.month, today.day);
     final endWeekStart = endDate.subtract(Duration(days: endDate.weekday - 1));
@@ -220,10 +199,12 @@ class _ActivityGrid extends StatelessWidget {
                   width: 12,
                   child: Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
+                    style: InstrumentTheme.tabular(
+                      TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                     textAlign: TextAlign.center,
                     softWrap: false,
@@ -241,7 +222,11 @@ class _ActivityGrid extends StatelessWidget {
                           day,
                         );
                         final volume = dayActivity?.volume ?? 0;
-                        final color = ActivityHeatmapColors.forVolume(context, volume, maxVolume);
+                        final color = ActivityHeatmapColors.forVolume(
+                          context,
+                          volume,
+                          maxVolume,
+                        );
                         return Tooltip(
                           message: dayActivity != null
                               ? '${DateFormat('MMM d', locale).format(date)}\n${l10n.sessionsCount(dayActivity.sessionCount)}\n${volume.toStringAsFixed(0)} kg'
@@ -285,27 +270,23 @@ class _ActivityLegend extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final colors = ActivityHeatmapColors.palette(context);
+    final onSurfaceVariant = Theme.of(context).colorScheme.onSurfaceVariant;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
           l10n.less,
-          style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          style: TextStyle(fontSize: 10, color: onSurfaceVariant),
         ),
         const SizedBox(width: 4),
-        _LegendBox(colors[0]),
-        const SizedBox(width: 2),
-        _LegendBox(colors[1]),
-        const SizedBox(width: 2),
-        _LegendBox(colors[2]),
-        const SizedBox(width: 2),
-        _LegendBox(colors[3]),
-        const SizedBox(width: 2),
-        _LegendBox(colors[4]),
+        for (var i = 0; i < colors.length; i++) ...[
+          if (i > 0) const SizedBox(width: 2),
+          _LegendBox(colors[i]),
+        ],
         const SizedBox(width: 4),
         Text(
           l10n.more,
-          style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          style: TextStyle(fontSize: 10, color: onSurfaceVariant),
         ),
       ],
     );
@@ -344,8 +325,13 @@ class ProfileCompletedWorkoutsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final dims = UiDimensions.of(context);
+
     return Padding(
-      padding: padding ?? EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding),
+      padding: padding ?? EdgeInsets.symmetric(horizontal: dims.pagePadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -353,24 +339,35 @@ class ProfileCompletedWorkoutsSection extends StatelessWidget {
             children: [
               Icon(
                 Icons.calendar_today,
-                color: Theme.of(context).colorScheme.primary,
-                size: 24,
+                color: instrument.workingAura,
+                size: 20,
               ),
               const SizedBox(width: 8),
-              Text(
-                l10n.completedWorkoutsTitle,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onSurface,
+              Expanded(
+                child: Text(
+                  l10n.completedWorkoutsTitle,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           if (sessions.isEmpty)
-            Text(
-              l10n.noCompletedWorkoutsYet,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            Container(
+              decoration: InstrumentTheme.instrumentCardDecoration(
+                context,
+                radius: 18,
+              ),
+              padding: EdgeInsets.all(dims.cardPadding),
+              child: Text(
+                l10n.noCompletedWorkoutsYet,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
             )
           else
             Column(
@@ -394,55 +391,51 @@ class _WorkoutCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM dd');
     final workoutCode = 'WO${session.workoutId}';
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppShadows.sm,
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: InstrumentTheme.instrumentCardDecoration(
+        context,
+        radius: 18,
       ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap != null ? () => onTap!(session) : null,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap != null ? () => onTap!(session) : null,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 52),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.tertiaryContainer,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    workoutCode,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onTertiaryContainer,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                Text(
+                  workoutCode,
+                  style: InstrumentTheme.tabular(
+                    InstrumentTheme.microLabel(
+                      context,
+                      color: instrument.workingAura,
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Text(
-                  dateFormat.format(session.startedAt),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    dateFormat.format(session.startedAt),
+                    style: InstrumentTheme.tabular(
+                      (theme.textTheme.bodyMedium ?? const TextStyle())
+                          .copyWith(
+                            color: scheme.onSurface,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
                   ),
                 ),
-                const Spacer(),
                 Icon(
                   Icons.check_circle,
-                  color: Theme.of(context).colorScheme.tertiary,
-                  size: 24,
+                  color: instrument.successColor,
+                  size: 20,
                 ),
               ],
             ),

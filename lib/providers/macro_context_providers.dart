@@ -1,6 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:workout_app/models/exercise_definition.dart';
-import 'package:workout_app/models/workout.dart';
 import 'package:workout_app/services/api_client.dart';
 import 'package:workout_app/services/exercise_service.dart';
 import 'package:workout_app/services/workout_service.dart';
@@ -22,14 +20,14 @@ final previewContextProvider = FutureProvider.family<PreviewContextData, int>((r
   final workouts = await woSvc.getWorkoutsByAppliedPlan(appliedPlanId);
   final workoutMap = <int, String>{
     for (final w in workouts)
-      if (w.id != null) w.id!: (w.name ?? 'Workout ${w.id}')
+      if (w.id != null) w.id!: w.name
   };
 
 
   final defs = await exSvc.getExerciseDefinitions();
   final exerciseMap = <int, String>{
     for (final d in defs)
-      if (d.id != null) d.id!: (d.name ?? 'Exercise ${d.id}')
+      if (d.id != null) d.id!: d.name
   };
 
   return PreviewContextData(workoutNames: workoutMap, exerciseNames: exerciseMap);
@@ -45,10 +43,10 @@ final workoutOriginalSetsProvider = FutureProvider.family<OriginalSetsMap, List<
     try {
       final w = await woSvc.getWorkoutWithDetails(wid);
       final mapEx = <int?, Map<int?, Map<String, dynamic>>>{};
-      final instances = w.exerciseInstances ?? const [];
+      final instances = w.exerciseInstances;
       for (final inst in instances) {
         final exId = inst.exerciseListId;
-        final sets = inst.sets ?? const [];
+        final sets = inst.sets;
         final mapSet = <int?, Map<String, dynamic>>{};
         for (final s in sets) {
           final sid = s.id;

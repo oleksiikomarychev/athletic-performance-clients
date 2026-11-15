@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/providers/chat_provider.dart';
 import 'package:workout_app/providers/target_data_providers.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
 
 class ToolResultCard extends ConsumerWidget {
   const ToolResultCard({
@@ -23,70 +25,94 @@ class ToolResultCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
+    final accent = isPreview
+        ? instrument.workingAura
+        : instrument.executionAccent;
+    final hairline =
+        (isDark ? instrument.hairlineBorder : scheme.outlineVariant)
+            .withValues(alpha: isDark ? 0.85 : 0.55);
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(14.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-
-            Row(
+    return Container(
+      decoration: InstrumentTheme.instrumentCardDecoration(
+        context,
+        accentColor: accent,
+        radius: 20,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+            child: Row(
               children: [
-                Icon(icon, color: colorScheme.primary),
-                const SizedBox(width: 8),
+                Icon(icon, size: 18, color: accent),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    title,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        isPreview ? 'TOOL PREVIEW' : 'TOOL APPLIED',
+                        style: InstrumentTheme.microLabel(
+                          context,
+                          color: accent,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        title,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-
-
-            content,
-
-            const SizedBox(height: 12),
-
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+          ),
+          Container(height: 1, color: hairline),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: content,
+          ),
+          Container(height: 1, color: hairline),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                TextButton.icon(
+                InstrumentActionButton(
+                  label: l10n.hide,
+                  icon: Icons.close_rounded,
+                  variant: InstrumentActionVariant.secondary,
                   onPressed: () {
-
-                    ref.read(chatControllerProvider.notifier).clearMassEditResult();
+                    ref
+                        .read(chatControllerProvider.notifier)
+                        .clearMassEditResult();
                   },
-                  icon: const Icon(Icons.close_rounded),
-                  label: Text(l10n.hide),
                 ),
-                if (actions != null) ...[
-                  const SizedBox(width: 8),
-                  ...actions!,
-                ],
+                if (actions != null) ...actions!,
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class MassEditToolWidget extends ConsumerWidget {
-  const MassEditToolWidget({
-    super.key,
-    required this.payload,
-  });
+  const MassEditToolWidget({super.key, required this.payload});
 
   final Map<String, dynamic> payload;
 
@@ -97,24 +123,31 @@ class MassEditToolWidget extends ConsumerWidget {
     final isPreview = mode == 'preview';
     final exerciseNameMap = ref.watch(exerciseDefinitionNameMapProvider);
 
-
     final summaryRaw = payload['summary'];
-    final summary = summaryRaw is Map<String, dynamic> ? summaryRaw : <String, dynamic>{};
+    final summary = summaryRaw is Map<String, dynamic>
+        ? summaryRaw
+        : <String, dynamic>{};
     final commandRaw = payload['mass_edit_command'];
-    final command = commandRaw is Map<String, dynamic> ? commandRaw : <String, dynamic>{};
+    final command = commandRaw is Map<String, dynamic>
+        ? commandRaw
+        : <String, dynamic>{};
     final filterRaw = command['filter'];
-    final filter = filterRaw is Map<String, dynamic> ? filterRaw : <String, dynamic>{};
+    final filter = filterRaw is Map<String, dynamic>
+        ? filterRaw
+        : <String, dynamic>{};
     final actionsRaw = command['actions'];
-    final actions = actionsRaw is Map<String, dynamic> ? actionsRaw : <String, dynamic>{};
+    final actions = actionsRaw is Map<String, dynamic>
+        ? actionsRaw
+        : <String, dynamic>{};
 
-    final workoutsMatched = summary['workouts_matched'] ?? summary['workouts_shifted'];
+    final workoutsMatched =
+        summary['workouts_matched'] ?? summary['workouts_shifted'];
     final setsMatched = summary['sets_matched'];
     final setsModified = summary['sets_modified'];
 
     final dynamic setsCount = isPreview
         ? (setsMatched ?? setsModified)
         : (setsModified ?? setsMatched);
-
 
     final filterLines = <String>[];
     final onlyFuture = filter['only_future'] == true;
@@ -124,14 +157,22 @@ class MassEditToolWidget extends ConsumerWidget {
     final exerciseIds = filter['exercise_definition_ids'];
 
     if (onlyFuture) filterLines.add(l10n.onlyFutureWorkouts);
-    if (scheduledFrom != null && scheduledFrom.isNotEmpty) filterLines.add(l10n.dateNotEarlierThan(scheduledFrom));
-    if (scheduledTo != null && scheduledTo.isNotEmpty) filterLines.add(l10n.dateNotLaterThan(scheduledTo));
-    if (statusIn is List && statusIn.isNotEmpty) filterLines.add(l10n.statuses(statusIn.join(', ')));
+    if (scheduledFrom != null && scheduledFrom.isNotEmpty) {
+      filterLines.add(l10n.dateNotEarlierThan(scheduledFrom));
+    }
+    if (scheduledTo != null && scheduledTo.isNotEmpty) {
+      filterLines.add(l10n.dateNotLaterThan(scheduledTo));
+    }
+    if (statusIn is List && statusIn.isNotEmpty) {
+      filterLines.add(l10n.statuses(statusIn.join(', ')));
+    }
 
     if (exerciseIds is List && exerciseIds.isNotEmpty) {
       final names = <String>[];
       for (final rawId in exerciseIds) {
-        final id = rawId is num ? rawId.toInt() : int.tryParse(rawId.toString());
+        final id = rawId is num
+            ? rawId.toInt()
+            : int.tryParse(rawId.toString());
         if (id == null) continue;
         final name = exerciseNameMap[id];
         if (name != null && name.isNotEmpty) {
@@ -145,7 +186,6 @@ class MassEditToolWidget extends ConsumerWidget {
       }
     }
 
-
     final actionLines = <String>[];
     void addActionLine(String key, String Function(num v) textBuilder) {
       final raw = actions[key];
@@ -155,17 +195,41 @@ class MassEditToolWidget extends ConsumerWidget {
     }
 
     addActionLine('set_intensity', (v) => l10n.setIntensity(v.toString()));
-    addActionLine('increase_intensity_by', (v) => l10n.increaseIntensityBy(v.toString()));
-    addActionLine('decrease_intensity_by', (v) => l10n.decreaseIntensityBy(v.toString()));
+    addActionLine(
+      'increase_intensity_by',
+      (v) => l10n.increaseIntensityBy(v.toString()),
+    );
+    addActionLine(
+      'decrease_intensity_by',
+      (v) => l10n.decreaseIntensityBy(v.toString()),
+    );
     addActionLine('set_volume', (v) => l10n.setVolume(v.toStringAsFixed(0)));
-    addActionLine('increase_volume_by', (v) => l10n.increaseVolumeBy(v.toStringAsFixed(0)));
-    addActionLine('decrease_volume_by', (v) => l10n.decreaseVolumeBy(v.toStringAsFixed(0)));
+    addActionLine(
+      'increase_volume_by',
+      (v) => l10n.increaseVolumeBy(v.toStringAsFixed(0)),
+    );
+    addActionLine(
+      'decrease_volume_by',
+      (v) => l10n.decreaseVolumeBy(v.toStringAsFixed(0)),
+    );
     addActionLine('set_weight', (v) => l10n.setWeight(v.toString()));
-    addActionLine('increase_weight_by', (v) => l10n.increaseWeightBy(v.toString()));
-    addActionLine('decrease_weight_by', (v) => l10n.decreaseWeightBy(v.toString()));
+    addActionLine(
+      'increase_weight_by',
+      (v) => l10n.increaseWeightBy(v.toString()),
+    );
+    addActionLine(
+      'decrease_weight_by',
+      (v) => l10n.decreaseWeightBy(v.toString()),
+    );
     addActionLine('set_effort', (v) => l10n.setEffort(v.toString()));
-    addActionLine('increase_effort_by', (v) => l10n.increaseEffortBy(v.toString()));
-    addActionLine('decrease_effort_by', (v) => l10n.decreaseEffortBy(v.toString()));
+    addActionLine(
+      'increase_effort_by',
+      (v) => l10n.increaseEffortBy(v.toString()),
+    );
+    addActionLine(
+      'decrease_effort_by',
+      (v) => l10n.decreaseEffortBy(v.toString()),
+    );
 
     if (actions['clamp_non_negative'] == true) {
       actionLines.add(l10n.clampNonNegative);
@@ -191,9 +255,11 @@ class MassEditToolWidget extends ConsumerWidget {
       actionLines.add(l10n.addNewExercises(addInstances.length.toString()));
     }
 
-
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final accent = isPreview
+        ? instrument.workingAura
+        : instrument.executionAccent;
 
     final titleText = isPreview
         ? l10n.massEditPreviewTitle
@@ -205,83 +271,94 @@ class MassEditToolWidget extends ConsumerWidget {
         if (workoutsMatched != null || setsCount != null)
           Wrap(
             spacing: 8,
-            runSpacing: 4,
+            runSpacing: 6,
             children: [
               if (workoutsMatched != null)
-                Chip(
-                  label: Text(l10n.massEditToolWorkoutsMatched(workoutsMatched.toString())),
-                  visualDensity: VisualDensity.compact,
+                InstrumentStatusPill(
+                  label: l10n.massEditToolWorkoutsMatched(
+                    workoutsMatched.toString(),
+                  ),
+                  color: accent,
                 ),
               if (setsCount != null)
-                Chip(
-                  label: Text(
-                    isPreview
-                        ? l10n.massEditToolSetsToBeModified(setsCount.toString())
-                        : l10n.massEditToolSetsModified(setsCount.toString()),
-                  ),
-                  visualDensity: VisualDensity.compact,
+                InstrumentStatusPill(
+                  label: isPreview
+                      ? l10n.massEditToolSetsToBeModified(setsCount.toString())
+                      : l10n.massEditToolSetsModified(setsCount.toString()),
+                  color: instrument.moderateEffortColor,
                 ),
             ],
           ),
         if (filterLines.isNotEmpty) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
-            l10n.filter,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
+            l10n.filter.toUpperCase(),
+            style: InstrumentTheme.microLabel(context, color: accent),
           ),
           const SizedBox(height: 4),
           ...filterLines.map(
-            (line) => Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('• '),
-                Expanded(child: Text(line, style: theme.textTheme.bodySmall)),
-              ],
+            (line) => Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('• ', style: theme.textTheme.bodySmall),
+                  Expanded(
+                    child: Text(
+                      line,
+                      style: InstrumentTheme.tabular(
+                        theme.textTheme.bodySmall ?? const TextStyle(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
         if (actionLines.isNotEmpty) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
-            l10n.changes,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
+            l10n.changes.toUpperCase(),
+            style: InstrumentTheme.microLabel(context, color: accent),
           ),
           const SizedBox(height: 4),
           ...actionLines.map(
-            (line) => Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('• '),
-                Expanded(child: Text(line, style: theme.textTheme.bodySmall)),
-              ],
+            (line) => Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('• ', style: theme.textTheme.bodySmall),
+                  Expanded(
+                    child: Text(
+                      line,
+                      style: InstrumentTheme.tabular(
+                        theme.textTheme.bodySmall ?? const TextStyle(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ],
     );
 
-
     final List<Widget> actionsList = [];
     if (isPreview && command.isNotEmpty) {
       actionsList.add(
-        ElevatedButton.icon(
+        InstrumentActionButton(
+          label: l10n.apply,
+          icon: Icons.check_rounded,
+          variant: InstrumentActionVariant.primary,
+          accentColor: instrument.workingAura,
           onPressed: () {
             ref
                 .read(chatControllerProvider.notifier)
                 .applyMassEditFromPreview(payload);
           },
-          icon: const Icon(Icons.check_rounded),
-          label: Text(l10n.apply),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-          ),
         ),
       );
     }

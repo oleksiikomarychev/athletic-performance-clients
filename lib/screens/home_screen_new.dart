@@ -1,23 +1,19 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:provider/provider.dart' as pv;
 import 'package:workout_app/providers/providers.dart';
 import 'package:workout_app/screens/workouts_screen.dart';
 import 'package:workout_app/screens/calendar_plans_screen.dart';
 import 'package:workout_app/screens/coach/coach_dashboard_screen.dart';
-import 'package:workout_app/screens/coach/coach_athletes_screen.dart';
 import 'package:workout_app/screens/debug_screen.dart';
 import 'package:workout_app/screens/social/social_feed_screen.dart';
 import 'package:workout_app/screens/user_profile_screen.dart';
 import 'package:workout_app/screens/settings/settings_home_screen.dart';
 import 'package:workout_app/widgets/custom_bottom_nav_bar.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
-import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/api_config.dart';
-import 'package:workout_app/services/chat_service.dart';
 
 class HomeScreenNew extends ConsumerStatefulWidget {
   const HomeScreenNew({super.key});
@@ -30,10 +26,14 @@ enum HomeTab { workouts, plans, social, crm, debug }
 
 class _HomeScreenNewState extends ConsumerState<HomeScreenNew> {
   HomeTab _activeTab = HomeTab.workouts;
+  int _tabDirection = 1;
 
-  void _onItemTapped(HomeTab tab) {
+  void _onItemTapped(HomeTab tab, List<HomeTab> tabs) {
     if (_activeTab == tab) return;
+    final oldIndex = tabs.indexOf(_activeTab);
+    final newIndex = tabs.indexOf(tab);
     setState(() {
+      _tabDirection = newIndex >= oldIndex ? 1 : -1;
       _activeTab = tab;
       switch (tab) {
         case HomeTab.workouts:
@@ -56,33 +56,17 @@ class _HomeScreenNewState extends ConsumerState<HomeScreenNew> {
   }
 
   Widget _tabBody(HomeTab tab) {
-    switch (tab) {
-      case HomeTab.workouts:
-        return WorkoutsScreen();
-      case HomeTab.plans:
-        return CalendarPlansScreen();
-      case HomeTab.social:
-        return SocialFeedScreen();
-      case HomeTab.crm:
-        return const CoachDashboardScreen();
-      case HomeTab.debug:
-        return const DebugScreen();
-    }
-  }
-
-  String _tabTitle(HomeTab tab) {
-    switch (tab) {
-      case HomeTab.workouts:
-        return 'Тренировки';
-      case HomeTab.plans:
-        return 'Планы тренировок';
-      case HomeTab.social:
-        return 'Лента';
-      case HomeTab.crm:
-        return 'CRM';
-      case HomeTab.debug:
-        return 'Отладка';
-    }
+    final child = switch (tab) {
+      HomeTab.workouts => WorkoutsScreen(),
+      HomeTab.plans => CalendarPlansScreen(),
+      HomeTab.social => SocialFeedScreen(),
+      HomeTab.crm => const CoachDashboardScreen(),
+      HomeTab.debug => const DebugScreen(),
+    };
+    return KeyedSubtree(
+      key: ValueKey<HomeTab>(tab),
+      child: child,
+    );
   }
 
   BottomNavBarItem _navItemFor(HomeTab tab) {
@@ -154,13 +138,21 @@ class _HomeScreenNewState extends ConsumerState<HomeScreenNew> {
       builder: (context, openChat) {
         final bodyContent = IndexedStack(
           index: selectedIndex,
-          children: tabs.map(_tabBody).toList(growable: false),
+          children: tabs
+              .map(
+                (tab) => TickerMode(
+                  enabled: tab == _activeTab,
+                  child: _tabBody(tab),
+                ),
+              )
+              .toList(growable: false),
         );
 
         if (isWide) {
           final theme = Theme.of(context);
           final isDark = theme.brightness == Brightness.dark;
           return Scaffold(
+            backgroundColor: theme.scaffoldBackgroundColor,
             body: Row(
               children: [
                 NavigationRail(
@@ -168,11 +160,11 @@ class _HomeScreenNewState extends ConsumerState<HomeScreenNew> {
                   minExtendedWidth: 210,
                   selectedIndex: selectedIndex,
                   backgroundColor: isDark
-                      ? AppColors.darkChrome
+                      ? InstrumentPalette.obsidianCardLow
                       : theme.colorScheme.surfaceContainerLowest,
                   onDestinationSelected: (index) {
                     if (index < 0 || index >= tabs.length) return;
-                    _onItemTapped(tabs[index]);
+                    _onItemTapped(tabs[index], tabs);
                   },
                   leading: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
@@ -185,14 +177,15 @@ class _HomeScreenNewState extends ConsumerState<HomeScreenNew> {
                             Container(
                               width: 36,
                               height: 36,
-                              decoration: BoxDecoration(
-                                gradient: isDark ? null : AppGradients.blue,
-                                color: isDark ? AppColors.primary : null,
-                                borderRadius: BorderRadius.circular(10),
+                              decoration: InstrumentTheme.cardDecoration(
+                                context,
+                                color: theme.colorScheme.primary,
+                                borderColor: theme.colorScheme.primary,
+                                radius: 10,
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.fitness_center,
-                                color: Colors.white,
+                                color: theme.colorScheme.onPrimary,
                                 size: 20,
                               ),
                             ),
@@ -315,13 +308,75 @@ class _HomeScreenNewState extends ConsumerState<HomeScreenNew> {
           );
         }
 
+        final theme = Theme.of(context);
+        final reducedMotion = MediaQuery.disableAnimationsOf(context);
         return Scaffold(
-          body: kIsWeb ? bodyContent : _tabBody(_activeTab),
+          extendBody: true,
+          backgroundColor: theme.scaffoldBackgroundColor,
+          body: kIsWeb
+              ? bodyContent
+              : AnimatedSwitcher(
+                  duration: reducedMotion
+                      ? Duration.zero
+                      : const Duration(milliseconds: 280),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  layoutBuilder: (currentChild, previousChildren) {
+                    return Stack(
+                      fit: StackFit.expand,
+                      children: <Widget>[
+                        ...previousChildren,
+                        if (currentChild != null) currentChild,
+                      ],
+                    );
+                  },
+                  transitionBuilder: (child, animation) {
+                    if (reducedMotion) return child;
+                    final isIncoming = child.key == ValueKey<HomeTab>(_activeTab);
+                    final sign = _tabDirection;
+                    final slide = Tween<Offset>(
+                      begin: Offset(isIncoming ? 0.045 * sign : -0.045 * sign, 0),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    );
+                    final fade = CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    );
+                    final scale = Tween<double>(
+                      begin: isIncoming ? 0.985 : 0.988,
+                      end: 1.0,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    );
+                    return TickerMode(
+                      enabled: isIncoming,
+                      child: FadeTransition(
+                        opacity: fade,
+                        child: SlideTransition(
+                          position: slide,
+                          child: ScaleTransition(
+                            scale: scale,
+                            child: child,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  child: _tabBody(_activeTab),
+                ),
           bottomNavigationBar: CustomBottomNavBar(
             currentIndex: selectedIndex,
             onTap: (index) {
               if (index < 0 || index >= tabs.length) return;
-              _onItemTapped(tabs[index]);
+              _onItemTapped(tabs[index], tabs);
             },
             items: tabs.map(_navItemFor).toList(),
           ),

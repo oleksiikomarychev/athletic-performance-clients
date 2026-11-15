@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/models/exercise_definition.dart';
 import 'package:workout_app/providers/target_data_providers.dart';
 
@@ -8,26 +9,68 @@ class MacroHumanPreview extends ConsumerWidget {
   final Map<String, dynamic> condition;
   final Map<String, dynamic> action;
   final Map<String, dynamic> duration;
-  const MacroHumanPreview({super.key, required this.trigger, required this.condition, required this.action, required this.duration});
+  const MacroHumanPreview({
+    super.key,
+    required this.trigger,
+    required this.condition,
+    required this.action,
+    required this.duration,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final defs = ref.watch(exerciseDefinitionsProvider).maybeWhen(data: (d) => d, orElse: () => const <ExerciseDefinition>[]);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final defs = ref.watch(exerciseDefinitionsProvider).maybeWhen(
+          data: (d) => d,
+          orElse: () => const <ExerciseDefinition>[],
+        );
     final nameMap = <int, String>{
       for (final e in defs)
-        if (e.id != null) e.id!: (e.name ?? 'Упражнение ${e.id}')
+        if (e.id != null) e.id!: e.name,
     };
     final main = _mainSentence(nameMap, defs);
-    final details = _detailsLines(nameMap, defs);
+    final details = _detailsEntries(nameMap, defs);
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(main),
-        const SizedBox(height: 6),
-        ...details.map((s) => Padding(
-              padding: const EdgeInsets.only(bottom: 2),
-              child: Text(s, style: Theme.of(context).textTheme.bodySmall),
-            )),
+        Text(
+          main,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: scheme.onSurface,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+        const SizedBox(height: 12),
+        for (int i = 0; i < details.length; i++) ...[
+          Container(height: 1, color: instrument.hairlineBorder),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  details[i].key,
+                  style: InstrumentTheme.microLabel(
+                    context,
+                    color: instrument.deloadAura,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  details[i].value,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -102,38 +145,54 @@ class MacroHumanPreview extends ConsumerWidget {
     final metric = trigger['metric']?.toString();
     final unit = _unitForMetric(metric);
     if (op == 'in_range' || op == 'not_in_range') {
-      final vals = (condition['range'] as List?) ?? (condition['values'] as List?) ?? const [];
+      final vals =
+          (condition['range'] as List?) ??
+          (condition['values'] as List?) ??
+          const [];
       if (vals.length >= 2) {
         final a = vals[0].toString();
         final b = vals[1].toString();
         final su = unit.isEmpty ? '' : ' $unit';
-        return op == 'in_range' ? 'значение в диапазоне $a до $b$su' : 'значение вне диапазона $a до $b$su';
+        return op == 'in_range'
+            ? 'значение в диапазоне $a до $b$su'
+            : 'значение вне диапазона $a до $b$su';
       }
       return op == 'in_range' ? 'значение в диапазоне' : 'значение вне диапазона';
     }
     if (op == 'stagnates_for') {
       final n = condition['n']?.toString();
       final e = condition['epsilon_percent']?.toString();
-      if (n != null && e != null) return 'стагнация за $n окон в пределах $e процентов';
+      if (n != null && e != null) {
+        return 'стагнация за $n окон в пределах $e процентов';
+      }
       return 'стагнация за окна';
     }
     if (op == 'deviates_from_avg') {
       final n = condition['n']?.toString();
       final v = condition['value_percent']?.toString();
       final d = (condition['direction'] ?? '').toString();
-      final dir = d.isEmpty ? '' : ', направление: ${d == 'positive' ? 'положительное' : d == 'negative' ? 'отрицательное' : d}';
-      if (n != null && v != null) return 'отклонение от среднего за $n окон не менее $v процентов$dir';
+      final dir = d.isEmpty
+          ? ''
+          : ', направление: ${d == 'positive' ? 'положительное' : d == 'negative' ? 'отрицательное' : d}';
+      if (n != null && v != null) {
+        return 'отклонение от среднего за $n окон не менее $v процентов$dir';
+      }
       return 'отклонение от среднего';
     }
     if (op == 'holds_for') {
       final rel = _relationWord((condition['relation'] ?? '').toString());
-      final values = (condition['range'] as List?) ?? (condition['values'] as List?) ?? const [];
+      final values =
+          (condition['range'] as List?) ??
+          (condition['values'] as List?) ??
+          const [];
       final val = values.length >= 2
           ? '${values[0]}–${values[1]}'
           : (condition['value'] ?? '').toString();
       final su = unit.isEmpty ? '' : ' $unit';
       final n = (condition['n'] ?? '').toString();
-      if (rel.isNotEmpty && val.isNotEmpty && n.isNotEmpty) return 'выполняется $n тренировок подряд: значение $rel $val$su';
+      if (rel.isNotEmpty && val.isNotEmpty && n.isNotEmpty) {
+        return 'выполняется $n тренировок подряд: значение $rel $val$su';
+      }
       return 'выполняется несколько тренировок подряд';
     }
     if (op == 'holds_for_sets') {
@@ -141,7 +200,9 @@ class MacroHumanPreview extends ConsumerWidget {
       final val = (condition['value'] ?? '').toString();
       final su = unit.isEmpty ? '' : ' $unit';
       final n = (condition['n_sets'] ?? '').toString();
-      if (rel.isNotEmpty && val.isNotEmpty && n.isNotEmpty) return 'выполняется $n подходов подряд внутри тренировки: значение $rel $val$su';
+      if (rel.isNotEmpty && val.isNotEmpty && n.isNotEmpty) {
+        return 'выполняется $n подходов подряд внутри тренировки: значение $rel $val$su';
+      }
       return 'выполняется несколько подходов подряд внутри тренировки';
     }
     final v = (condition['value'] ?? '').toString();
@@ -175,6 +236,7 @@ class MacroHumanPreview extends ConsumerWidget {
         if (v is String && v.isNotEmpty) parts.add('$k: $v');
         if (v is List && v.isNotEmpty) parts.add('$k: ${v.join(', ')}');
       }
+
       add('movement_type');
       add('region');
       add('muscle_group');
@@ -189,12 +251,14 @@ class MacroHumanPreview extends ConsumerWidget {
           final actual = (d.toJson()[key] as String?)?.toLowerCase();
           return actual != null && actual.isNotEmpty && actual == want;
         }
+
         bool checkList(String key, List list) {
           if (list.isEmpty) return true;
           final actual = (d.toJson()[key] as String?)?.toLowerCase();
           if (actual == null || actual.isEmpty) return false;
           return list.map((e) => e.toString().toLowerCase()).contains(actual);
         }
+
         final mt = val['movement_type'];
         final rg = val['region'];
         final mg = val['muscle_group'];
@@ -209,10 +273,11 @@ class MacroHumanPreview extends ConsumerWidget {
         if (eq is List) ok = ok && checkList('equipment', eq);
         return ok;
       }
+
       for (final d in defs) {
         if (examples.length >= 3) break;
         if (matches(d)) {
-          final nm = (d.name ?? '').trim();
+          final nm = d.name.trim();
           if (nm.isNotEmpty) examples.add(nm);
         }
       }
@@ -225,7 +290,8 @@ class MacroHumanPreview extends ConsumerWidget {
 
   String _actionPhrase(Map<int, String> names, List<ExerciseDefinition> defs) {
     final type = (action['type'] ?? '').toString();
-    final params = (action['params'] as Map?)?.cast<String, dynamic>() ?? const {};
+    final params =
+        (action['params'] as Map?)?.cast<String, dynamic>() ?? const {};
     final mode = (params['mode'] ?? '').toString();
     final valStr = (params['value'] ?? '').toString();
     final v = double.tryParse(valStr);
@@ -235,24 +301,33 @@ class MacroHumanPreview extends ConsumerWidget {
       if (mode == 'by_Template') {
         final tid = params['template_id'];
         if (tid != null && tid.toString().isNotEmpty) {
-          base = '$base по шаблону ID ${tid.toString()}';
+          base = '$base по шаблону ID $tid';
         }
       } else if (mode == 'Create_Inline') {
         final weeks = params['duration_weeks'];
         final dim = params['days_in_microcycle'];
-        final restDays = (params['rest_days'] as List?)?.map((e) => int.tryParse(e.toString()) ?? -1).where((e) => e > 0).toList() ?? const <int>[];
-        final focus = (params['default_focus_tags'] as Map?)?.cast<String, dynamic>() ?? const {};
+        final restDays = (params['rest_days'] as List?)
+                ?.map((e) => int.tryParse(e.toString()) ?? -1)
+                .where((e) => e > 0)
+                .toList() ??
+            const <int>[];
+        final focus =
+            (params['default_focus_tags'] as Map?)?.cast<String, dynamic>() ??
+                const {};
         final parts = <String>[];
-        if (weeks != null) parts.add('${weeks.toString()} недель');
-        if (dim != null) parts.add('микроцикл ${dim.toString()} дней');
-        if (restDays.isNotEmpty) parts.add('выходные дни: ${restDays.join(', ')}');
+        if (weeks != null) parts.add('$weeks недель');
+        if (dim != null) parts.add('микроцикл $dim дней');
+        if (restDays.isNotEmpty) {
+          parts.add('выходные дни: ${restDays.join(', ')}');
+        }
         if (focus.isNotEmpty) {
           final tagParts = <String>[];
           void add(String k) {
-            final v = focus[k];
-            if (v is String && v.isNotEmpty) tagParts.add('$k: $v');
-            if (v is List && v.isNotEmpty) tagParts.add('$k: ${v.join(', ')}');
+            final fv = focus[k];
+            if (fv is String && fv.isNotEmpty) tagParts.add('$k: $fv');
+            if (fv is List && fv.isNotEmpty) tagParts.add('$k: ${fv.join(', ')}');
           }
+
           add('movement_type');
           add('region');
           add('muscle_group');
@@ -261,13 +336,14 @@ class MacroHumanPreview extends ConsumerWidget {
         }
         if (parts.isNotEmpty) base = '$base (${parts.join('; ')})';
       }
-      final placement = (params['placement'] as Map?)?.cast<String, dynamic>() ?? const {};
+      final placement =
+          (params['placement'] as Map?)?.cast<String, dynamic>() ?? const {};
       final pmode = (placement['mode'] ?? '').toString();
       if (pmode == 'Append_To_End') buf.add('в конец плана');
       if (pmode == 'Insert_After_Workout') {
         final wid = placement['workout_id'];
         if (wid != null) {
-          buf.add('после тренировки #${wid.toString()}');
+          buf.add('после тренировки #$wid');
         } else {
           buf.add('после выбранной тренировки');
         }
@@ -275,36 +351,48 @@ class MacroHumanPreview extends ConsumerWidget {
       if (pmode == 'Insert_After_Mesocycle') {
         final midx = placement['mesocycle_index'];
         if (midx != null) {
-          buf.add('после мезоцикла ${midx.toString()}');
+          buf.add('после мезоцикла $midx');
         } else {
           buf.add('после выбранного мезоцикла');
         }
       }
       final conflict = (params['on_conflict'] ?? '').toString();
       if (conflict.isNotEmpty) {
-        String ctext = conflict == 'Replace_Planned' ? 'заменять запланированное' : conflict == 'Shift_Forward' ? 'сдвигать вперёд' : conflict == 'Skip_On_Conflict' ? 'пропускать конфликтующие' : conflict;
+        final ctext = conflict == 'Replace_Planned'
+            ? 'заменять запланированное'
+            : conflict == 'Shift_Forward'
+                ? 'сдвигать вперёд'
+                : conflict == 'Skip_On_Conflict'
+                    ? 'пропускать конфликтующие'
+                    : conflict;
         buf.add('при конфликте: $ctext');
       }
-      final tail = buf.isEmpty ? '' : ' ' + buf.join(', ');
+      final tail = buf.isEmpty ? '' : ' ${buf.join(', ')}';
       return base + tail;
     }
     if (type == 'Adjust_Load' && mode == 'by_Percent' && v != null) {
       final abs = v.abs().toString().replaceAll('-', '');
-      return v < 0 ? 'уменьшить вес на $abs процентов ${_actionTarget(names, defs)}' : 'увеличить вес на $abs процентов ${_actionTarget(names, defs)}';
+      return v < 0
+          ? 'уменьшить вес на $abs процентов ${_actionTarget(names, defs)}'
+          : 'увеличить вес на $abs процентов ${_actionTarget(names, defs)}';
     }
     if (type == 'Adjust_Load' && mode == 'to_Target' && valStr.isNotEmpty) {
       return 'подогнать вес к целевому RPE $valStr ${_actionTarget(names, defs)}';
     }
     if (type == 'Adjust_Reps' && mode == 'by_Value' && v != null) {
       final abs = v.abs().toString().replaceAll('-', '');
-      return v < 0 ? 'уменьшить повторы на $abs ${_actionTarget(names, defs)}' : 'увеличить повторы на $abs ${_actionTarget(names, defs)}';
+      return v < 0
+          ? 'уменьшить повторы на $abs ${_actionTarget(names, defs)}'
+          : 'увеличить повторы на $abs ${_actionTarget(names, defs)}';
     }
     if (type == 'Adjust_Reps' && mode == 'to_Target' && valStr.isNotEmpty) {
       return 'подобрать повторы к целевому RPE $valStr ${_actionTarget(names, defs)}';
     }
     if (type == 'Adjust_Sets' && mode == 'by_Value' && v != null) {
       final abs = v.abs().toString().replaceAll('-', '');
-      return v < 0 ? 'убрать $abs подходов ${_actionTarget(names, defs)}' : 'добавить $abs подходов ${_actionTarget(names, defs)}';
+      return v < 0
+          ? 'убрать $abs подходов ${_actionTarget(names, defs)}'
+          : 'добавить $abs подходов ${_actionTarget(names, defs)}';
     }
     return 'выполнить действие ${_actionTarget(names, defs)}';
   }
@@ -330,25 +418,30 @@ class MacroHumanPreview extends ConsumerWidget {
     final cond = _conditionPhrase();
     final act = _actionPhrase(names, defs);
     final dur = _durationPhrase();
-    if ((trigger.isEmpty && condition.isEmpty && action.isEmpty)) return 'Описание появится после выбора метрики, условия и действия';
+    if (trigger.isEmpty && condition.isEmpty && action.isEmpty) {
+      return 'Описание появится после выбора метрики, условия и действия';
+    }
     final parts = <String>[];
     parts.add('Если $metric $trg, и $cond, то $act');
     if (dur.isNotEmpty) parts.add(dur);
-    return parts.join(' ') + '.';
+    return '${parts.join(' ')}.';
   }
 
-  List<String> _detailsLines(Map<int, String> names, List<ExerciseDefinition> defs) {
+  List<MapEntry<String, String>> _detailsEntries(
+    Map<int, String> names,
+    List<ExerciseDefinition> defs,
+  ) {
     final metric = _metricName(trigger['metric']?.toString());
     final trg = _targetFromTrigger(names);
     final cond = _conditionPhrase();
     final act = _actionPhrase(names, defs);
     final dur = _durationPhrase();
-    final out = <String>[];
-    out.add('Метрика: $metric');
-    out.add('Триггер: $trg');
-    out.add('Условие: $cond');
-    out.add('Действие: $act');
-    if (dur.isNotEmpty) out.add('Длительность: $dur');
-    return out;
+    return [
+      MapEntry('МЕТРИКА', metric),
+      MapEntry('ТРИГГЕР', trg),
+      MapEntry('УСЛОВИЕ', cond),
+      MapEntry('ДЕЙСТВИЕ', act),
+      if (dur.isNotEmpty) MapEntry('ДЛИТЕЛЬНОСТЬ', dur),
+    ];
   }
 }

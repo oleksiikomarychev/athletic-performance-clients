@@ -1,20 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:workout_app/config/theme/ui_dimensions.dart';
-import '../models/exercise_definition.dart';
-import '../services/exercise_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/services/service_locator.dart';
+import 'package:workout_app/src/widgets/snack_utils.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
+import 'package:workout_app/widgets/assistant_chat_host.dart';
+import 'package:workout_app/widgets/empty_state.dart';
+import 'package:workout_app/widgets/interface_maker_sheet.dart';
+import 'package:workout_app/widgets/loading_indicator.dart';
+import 'package:workout_app/widgets/primary_app_bar.dart';
+
+import '../models/exercise_definition.dart';
 
 class ExerciseSelectionScreen extends ConsumerStatefulWidget {
   const ExerciseSelectionScreen({super.key});
 
   @override
-  ConsumerState<ExerciseSelectionScreen> createState() => _ExerciseSelectionScreenState();
+  ConsumerState<ExerciseSelectionScreen> createState() =>
+      _ExerciseSelectionScreenState();
 }
 
-class _ExerciseSelectionScreenState extends ConsumerState<ExerciseSelectionScreen> {
+class _ExerciseSelectionScreenState
+    extends ConsumerState<ExerciseSelectionScreen> {
   List<ExerciseDefinition> _exercises = [];
   List<ExerciseDefinition> _filteredExercises = [];
+  List<String> _muscleGroups = [];
+  String? _selectedMuscleGroup;
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
 
@@ -22,7 +33,7 @@ class _ExerciseSelectionScreenState extends ConsumerState<ExerciseSelectionScree
   void initState() {
     super.initState();
     _loadExercises();
-    _searchController.addListener(_filterExercises);
+    _searchController.addListener(_applyFilters);
   }
 
   @override
@@ -33,96 +44,240 @@ class _ExerciseSelectionScreenState extends ConsumerState<ExerciseSelectionScree
 
   Future<void> _loadExercises() async {
     try {
-
       final exerciseService = ref.read(exerciseServiceProvider);
       final exercises = await exerciseService.getExerciseDefinitions();
+      if (!mounted) return;
+      final groups = exercises
+          .map((e) => e.muscleGroup?.trim())
+          .whereType<String>()
+          .where((g) => g.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort();
       setState(() {
         _exercises = exercises;
-        _filteredExercises = exercises;
+        _muscleGroups = groups;
         _isLoading = false;
       });
+      _applyFilters();
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка загрузки упражнений: $e')),
-        );
-      }
+      showAppSnackBar(
+        context,
+        'Ошибка загрузки упражнений: $e',
+        isError: true,
+      );
     }
   }
 
-  void _filterExercises() {
-    final query = _searchController.text.toLowerCase();
+  void _applyFilters() {
+    final query = _searchController.text.trim().toLowerCase();
     setState(() {
       _filteredExercises = _exercises.where((exercise) {
+        if (_selectedMuscleGroup != null &&
+            exercise.muscleGroup != _selectedMuscleGroup) {
+          return false;
+        }
+        if (query.isEmpty) return true;
         return exercise.name.toLowerCase().contains(query) ||
-               (exercise.muscleGroup?.toLowerCase().contains(query) ?? false) ||
-               (exercise.equipment?.toLowerCase().contains(query) ?? false);
+            (exercise.muscleGroup?.toLowerCase().contains(query) ?? false) ||
+            (exercise.equipment?.toLowerCase().contains(query) ?? false);
       }).toList();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).densePagePadding),
-              child: Row(
-                children: [
-                  const BackButton(),
-                  Expanded(
-                    child: Text(
-                      'Выберите упражнение',
-                      style: Theme.of(context).textTheme.titleLarge,
-                      textAlign: TextAlign.center,
+    return AssistantChatHost(
+      contextBuilder: () async => {
+        'screen': 'exercise_selection',
+        'entities': {'filtered_count': _filteredExercises.length},
+      },
+      builder: (context, openChat) {
+        final theme = Theme.of(context);
+        final scheme = theme.colorScheme;
+        final instrument = InstrumentTheme.of(context);
+        final topInset = AmbientScaffoldShell.topContentInset(context);
+        final bottomInset = AmbientScaffoldShell.bottomContentInset(context);
+
+        return AmbientScaffoldShell(
+          appBar: PrimaryAppBar(
+            title: 'Выберите упражнение',
+            onTitleTap: openChat,
+            showBack: true,
+          ),
+          body: _isLoading
+              ? Padding(
+                  padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
+                  child: const LoadingIndicator(),
+                )
+              : ListView(
+                  padding: EdgeInsets.fromLTRB(
+                    0,
+                    topInset + 8,
+                    0,
+                    bottomInset + 24,
+                  ),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InstrumentTheme.inputDecoration(
+                          context,
+                          labelText: 'Поиск упражнений',
+                          prefixIcon: const Icon(Icons.search_rounded),
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 48),
-                ],
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(UiDimensions.of(context).densePagePadding),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  labelText: 'Поиск упражнений',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _filteredExercises.isEmpty
-                      ? const Center(child: Text('Упражнения не найдены'))
-                      : ListView.builder(
-                          itemCount: _filteredExercises.length,
-                          itemBuilder: (context, index) {
-                            final exercise = _filteredExercises[index];
-                            return ListTile(
-                              title: Text(exercise.name),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                    if (_muscleGroups.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      CanvasPillStrip(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        items: [
+                          CanvasPillItem(
+                            label: 'Все',
+                            selected: _selectedMuscleGroup == null,
+                            onTap: () {
+                              _selectedMuscleGroup = null;
+                              _applyFilters();
+                            },
+                          ),
+                          for (final g in _muscleGroups)
+                            CanvasPillItem(
+                              label: g,
+                              selected: _selectedMuscleGroup == g,
+                              onTap: () {
+                                _selectedMuscleGroup = g;
+                                _applyFilters();
+                              },
+                            ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _filteredExercises.isEmpty
+                          ? const EmptyState(
+                              icon: Icons.search_off_rounded,
+                              title: 'Упражнения не найдены',
+                              description:
+                                  'Попробуйте изменить поисковый запрос или группу мышц.',
+                            )
+                          : Container(
+                              decoration:
+                                  InstrumentTheme.instrumentCardDecoration(
+                                    context,
+                                  ),
+                              clipBehavior: Clip.antiAlias,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  if (exercise.muscleGroup != null)
-                                    Text('Группа мышц: ${exercise.muscleGroup}'),
-                                  if (exercise.equipment != null)
-                                    Text('Оборудование: ${exercise.equipment}'),
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      16,
+                                      12,
+                                      16,
+                                      10,
+                                    ),
+                                    child: Text(
+                                      'DIRECTORY · ${_filteredExercises.length}',
+                                      style: InstrumentTheme.microLabel(context)
+                                          .copyWith(
+                                            fontFeatures: const [
+                                              FontFeature.tabularFigures(),
+                                            ],
+                                          ),
+                                    ),
+                                  ),
+                                  Container(
+                                    height: 1,
+                                    color: instrument.hairlineBorder,
+                                  ),
+                                  for (
+                                    int i = 0;
+                                    i < _filteredExercises.length;
+                                    i++
+                                  ) ...[
+                                    if (i > 0)
+                                      Container(
+                                        height: 1,
+                                        color: instrument.hairlineBorder,
+                                      ),
+                                    _SelectableExerciseRow(
+                                      exercise: _filteredExercises[i],
+                                      subtitleColor: scheme.onSurfaceVariant,
+                                      onTap: () => Navigator.of(
+                                        context,
+                                      ).pop(_filteredExercises[i]),
+                                    ),
+                                  ],
                                 ],
                               ),
-                              onTap: () => Navigator.of(context).pop(exercise),
-                            );
-                          },
+                            ),
+                    ),
+                  ],
+                ),
+        );
+      },
+    );
+  }
+}
+
+class _SelectableExerciseRow extends StatelessWidget {
+  final ExerciseDefinition exercise;
+  final Color subtitleColor;
+  final VoidCallback onTap;
+
+  const _SelectableExerciseRow({
+    required this.exercise,
+    required this.subtitleColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final meta = <String>[
+      if (exercise.muscleGroup != null) 'Группа мышц: ${exercise.muscleGroup}',
+      if (exercise.equipment != null) 'Оборудование: ${exercise.equipment}',
+    ];
+
+    return InkWell(
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 56),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      exercise.name,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (meta.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        meta.join(' · '),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: subtitleColor,
                         ),
-            ),
-          ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: subtitleColor),
+            ],
+          ),
         ),
       ),
     );

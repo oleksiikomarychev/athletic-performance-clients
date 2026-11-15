@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/src/api/nutrition_api.dart';
-import 'package:workout_app/widgets/primary_app_bar.dart';
+import 'package:workout_app/src/widgets/snack_utils.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
 import 'package:workout_app/widgets/loading_indicator.dart';
+import 'package:workout_app/widgets/primary_app_bar.dart';
 
 class NutritionPlanCreate extends StatefulWidget {
   final Map<String, dynamic>? initialPlan;
@@ -27,6 +30,7 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
   List<Map<String, dynamic>> _supplementList = [];
   List<Map<String, dynamic>> _medicationList = [];
   List<Map<String, dynamic>> _selectedEntries = [];
+  final Set<String> _expandedCategories = {'food'};
 
   bool _isLoading = false;
   bool _isLoadingItems = false;
@@ -37,18 +41,21 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
     super.initState();
     _loadItems();
     if (widget.initialPlan != null) {
-      _sessionIdController.text = widget.initialPlan!['session_id'] ?? '';
+      _sessionIdController.text =
+          widget.initialPlan!['session_id']?.toString() ?? '';
       _userIdController.text =
           widget.initialPlan!['user_id']?.toString() ?? '1';
       _workoutIdController.text =
           widget.initialPlan!['workout_id']?.toString() ?? '';
       _appliedPlanWorkoutIdController.text =
           widget.initialPlan!['applied_plan_workout_id']?.toString() ?? '';
-      if (widget.initialPlan!['date'] != null) {
-        _selectedDate = DateTime.parse(widget.initialPlan!['date']);
+      final rawDate = widget.initialPlan!['date']?.toString();
+      if (rawDate != null && rawDate.isNotEmpty) {
+        final parsed = DateTime.tryParse(rawDate);
+        if (parsed != null) _selectedDate = parsed;
       }
       _selectedEntries = List<Map<String, dynamic>>.from(
-        widget.initialPlan!['entries'] ?? [],
+        widget.initialPlan!['entries'] ?? const [],
       );
     }
   }
@@ -63,9 +70,7 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
   }
 
   Future<void> _loadItems() async {
-    setState(() {
-      _isLoadingItems = true;
-    });
+    setState(() => _isLoadingItems = true);
 
     try {
       final food = await NutritionApi.getAllFood();
@@ -82,56 +87,51 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoadingItems = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading items: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        setState(() => _isLoadingItems = false);
+        showAppSnackBar(context, 'Error loading items: $e', isError: true);
       }
     }
   }
 
-  void _addEntry(Map<String, dynamic> item, String type) async {
+  Future<void> _addEntry(Map<String, dynamic> item, String type) async {
     final dosageController = TextEditingController(
       text: item['dosage']?.toString() ?? '',
     );
 
-    final result = await showDialog<bool>(
+    final result = await showInstrumentDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Add ${item['name'] ?? 'Item'}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: dosageController,
-              decoration: InputDecoration(
-                labelText: 'Dosage (${item['unit'] ?? ''})',
-                hintText: item['dosage']?.toString(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-          ],
+      eyebrow: type.toUpperCase(),
+      title: 'Add ${item['name'] ?? 'Item'}',
+      content: TextField(
+        controller: dosageController,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          fontFeatures: const [FontFeature.tabularFigures()],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Add'),
-          ),
-        ],
+        decoration: InstrumentTheme.inputDecoration(
+          context,
+          labelText: 'Dosage (${item['unit'] ?? ''})',
+          hintText: item['dosage']?.toString(),
+        ),
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
       ),
+      actions: [
+        InstrumentActionButton(
+          label: 'Cancel',
+          variant: InstrumentActionVariant.secondary,
+          onPressed: () => Navigator.pop(context, false),
+        ),
+        InstrumentActionButton(
+          label: 'Add',
+          icon: Icons.add_rounded,
+          onPressed: () => Navigator.pop(context, true),
+        ),
+      ],
     );
 
     if (result == true && mounted) {
-      final newDosage = double.tryParse(dosageController.text);
+      final newDosage = double.tryParse(
+        dosageController.text.trim().replaceAll(',', '.'),
+      );
       if (newDosage != null && newDosage > 0) {
         setState(() {
           _selectedEntries.add({...item, 'type': type, 'dosage': newDosage});
@@ -148,6 +148,18 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
     });
   }
 
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+    }
+  }
+
   Future<void> _save() async {
     FocusScope.of(context).unfocus();
 
@@ -156,18 +168,15 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
     }
 
     if (_selectedEntries.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please add at least one entry'),
-          backgroundColor: Colors.red,
-        ),
+      showAppSnackBar(
+        context,
+        'Please add at least one entry',
+        isError: true,
       );
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final userId = int.tryParse(_userIdController.text) ?? 1;
@@ -178,8 +187,7 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
       );
       final date = _selectedDate.toIso8601String();
 
-      Map<String, dynamic>? result;
-
+      final Map<String, dynamic>? result;
       if (widget.initialPlan != null) {
         result = await NutritionApi.updateSession(
           sessionId,
@@ -201,29 +209,19 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
       }
 
       if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            widget.initialPlan != null
-                ? 'Session updated successfully'
-                : 'Session created successfully',
-          ),
-        ),
+      showAppSnackBar(
+        context,
+        widget.initialPlan != null
+            ? 'Session updated successfully'
+            : 'Session created successfully',
       );
-
       Navigator.pop(context, result);
     } catch (e) {
       if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-      );
+      showAppSnackBar(context, 'Error: $e', isError: true);
     } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -237,190 +235,213 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
         'entities': {'selected_entries_count': _selectedEntries.length},
       },
       builder: (context, openChat) {
-        return Scaffold(
+        final theme = Theme.of(context);
+        final scheme = theme.colorScheme;
+        final instrument = InstrumentTheme.of(context);
+        final topInset = AmbientScaffoldShell.topContentInset(context);
+        final bottomInset = AmbientScaffoldShell.bottomContentInset(context);
+        final tabularStyle = theme.textTheme.bodyLarge?.copyWith(
+          fontFeatures: const [FontFeature.tabularFigures()],
+        );
+
+        return AmbientScaffoldShell(
           appBar: PrimaryAppBar(
             title: widget.initialPlan != null
                 ? 'Edit Nutrition Session'
                 : 'Create Nutrition Session',
             onTitleTap: openChat,
             showBack: true,
+            actions: [
+              IconButton(
+                onPressed: _isLoading ? null : _save,
+                icon: const Icon(Icons.check_rounded),
+                tooltip: 'Save',
+              ),
+            ],
           ),
           body: Form(
             key: _formKey,
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Session Configuration',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: UiDimensions.of(context).rowGap),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final sessionIdField = TextFormField(
-                        controller: _sessionIdController,
-                        decoration: const InputDecoration(
-                          labelText: 'Session ID',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) =>
-                            value?.isEmpty == true ? 'Required' : null,
-                      );
-                      final userIdField = TextFormField(
-                        controller: _userIdController,
-                        decoration: const InputDecoration(
-                          labelText: 'User ID',
-                          border: OutlineInputBorder(),
+            child: ListView(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                topInset + 8,
+                16,
+                bottomInset + 28,
+              ),
+              children: [
+                _NutritionFormCard(
+                  eyebrow: '01 · SESSION CONFIG',
+                  title: 'Session Configuration',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final sessionIdField = TextFormField(
+                            controller: _sessionIdController,
+                            style: tabularStyle,
+                            decoration: InstrumentTheme.inputDecoration(
+                              context,
+                              labelText: 'Session ID',
+                            ),
+                            validator: (value) =>
+                                value?.isEmpty == true ? 'Required' : null,
+                          );
+                          final userIdField = TextFormField(
+                            controller: _userIdController,
+                            style: tabularStyle,
+                            decoration: InstrumentTheme.inputDecoration(
+                              context,
+                              labelText: 'User ID',
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) =>
+                                value?.isEmpty == true ? 'Required' : null,
+                          );
+
+                          if (constraints.maxWidth < 300) {
+                            return Column(
+                              children: [
+                                sessionIdField,
+                                const SizedBox(height: 12),
+                                userIdField,
+                              ],
+                            );
+                          }
+                          return Row(
+                            children: [
+                              Expanded(child: sessionIdField),
+                              const SizedBox(width: 12),
+                              Expanded(child: userIdField),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _workoutIdController,
+                        style: tabularStyle,
+                        decoration: InstrumentTheme.inputDecoration(
+                          context,
+                          labelText: 'Workout ID (optional)',
                         ),
                         keyboardType: TextInputType.number,
-                        validator: (value) =>
-                            value?.isEmpty == true ? 'Required' : null,
-                      );
-
-                      if (constraints.maxWidth < 340) {
-                        return Column(
-                          children: [
-                            sessionIdField,
-                            SizedBox(height: UiDimensions.of(context).rowGap),
-                            userIdField,
-                          ],
-                        );
-                      }
-                      return Row(
-                        children: [
-                          Expanded(child: sessionIdField),
-                          SizedBox(width: UiDimensions.of(context).rowGap),
-                          Expanded(child: userIdField),
-                        ],
-                      );
-                    },
-                  ),
-                  SizedBox(height: UiDimensions.of(context).rowGap),
-                  TextFormField(
-                    controller: _workoutIdController,
-                    decoration: const InputDecoration(
-                      labelText: 'Workout ID (optional)',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  SizedBox(height: UiDimensions.of(context).rowGap),
-                  TextFormField(
-                    controller: _appliedPlanWorkoutIdController,
-                    decoration: const InputDecoration(
-                      labelText: 'Applied Plan Workout ID (optional)',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  SizedBox(height: UiDimensions.of(context).rowGap),
-                  InkWell(
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: _selectedDate,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2030),
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          _selectedDate = picked;
-                        });
-                      }
-                    },
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Date',
-                        border: OutlineInputBorder(),
                       ),
-                      child: Text(
-                        '${_selectedDate.toLocal().toString().split(' ')[0]}',
-                        style: const TextStyle(fontSize: 16),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _appliedPlanWorkoutIdController,
+                        style: tabularStyle,
+                        decoration: InstrumentTheme.inputDecoration(
+                          context,
+                          labelText: 'Applied Plan Workout ID (optional)',
+                        ),
+                        keyboardType: TextInputType.number,
                       ),
-                    ),
-                  ),
-                  SizedBox(height: UiDimensions.of(context).sectionGap),
-                  Text(
-                    'Selected Entries',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  if (_selectedEntries.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.0),
-                      child: Center(child: Text('No entries selected')),
-                    )
-                  else
-                    ..._selectedEntries.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final item = entry.value;
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          title: Text(item['name'] ?? 'Unknown'),
-                          subtitle: Text(
-                            '${item['type']} - ${item['dosage']} ${item['unit']}',
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.remove_circle_outline),
-                            onPressed: () => _removeEntry(index),
+                      const SizedBox(height: 12),
+                      InkWell(
+                        onTap: _pickDate,
+                        borderRadius: BorderRadius.circular(14),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 52),
+                          child: InputDecorator(
+                            decoration: InstrumentTheme.inputDecoration(
+                              context,
+                              labelText: 'Date',
+                              suffixIcon: Icon(
+                                Icons.calendar_today_outlined,
+                                size: 18,
+                                color: instrument.workingAura,
+                              ),
+                            ),
+                            child: Text(
+                              _selectedDate.toLocal().toString().split(' ').first,
+                              style: tabularStyle,
+                            ),
                           ),
                         ),
-                      );
-                    }).toList(),
-                  SizedBox(height: UiDimensions.of(context).sectionGap),
-                  Text(
-                    'Available Items',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  if (_isLoadingItems)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: LoadingIndicator(),
                       ),
-                    )
-                  else ...[
-                    _buildExpansionCategory('Food', _foodList, 'food'),
-                    _buildExpansionCategory(
-                      'Supplements',
-                      _supplementList,
-                      'supplement',
-                    ),
-                    _buildExpansionCategory(
-                      'Medications',
-                      _medicationList,
-                      'medication',
-                    ),
-                  ],
-                  SizedBox(height: UiDimensions.of(context).sectionGap),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _save,
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(
-                              widget.initialPlan != null
-                                  ? 'Update Session'
-                                  : 'Create Session',
-                            ),
-                    ),
+                    ],
                   ),
-                  SizedBox(height: UiDimensions.of(context).sectionGap),
-                ],
-              ),
+                ),
+                const SizedBox(height: 14),
+                _NutritionFormCard(
+                  eyebrow: '02 · SELECTED INTAKE (${_selectedEntries.length})',
+                  title: 'Selected Entries',
+                  accentColor: instrument.deloadAura,
+                  flushBody: true,
+                  child: _selectedEntries.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Text(
+                            'No entries selected',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            for (int i = 0; i < _selectedEntries.length; i++) ...[
+                              if (i > 0)
+                                Container(
+                                  height: 1,
+                                  color: instrument.hairlineBorder,
+                                ),
+                              _SelectedEntryRow(
+                                item: _selectedEntries[i],
+                                onRemove: () => _removeEntry(i),
+                              ),
+                            ],
+                          ],
+                        ),
+                ),
+                const SizedBox(height: 14),
+                _NutritionFormCard(
+                  eyebrow: '03 · CATALOG',
+                  title: 'Available Items',
+                  flushBody: true,
+                  child: _isLoadingItems
+                      ? const Padding(
+                          padding: EdgeInsets.all(20),
+                          child: LoadingIndicator(),
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildCollapsibleCategory(
+                              context,
+                              title: 'Food',
+                              items: _foodList,
+                              type: 'food',
+                              isFirst: true,
+                            ),
+                            _buildCollapsibleCategory(
+                              context,
+                              title: 'Supplements',
+                              items: _supplementList,
+                              type: 'supplement',
+                            ),
+                            _buildCollapsibleCategory(
+                              context,
+                              title: 'Medications',
+                              items: _medicationList,
+                              type: 'medication',
+                            ),
+                          ],
+                        ),
+                ),
+                const SizedBox(height: 16),
+                InstrumentActionButton(
+                  label: widget.initialPlan != null
+                      ? 'Update Session'
+                      : 'Create Session',
+                  icon: Icons.check_rounded,
+                  expanded: true,
+                  loading: _isLoading,
+                  onPressed: _isLoading ? null : _save,
+                ),
+              ],
             ),
           ),
         );
@@ -428,25 +449,262 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
     );
   }
 
-  Widget _buildExpansionCategory(
-    String title,
-    List<Map<String, dynamic>> items,
-    String type,
-  ) {
-    return ExpansionTile(
-      title: Text(title),
-      children: items.isEmpty
-          ? [const ListTile(title: Text('No items available'))]
-          : items.map((item) {
-              return ListTile(
-                title: Text(item['name'] ?? 'Unknown'),
-                subtitle: Text('${item['dosage']} ${item['unit']}'),
-                trailing: IconButton(
-                  icon: const Icon(Icons.add_circle_outline),
-                  onPressed: () => _addEntry(item, type),
+  Widget _buildCollapsibleCategory(
+    BuildContext context, {
+    required String title,
+    required List<Map<String, dynamic>> items,
+    required String type,
+    bool isFirst = false,
+  }) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final expanded = _expandedCategories.contains(type);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (!isFirst) Container(height: 1, color: instrument.hairlineBorder),
+        InkWell(
+          onTap: () {
+            setState(() {
+              if (expanded) {
+                _expandedCategories.remove(type);
+              } else {
+                _expandedCategories.add(type);
+              }
+            });
+          },
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 52),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${items.length}',
+                    style: InstrumentTheme.microLabel(context).copyWith(
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    expanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (expanded) ...[
+          Container(height: 1, color: instrument.hairlineBorder),
+          if (items.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Text(
+                'No items available',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
                 ),
-              );
-            }).toList(),
+              ),
+            )
+          else
+            for (int i = 0; i < items.length; i++) ...[
+              if (i > 0) Container(height: 1, color: instrument.hairlineBorder),
+              _CatalogItemRow(
+                item: items[i],
+                onAdd: () => _addEntry(items[i], type),
+              ),
+            ],
+        ],
+      ],
+    );
+  }
+}
+
+class _NutritionFormCard extends StatelessWidget {
+  final String eyebrow;
+  final String title;
+  final Widget child;
+  final Color? accentColor;
+  final bool flushBody;
+
+  const _NutritionFormCard({
+    required this.eyebrow,
+    required this.title,
+    required this.child,
+    this.accentColor,
+    this.flushBody = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final instrument = InstrumentTheme.of(context);
+
+    return Container(
+      decoration: InstrumentTheme.instrumentCardDecoration(
+        context,
+        accentColor: accentColor,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  eyebrow,
+                  style: InstrumentTheme.microLabel(
+                    context,
+                    color: accentColor,
+                  ).copyWith(
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(height: 1, color: instrument.hairlineBorder),
+          if (flushBody)
+            child
+          else
+            Padding(padding: const EdgeInsets.all(16), child: child),
+        ],
+      ),
+    );
+  }
+}
+
+class _SelectedEntryRow extends StatelessWidget {
+  final Map<String, dynamic> item;
+  final VoidCallback onRemove;
+
+  const _SelectedEntryRow({required this.item, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item['name']?.toString() ?? 'Unknown',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${item['type']} · ${item['dosage']} ${item['unit'] ?? ''}'
+                      .trim(),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            child: IconButton(
+              icon: Icon(
+                Icons.remove_circle_outline_rounded,
+                color: instrument.peakEffortColor,
+              ),
+              tooltip: 'Remove entry',
+              onPressed: onRemove,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CatalogItemRow extends StatelessWidget {
+  final Map<String, dynamic> item;
+  final VoidCallback onAdd;
+
+  const _CatalogItemRow({required this.item, required this.onAdd});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+
+    return InkWell(
+      onTap: onAdd,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item['name']?.toString() ?? 'Unknown',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${item['dosage'] ?? '—'} ${item['unit'] ?? ''}'.trim(),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              child: IconButton(
+                icon: Icon(
+                  Icons.add_circle_outline_rounded,
+                  color: instrument.workingAura,
+                ),
+                tooltip: 'Add entry',
+                onPressed: onAdd,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

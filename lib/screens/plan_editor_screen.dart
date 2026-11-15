@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/models/calendar_plan.dart';
+import 'package:workout_app/models/mesocycle.dart';
 import 'package:workout_app/models/microcycle.dart';
 import 'package:workout_app/models/plan_schedule.dart';
 import 'package:workout_app/services/api_client.dart';
@@ -8,6 +10,7 @@ import 'package:workout_app/services/mesocycle_service.dart';
 import 'package:workout_app/models/exercise_definition.dart';
 import 'package:workout_app/screens/exercise_selection_screen.dart';
 import 'package:workout_app/screens/plan_microcycle_editor.dart';
+import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/widgets/mode_value_control.dart';
 import 'package:workout_app/screens/macros/macros_list_screen.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
@@ -31,14 +34,6 @@ class _MicroDiff {
     required this.changedEffort,
     required this.changedVolume,
   });
-}
-
-class _ReplaceConfig {
-  final Set<int> sourceExerciseIds;
-  final ExerciseDefinition target;
-  final int? dayIndex;
-
-  const _ReplaceConfig({required this.sourceExerciseIds, required this.target, required this.dayIndex});
 }
 
 enum RecalcTarget { auto, intensity, effort, reps }
@@ -575,212 +570,428 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
   @override
   Widget build(BuildContext context) {
     final plan = widget.plan;
-    return Scaffold(
-      appBar: PrimaryAppBar(
-        title: 'Редактор: ${plan.name}',
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final dimensions = UiDimensions.of(context);
+
+    return AssistantChatHost(
+      contextBuilder: () async => {
+        'screen': 'plan_editor',
+        'entities': {
+          'calendar_plan_id': plan.id,
+          'plan_name': plan.name,
+          'mesocycles_count': plan.mesocycles.length,
+          'selected_microcycles': _selectedMicrocycleIds.toList(),
+          if (_query.isNotEmpty) 'search_query': _query,
+        },
+      },
+      builder: (context, openChat) {
+        return Scaffold(
+          appBar: PrimaryAppBar(
+            title: 'Редактор: ${plan.name}',
+            onTitleTap: openChat,
             actions: [
-              TextButton.icon(
-                onPressed: () {
-              final id = plan.id;
-              if (id != null) {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => MacrosListScreen(calendarPlanId: id),
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: IconButton(
+                  tooltip: 'Macros',
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    tapTargetSize: MaterialTapTargetSize.padded,
                   ),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Нет ID плана')),
-                );
-              }
-            },
-            icon: const Icon(Icons.auto_fix_high, color: Colors.white),
-            label: const Text('Macros', style: TextStyle(color: Colors.white)),
-          ),
-          if (_selectedMicrocycleIds.isNotEmpty)
-            TextButton.icon(
-              onPressed: _batchSaving ? null : _openMassEditDialog,
-              icon: _batchSaving
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Icon(Icons.tune, color: Colors.white),
-              label: Text('Массово (${_selectedMicrocycleIds.length})', style: const TextStyle(color: Colors.white)),
-            ),
-          if (_selectedMicrocycleIds.isNotEmpty)
-            TextButton.icon(
-              onPressed: _batchSaving ? null : _openMassReplaceDialog,
-              icon: const Icon(Icons.swap_horiz, color: Colors.white),
-              label: const Text('Замена', style: TextStyle(color: Colors.white)),
-            ),
-        ],
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(UiDimensions.of(context).densePagePadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _searchCtrl,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: 'Поиск упражнения по названию...',
-                border: OutlineInputBorder(),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => MacrosListScreen(calendarPlanId: plan.id),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.auto_fix_high),
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Мезоциклы',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: ListView.builder(
-                itemCount: plan.mesocycles.length,
-                itemBuilder: (context, index) {
-                  final meso = plan.mesocycles[index];
-                  final filtered = meso.microcycles.where(_microHasMatch).toList();
-                  if (filtered.isEmpty) return const SizedBox.shrink();
-                  return ExpansionTile(
-                    title: Row(
+            ],
+          ),
+          body: Padding(
+            padding: EdgeInsets.all(dimensions.densePagePadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _searchCtrl,
+                  decoration: InstrumentTheme.inputDecoration(
+                    context,
+                    hintText: 'Поиск упражнения по названию...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _query.isEmpty
+                        ? null
+                        : IconButton(
+                            tooltip: 'Очистить',
+                            style: IconButton.styleFrom(
+                              minimumSize: const Size(48, 48),
+                              tapTargetSize: MaterialTapTargetSize.padded,
+                            ),
+                            icon: const Icon(Icons.close, size: 18),
+                            onPressed: () {
+                              _searchCtrl.clear();
+                              setState(() => _query = '');
+                            },
+                          ),
+                  ),
+                ),
+                if (_selectedMicrocycleIds.isNotEmpty) ...[
+                  SizedBox(height: dimensions.rowGap),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: dimensions.cardPadding,
+                      vertical: 8,
+                    ),
+                    decoration: InstrumentTheme.cardDecoration(
+                      context,
+                      color: colors.primaryContainer.withValues(alpha: 0.35),
+                      borderColor: colors.primary.withValues(alpha: 0.45),
+                      radius: 12,
+                    ),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Expanded(child: Text(meso.name)),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.red),
-                          onPressed: () async {
-                            final confirmed = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: const Text('Удалить мезоцикл'),
-                                content: Text('Вы уверены, что хотите удалить мезоцикл "${meso.name}" и все его микроциклы?'),
-                                actions: [
-                                  TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Отмена')),
-                                  FilledButton(
-                                    onPressed: () => Navigator.of(ctx).pop(true),
-                                    style: FilledButton.styleFrom(backgroundColor: Colors.red),
-                                    child: const Text('Удалить'),
+                        Text(
+                          'ВЫБРАНО: ${_selectedMicrocycleIds.length}',
+                          style: InstrumentTheme.tabular(
+                            InstrumentTheme.microLabel(
+                              context,
+                              color: colors.primary,
+                            ),
+                          ),
+                        ),
+                        FilledButton.tonalIcon(
+                          onPressed: _batchSaving ? null : _openMassEditDialog,
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(48, 48),
+                            tapTargetSize: MaterialTapTargetSize.padded,
+                          ),
+                          icon: _batchSaving
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
                                   ),
-                                ],
-                              ),
-                            );
-                            if (confirmed == true) {
-                              try {
-                                await _mesoService.deleteMesocycle(meso.id!);
-                                if (mounted) {
-                                  setState(() {
-                                    widget.plan.mesocycles.removeWhere((m) => m.id == meso.id);
-                                  });
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Мезоцикл удалён')),
-                                  );
-                                }
-                              } catch (e) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Ошибка удаления: $e')),
-                                  );
-                                }
-                              }
-                            }
-                          },
-                          tooltip: 'Удалить мезоцикл',
+                                )
+                              : const Icon(Icons.tune, size: 18),
+                          label: const Text('Массово'),
+                        ),
+                        FilledButton.tonalIcon(
+                          onPressed:
+                              _batchSaving ? null : _openMassReplaceDialog,
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(48, 48),
+                            tapTargetSize: MaterialTapTargetSize.padded,
+                          ),
+                          icon: const Icon(Icons.swap_horiz, size: 18),
+                          label: const Text('Замена'),
                         ),
                       ],
                     ),
-                    children: [
-                      ...filtered.map((micro) => CheckboxListTile(
-                            controlAffinity: ListTileControlAffinity.leading,
-                            value: _selectedMicrocycleIds.contains(micro.id),
-                            onChanged: (checked) {
-                              setState(() {
-                                if (checked == true) {
-                                  _selectedMicrocycleIds.add(micro.id);
-                                } else {
-                                  _selectedMicrocycleIds.remove(micro.id);
-                                }
-                              });
-                            },
-                            title: Text(micro.name),
-                            subtitle: Text('Дней: ${micro.daysCount ?? 0}'),
-                            secondary: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.chevron_right),
-                                  onPressed: () async {
-                                    final changed = await Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => PlanMicrocycleEditor(microcycle: micro),
+                  ),
+                ],
+                SizedBox(height: dimensions.rowGap),
+                Text(
+                  'МЕЗОЦИКЛЫ · ${plan.mesocycles.length}',
+                  style: InstrumentTheme.tabular(
+                    InstrumentTheme.microLabel(context),
+                  ),
+                ),
+                SizedBox(height: dimensions.rowGap),
+                Expanded(
+                  child: ListView.separated(
+                    itemCount: plan.mesocycles.length,
+                    separatorBuilder: (_, __) =>
+                        SizedBox(height: dimensions.rowGap),
+                    itemBuilder: (context, index) {
+                      final meso = plan.mesocycles[index];
+                      final filtered =
+                          meso.microcycles.where(_microHasMatch).toList();
+                      if (filtered.isEmpty) return const SizedBox.shrink();
+                      return Container(
+                        decoration: InstrumentTheme.cardDecoration(
+                          context,
+                          color: colors.surfaceContainerLow,
+                          radius: 14,
+                        ),
+                        child: ExpansionTile(
+                          shape: const Border(),
+                          collapsedShape: const Border(),
+                          tilePadding: EdgeInsets.symmetric(
+                            horizontal: dimensions.cardPadding,
+                            vertical: 4,
+                          ),
+                          childrenPadding: EdgeInsets.fromLTRB(
+                            dimensions.cardPadding,
+                            0,
+                            dimensions.cardPadding,
+                            dimensions.cardPadding,
+                          ),
+                          title: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      meso.name,
+                                      style: theme.textTheme.titleSmall
+                                          ?.copyWith(
+                                        fontWeight: FontWeight.w700,
                                       ),
-                                    );
-                                    if (!context.mounted) return;
-                                    if (changed == true) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Изменения сохранены')),
-                                      );
-                                    } else if (changed is Map<String, dynamic> && changed['deletedId'] != null) {
-                                      final int did = (changed['deletedId'] as num).toInt();
-                                      setState(() {
-                                        meso.microcycles.removeWhere((mc) => mc.id == did);
-                                        _selectedMicrocycleIds.remove(did);
-                                      });
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Микроцикл удалён')),
-                                      );
-                                    }
-                                  },
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                  onPressed: () async {
-                                    final confirmed = await showDialog<bool>(
-                                      context: context,
-                                      builder: (ctx) => AlertDialog(
-                                        title: const Text('Удалить микроцикл'),
-                                        content: Text('Вы уверены, что хотите удалить микроцикл "${micro.name}"?'),
-                                        actions: [
-                                          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Отмена')),
-                                          FilledButton(
-                                            onPressed: () => Navigator.of(ctx).pop(true),
-                                            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-                                            child: const Text('Удалить'),
-                                          ),
-                                        ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'МИКРОЦИКЛОВ: ${filtered.length}',
+                                      style: InstrumentTheme.tabular(
+                                        InstrumentTheme.microLabel(context),
                                       ),
-                                    );
-                                    if (confirmed == true) {
-                                      try {
-                                        await _mesoService.deleteMicrocycle(micro.id!);
-                                        if (mounted) {
-                                          setState(() {
-                                            meso.microcycles.removeWhere((mc) => mc.id == micro.id);
-                                            _selectedMicrocycleIds.remove(micro.id);
-                                          });
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text('Микроцикл удалён')),
-                                          );
-                                        }
-                                      } catch (e) {
-                                        if (mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text('Ошибка удаления: $e')),
-                                          );
-                                        }
-                                      }
-                                    }
-                                  },
-                                  tooltip: 'Удалить микроцикл',
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          )),
-                    ],
-                  );
-                },
-              ),
+                              ),
+                              SizedBox(
+                                width: 48,
+                                height: 48,
+                                child: IconButton(
+                                  tooltip: 'Удалить мезоцикл',
+                                  style: IconButton.styleFrom(
+                                    minimumSize: const Size(48, 48),
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.padded,
+                                  ),
+                                  icon: Icon(
+                                    Icons.delete_outline,
+                                    color: colors.error,
+                                  ),
+                                  onPressed: () =>
+                                      _confirmDeleteMesocycle(meso),
+                                ),
+                              ),
+                            ],
+                          ),
+                          children: filtered.map((micro) {
+                            final selected =
+                                _selectedMicrocycleIds.contains(micro.id);
+                            return Container(
+                              margin: EdgeInsets.only(top: dimensions.rowGap),
+                              decoration: InstrumentTheme.cardDecoration(
+                                context,
+                                color: selected
+                                    ? colors.primaryContainer
+                                        .withValues(alpha: 0.25)
+                                    : colors.surfaceContainerHighest
+                                        .withValues(alpha: 0.4),
+                                borderColor: selected
+                                    ? colors.primary.withValues(alpha: 0.55)
+                                    : null,
+                                radius: 10,
+                              ),
+                              child: CheckboxListTile(
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                value: selected,
+                                onChanged: (checked) {
+                                  setState(() {
+                                    if (checked == true) {
+                                      _selectedMicrocycleIds.add(micro.id);
+                                    } else {
+                                      _selectedMicrocycleIds.remove(micro.id);
+                                    }
+                                  });
+                                },
+                                title: Text(
+                                  micro.name,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  'Дней: ${micro.daysCount ?? 0}',
+                                  style: InstrumentTheme.tabular(
+                                    theme.textTheme.bodySmall ??
+                                        const TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                                secondary: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox(
+                                      width: 48,
+                                      height: 48,
+                                      child: IconButton(
+                                        tooltip: 'Редактировать микроцикл',
+                                        style: IconButton.styleFrom(
+                                          minimumSize: const Size(48, 48),
+                                          tapTargetSize:
+                                              MaterialTapTargetSize.padded,
+                                        ),
+                                        icon: const Icon(Icons.chevron_right),
+                                        onPressed: () =>
+                                            _openMicrocycleEditor(meso, micro),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 48,
+                                      height: 48,
+                                      child: IconButton(
+                                        tooltip: 'Удалить микроцикл',
+                                        style: IconButton.styleFrom(
+                                          minimumSize: const Size(48, 48),
+                                          tapTargetSize:
+                                              MaterialTapTargetSize.padded,
+                                        ),
+                                        icon: Icon(
+                                          Icons.delete_outline,
+                                          color: colors.error,
+                                        ),
+                                        onPressed: () =>
+                                            _confirmDeleteMicrocycle(
+                                                meso, micro),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _openMicrocycleEditor(
+    Mesocycle meso,
+    Microcycle micro,
+  ) async {
+    final changed = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PlanMicrocycleEditor(microcycle: micro),
       ),
     );
+    if (!mounted) return;
+    if (changed == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Изменения сохранены')),
+      );
+    } else if (changed is Map<String, dynamic> && changed['deletedId'] != null) {
+      final int did = (changed['deletedId'] as num).toInt();
+      setState(() {
+        meso.microcycles.removeWhere((mc) => mc.id == did);
+        _selectedMicrocycleIds.remove(did);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Микроцикл удалён')),
+      );
+    }
+  }
+
+  Future<void> _confirmDeleteMesocycle(Mesocycle meso) async {
+    final colors = Theme.of(context).colorScheme;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Удалить мезоцикл'),
+        content: Text(
+          'Вы уверены, что хотите удалить мезоцикл "${meso.name}" и все его микроциклы?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: colors.error),
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await _mesoService.deleteMesocycle(meso.id);
+      if (mounted) {
+        setState(() {
+          widget.plan.mesocycles.removeWhere((m) => m.id == meso.id);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Мезоцикл удалён')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка удаления: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmDeleteMicrocycle(
+    Mesocycle meso,
+    Microcycle micro,
+  ) async {
+    final colors = Theme.of(context).colorScheme;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Удалить микроцикл'),
+        content: Text(
+          'Вы уверены, что хотите удалить микроцикл "${micro.name}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: colors.error),
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await _mesoService.deleteMicrocycle(micro.id);
+      if (mounted) {
+        setState(() {
+          meso.microcycles.removeWhere((mc) => mc.id == micro.id);
+          _selectedMicrocycleIds.remove(micro.id);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Микроцикл удалён')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка удаления: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _openMassEditDialog() async {
@@ -892,7 +1103,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                   ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<RecalcTarget>(
-                    value: recalcTarget,
+                    initialValue: recalcTarget,
                     items: const [
                       DropdownMenuItem(value: RecalcTarget.auto, child: Text('Пересчитать: Авто')),
                       DropdownMenuItem(value: RecalcTarget.reps, child: Text('Пересчитать: Повторы')),
@@ -1125,7 +1336,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                   Text('Изменения: Int $sumI · RPE $sumE · Повт $sumV'),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<FixStrategy>(
-                    value: localFix,
+                    initialValue: localFix,
                     items: const [
                       DropdownMenuItem(value: FixStrategy.none, child: Text('Валидатор: Без авто-исправлений')),
                       DropdownMenuItem(value: FixStrategy.fixReps, child: Text('Валидатор: Поправить Повторы')),
@@ -1137,7 +1348,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                         switch (localFix) {
                           case FixStrategy.fixReps: return 'fixReps';
                           case FixStrategy.fixIntensity: return 'fixIntensity';
-                          case FixStrategy.none: default: return 'none';
+                          case FixStrategy.none: return 'none';
                         }
                       }();
                       setState(() { recompute(); });

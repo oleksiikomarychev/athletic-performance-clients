@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
-
-import '../config/constants/theme_constants.dart';
-import '../config/theme/ui_dimensions.dart';
-import '../models/user_profile.dart';
+import 'package:workout_app/models/user_profile.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
 
 class UserProfileView extends StatelessWidget {
   final UserProfile profile;
@@ -33,22 +33,27 @@ class UserProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final dims = UiDimensions.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _buildHeader(context),
         if ((profile.bio ?? '').isNotEmpty) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Text(
             profile.bio!,
-            style: TextStyle(
-              fontSize: 14,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+              height: 1.4,
             ),
           ),
         ],
         if (showCoachingCard) ...[
-          SizedBox(height: UiDimensions.of(context).sectionGap),
+          SizedBox(height: dims.sectionGap),
           _buildCoachingCard(context),
         ],
         ...additionalSections,
@@ -59,6 +64,15 @@ class UserProfileView extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final avatarUrl = avatarUrlOverride ?? profile.photoUrl;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final dims = UiDimensions.of(context);
+    final initial = (profile.displayName?.isNotEmpty ?? false)
+        ? profile.displayName!.substring(0, 1).toUpperCase()
+        : (profile.userId.isNotEmpty
+              ? profile.userId.substring(0, 1).toUpperCase()
+              : '?');
 
     return Column(
       children: [
@@ -66,74 +80,89 @@ class UserProfileView extends StatelessWidget {
           alignment: Alignment.bottomRight,
           children: [
             CircleAvatar(
-              radius: UiDimensions.of(context).avatarRadius,
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              radius: dims.avatarRadius,
+              backgroundColor: instrument.workingAura.withValues(alpha: 0.16),
               backgroundImage: avatarUrl != null
                   ? NetworkImage(avatarUrl)
                   : null,
               child: avatarUrl == null
                   ? Text(
-                      (profile.displayName?.isNotEmpty ?? false)
-                          ? profile.displayName!.substring(0, 1).toUpperCase()
-                          : profile.userId.substring(0, 1).toUpperCase(),
+                      initial,
                       style: TextStyle(
-                        fontSize: UiDimensions.of(context).avatarRadius * 0.7,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        fontSize: dims.avatarRadius * 0.7,
+                        fontWeight: FontWeight.w800,
+                        color: instrument.workingAura,
                       ),
                     )
                   : null,
             ),
             if (isOwner && onAvatarTool != null)
-              Material(
-                color: Theme.of(context).colorScheme.surfaceContainerLow,
-                shape: const CircleBorder(),
-                elevation: 2,
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: theme.brightness == Brightness.dark
+                      ? InstrumentPalette.obsidianCardLow
+                      : scheme.surface,
+                  border: Border.all(
+                    color: instrument.hairlineBorder.withValues(alpha: 0.8),
+                  ),
+                ),
                 child: IconButton(
-                  icon: const Icon(Icons.auto_awesome, size: 18),
+                  icon: Icon(
+                    Icons.auto_awesome,
+                    size: 18,
+                    color: instrument.workingAura,
+                  ),
                   onPressed: onAvatarTool,
                   tooltip: 'Avatar',
+                  constraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
                 ),
               ),
           ],
         ),
-        SizedBox(height: UiDimensions.of(context).rowGap),
+        SizedBox(height: dims.rowGap),
         Text(
           profile.displayName ?? 'User ${profile.userId}',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: UiDimensions.of(context).profileNameFontSize,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontSize: dims.profileNameFontSize,
+            fontWeight: FontWeight.w700,
+            color: scheme.onSurface,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           subtitle ?? profile.userId,
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 13,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          style: InstrumentTheme.tabular(
+            (theme.textTheme.bodySmall ?? const TextStyle()).copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
           ),
         ),
         if (isOwner && (onEditProfile != null || onManageCoaching != null)) ...[
-          SizedBox(height: UiDimensions.of(context).rowGap),
+          SizedBox(height: dims.rowGap),
           Wrap(
-            spacing: 12,
+            spacing: 10,
             runSpacing: 8,
             alignment: WrapAlignment.center,
             children: [
               if (onEditProfile != null)
-                OutlinedButton.icon(
+                InstrumentActionButton(
+                  label: l10n.editProfileButton,
+                  icon: Icons.edit_outlined,
+                  variant: InstrumentActionVariant.secondary,
                   onPressed: onEditProfile,
-                  icon: const Icon(Icons.edit_outlined, size: 16),
-                  label: Text(l10n.editProfileButton),
                 ),
               if (onManageCoaching != null)
-                OutlinedButton.icon(
+                InstrumentActionButton(
+                  label: l10n.coachingSettingsButton,
+                  icon: Icons.workspace_premium_outlined,
+                  variant: InstrumentActionVariant.secondary,
                   onPressed: onManageCoaching,
-                  icon: const Icon(Icons.workspace_premium_outlined, size: 16),
-                  label: Text(l10n.coachingSettingsButton),
                 ),
             ],
           ),
@@ -146,161 +175,188 @@ class UserProfileView extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final coaching = profile.coaching;
     final enabled = coaching?.enabled ?? false;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final dims = UiDimensions.of(context);
+    final hairline =
+        (theme.brightness == Brightness.dark
+                ? instrument.hairlineBorder
+                : scheme.outlineVariant)
+            .withValues(alpha: 0.65);
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: AppShadows.sm,
+      decoration: InstrumentTheme.instrumentCardDecoration(
+        context,
+        accentColor: enabled ? instrument.successColor : null,
+        radius: 22,
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.workspace_premium_outlined,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  l10n.coachingTitle,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              dims.cardPadding,
+              dims.cardPadding,
+              dims.cardPadding,
+              12,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.workspace_premium_outlined,
+                  color: enabled
+                      ? instrument.successColor
+                      : scheme.onSurfaceVariant,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'COACHING STATUS',
+                        style: InstrumentTheme.microLabel(
+                          context,
+                          color: enabled
+                              ? instrument.successColor
+                              : scheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.coachingTitle,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              if (enabled)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.tertiaryContainer,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+                const SizedBox(width: 8),
+                Flexible(
                   child: Text(
-                    l10n.coachingAcceptingNewClients,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onTertiaryContainer,
+                    enabled
+                        ? l10n.coachingAcceptingNewClients.toUpperCase()
+                        : l10n.coachingDisabled.toUpperCase(),
+                    textAlign: TextAlign.end,
+                    style: InstrumentTheme.microLabel(
+                      context,
+                      color: enabled
+                          ? instrument.successColor
+                          : scheme.onSurfaceVariant,
                     ),
                   ),
-                )
-              else
-                Text(
-                  l10n.coachingDisabled,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (!enabled)
-            Text(
-              l10n.coachingDisabledDescription,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            )
-          else ...[
-            if ((coaching?.tagline?.isNotEmpty ?? false)) ...[
-              Text(
-                coaching!.tagline!,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 8),
-            ],
-            if ((coaching?.description?.isNotEmpty ?? false)) ...[
-              Text(
-                coaching!.description!,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                if ((coaching?.specializations ?? []).isNotEmpty)
-                  _chip(
-                    context,
-                    l10n.coachingSpecializations,
-                    coaching!.specializations.join(', '),
-                  ),
-                if ((coaching?.languages ?? []).isNotEmpty)
-                  _chip(
-                    context,
-                    l10n.coachingLanguages,
-                    coaching!.languages.join(', '),
-                  ),
-                if (coaching?.ratePlan != null)
-                  _chip(
-                    context,
-                    l10n.coachingRate,
-                    coaching!.ratePlan!.amountMinor != null
-                        ? '${(coaching.ratePlan!.amountMinor! / 100).toStringAsFixed(0)} USD / month'
-                        : l10n.coachingCustomRate,
-                  ),
               ],
             ),
-            const SizedBox(height: 16),
-            if (!isOwner && onRequestCoaching != null)
-              ElevatedButton.icon(
-                onPressed: enabled ? onRequestCoaching : null,
-                icon: const Icon(Icons.handshake_outlined),
-                label: Text(l10n.requestCoaching),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                  disabledBackgroundColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.12),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-              ),
-          ],
+          ),
+          Container(height: 1, color: hairline),
+          Padding(
+            padding: EdgeInsets.all(dims.cardPadding),
+            child: !enabled
+                ? Text(
+                    l10n.coachingDisabledDescription,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if ((coaching?.tagline?.isNotEmpty ?? false)) ...[
+                        Text(
+                          coaching!.tagline!,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: scheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      if ((coaching?.description?.isNotEmpty ?? false)) ...[
+                        Text(
+                          coaching!.description!,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                            height: 1.35,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      if ((coaching?.specializations ?? []).isNotEmpty)
+                        _bareDetailRow(
+                          context,
+                          hairline: hairline,
+                          label: l10n.coachingSpecializations,
+                          value: coaching!.specializations.join(', '),
+                        ),
+                      if ((coaching?.languages ?? []).isNotEmpty)
+                        _bareDetailRow(
+                          context,
+                          hairline: hairline,
+                          label: l10n.coachingLanguages,
+                          value: coaching!.languages.join(', '),
+                        ),
+                      if (coaching?.ratePlan != null)
+                        _bareDetailRow(
+                          context,
+                          hairline: hairline,
+                          label: l10n.coachingRate,
+                          value: coaching!.ratePlan!.amountMinor != null
+                              ? '${(coaching.ratePlan!.amountMinor! / 100).toStringAsFixed(0)} USD / month'
+                              : l10n.coachingCustomRate,
+                          accentColor: instrument.workingAura,
+                        ),
+                      if (!isOwner && onRequestCoaching != null) ...[
+                        const SizedBox(height: 14),
+                        InstrumentActionButton(
+                          label: l10n.requestCoaching,
+                          icon: Icons.handshake_outlined,
+                          variant: InstrumentActionVariant.primary,
+                          expanded: true,
+                          onPressed: enabled ? onRequestCoaching : null,
+                        ),
+                      ],
+                    ],
+                  ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _chip(BuildContext context, String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(12),
-      ),
+  Widget _bareDetailRow(
+    BuildContext context, {
+    required Color hairline,
+    required String label,
+    required String value,
+    Color? accentColor,
+  }) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            label.toUpperCase(),
+            style: InstrumentTheme.microLabel(context),
           ),
           const SizedBox(height: 2),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface,
+            style: InstrumentTheme.tabular(
+              (theme.textTheme.bodyMedium ?? const TextStyle()).copyWith(
+                fontWeight: FontWeight.w600,
+                color: accentColor ?? scheme.onSurface,
+              ),
             ),
           ),
         ],

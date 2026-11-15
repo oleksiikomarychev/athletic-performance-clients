@@ -1,10 +1,18 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart' as pv;
-import 'package:workout_app/widgets/assistant_chat_host.dart';
-import 'package:workout_app/widgets/floating_header_bar.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/screens/coach/athlete_detail_screen.dart';
+import 'package:workout_app/screens/coach/coach_athletes_screen.dart';
+import 'package:workout_app/screens/coach/coach_chat_screen.dart';
+import 'package:workout_app/screens/coach/coach_relationships_screen.dart';
+import 'package:workout_app/screens/coach/coach_dashboard_screen.dart';
 import 'package:workout_app/services/chat_service.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
+import 'package:workout_app/widgets/assistant_chat_host.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
+import 'package:workout_app/widgets/primary_app_bar.dart';
 
 import '../models/calendar_plan.dart';
 import '../models/exercise_definition.dart';
@@ -13,6 +21,7 @@ import '../models/microcycle.dart';
 import '../models/plan_schedule.dart';
 import '../models/workout_session.dart';
 import 'active_plan_screen.dart';
+import 'all_users_screen.dart';
 import 'analytics_screen.dart';
 import 'calendar_plan_create.dart';
 import 'calendar_plan_detail.dart';
@@ -28,6 +37,10 @@ import 'home_screen_new.dart';
 import 'macros/macro_editor_screen.dart';
 import 'macros/macros_list_screen.dart';
 import 'macros/macros_preview_screen.dart';
+import 'nutrition_plan_active.dart';
+import 'nutrition_plan_create.dart';
+import 'nutrition_plan_detail.dart';
+import 'nutrition_plans_list.dart';
 import 'plan_editor_screen.dart';
 import 'plan_microcycle_editor.dart';
 import 'progression_detail_screen.dart';
@@ -38,20 +51,10 @@ import 'social/social_feed_screen.dart';
 import 'splash_screen_new.dart';
 import 'user_max_screen.dart';
 import 'user_profile_screen.dart';
-import 'all_users_screen.dart';
 import 'workout_detail_screen.dart';
 import 'workout_list_screen.dart';
 import 'workout_session_history_screen.dart';
 import 'workouts_screen.dart';
-import 'nutrition_plan_active.dart';
-import 'nutrition_plans_list.dart';
-import 'nutrition_plan_detail.dart';
-import 'nutrition_plan_create.dart';
-import 'package:workout_app/screens/coach/athlete_detail_screen.dart';
-import 'package:workout_app/screens/coach/coach_chat_screen.dart';
-import 'package:workout_app/screens/coach/coach_dashboard_screen.dart';
-import 'package:workout_app/screens/coach/coach_athletes_screen.dart';
-import 'package:workout_app/screens/coach/coach_relationships_screen.dart';
 
 class DebugScreen extends StatelessWidget {
   const DebugScreen({super.key});
@@ -65,10 +68,7 @@ class DebugScreen extends StatelessWidget {
       'Calendar Plan Detail (stub)': (context) =>
           CalendarPlanDetail(plan: _stubCalendarPlan()),
       'Calendar Plans': (context) => const CalendarPlansScreen(),
-      'Chat Screen (embedded)': (context) => Scaffold(
-        appBar: AppBar(title: const Text('Chat Screen (embedded)')),
-        body: const ChatScreen(embedded: true),
-      ),
+      'Chat Screen (embedded)': (context) => const _EmbeddedChatDebugPage(),
       'Exercise Selection': (context) => ExerciseSelectionScreen(),
       'Exercise Form (stub)': (context) =>
           ExerciseFormScreen(exercise: _stubExerciseDefinition(), workoutId: 0),
@@ -108,42 +108,112 @@ class DebugScreen extends StatelessWidget {
       ..._coachAndSocialScreens(),
     };
 
+    final entries = screens.entries.toList();
+
     return AssistantChatHost(
       builder: (context, openChat) {
-        return Scaffold(
-          body: SafeArea(
-            child: Stack(
-              children: [
-                ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 104, 16, 16),
+        final theme = Theme.of(context);
+        final scheme = theme.colorScheme;
+        final instrument = InstrumentTheme.of(context);
+        final topInset = AmbientScaffoldShell.topContentInset(context);
+        final bottomInset = AmbientScaffoldShell.bottomContentInset(context);
+
+        return AmbientScaffoldShell(
+          appBar: PrimaryAppBar.main(
+            title: 'Debug Screen',
+            onTitleTap: openChat,
+            actions: [_buildOverflowMenu(context)],
+          ),
+          body: ListView(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              topInset + 8,
+              16,
+              bottomInset + 24,
+            ),
+            children: [
+              Container(
+                decoration: InstrumentTheme.instrumentCardDecoration(context),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ListTile(
-                      title: const Text('Reset app state'),
-                      onTap: () {},
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'ROUTE SANDBOX',
+                                  style: InstrumentTheme.microLabel(context),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'All screens',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '${entries.length} ROUTES',
+                            style: InstrumentTheme.microLabel(
+                              context,
+                              color: instrument.workingAura,
+                            ).copyWith(
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    ListTile(title: const Text('Clear cache'), onTap: () {}),
-                    const Divider(),
-                    ...screens.entries.map((entry) {
-                      return ListTile(
-                        title: Text(entry.key),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: entry.value),
+                    for (int i = 0; i < entries.length; i++) ...[
+                      Container(height: 1, color: instrument.hairlineBorder),
+                      InkWell(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: entries[i].value),
+                          );
+                        },
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 54),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    entries[i].key,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Icon(
+                                  Icons.arrow_forward_ios_rounded,
+                                  size: 16,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      );
-                    }),
+                      ),
+                    ],
                   ],
                 ),
-                Align(
-                  alignment: Alignment.topCenter,
-                  child: FloatingHeaderBar(
-                    title: 'Debug Screen',
-                    onTitleTap: openChat,
-                    actions: [_buildOverflowMenu(context)],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -165,22 +235,25 @@ class DebugScreen extends StatelessWidget {
   }
 
   Future<void> _handleLogout(BuildContext context) async {
-    final shouldLogout = await showDialog<bool>(
+    final instrument = InstrumentTheme.of(context);
+    final shouldLogout = await showInstrumentDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Выйти из аккаунта?'),
-        content: const Text('Вы уверены, что хотите выйти?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Отмена'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Выйти'),
-          ),
-        ],
-      ),
+      eyebrow: 'DEBUG SESSION',
+      title: 'Выйти из аккаунта?',
+      message: 'Вы уверены, что хотите выйти?',
+      accentColor: instrument.peakEffortColor,
+      actionsBuilder: (ctx) => [
+        InstrumentActionButton(
+          label: 'Отмена',
+          variant: InstrumentActionVariant.secondary,
+          onPressed: () => Navigator.of(ctx).pop(false),
+        ),
+        InstrumentActionButton(
+          label: 'Выйти',
+          variant: InstrumentActionVariant.destructive,
+          onPressed: () => Navigator.of(ctx).pop(true),
+        ),
+      ],
     );
 
     if (shouldLogout != true || !context.mounted) return;
@@ -202,7 +275,7 @@ class DebugScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Ошибка при выходе: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: InstrumentTheme.of(context).peakEffortColor,
         ),
       );
     }
@@ -282,6 +355,23 @@ class DebugScreen extends StatelessWidget {
       status: 'completed',
       durationSeconds: 0,
       progress: const {},
+    );
+  }
+}
+
+class _EmbeddedChatDebugPage extends StatelessWidget {
+  const _EmbeddedChatDebugPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final topInset = AmbientScaffoldShell.topContentInset(context);
+    final bottomInset = AmbientScaffoldShell.bottomContentInset(context);
+    return AmbientScaffoldShell(
+      appBar: PrimaryAppBar.detail(title: 'Chat Screen (embedded)'),
+      body: Padding(
+        padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
+        child: const ChatScreen(embedded: true),
+      ),
     );
   }
 }

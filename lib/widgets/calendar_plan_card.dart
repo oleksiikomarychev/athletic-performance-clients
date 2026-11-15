@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 
-/// A compact comparison summary. The whole card opens the plan's details.
+/// Plan Passport card aligned with the Adaptive Training Instrument design system.
+/// Displays technical plan metadata cleanly with tabular numerals and hairline borders.
 class CalendarPlanCard extends StatelessWidget {
   final CalendarPlan plan;
   final VoidCallback onTap;
@@ -67,67 +69,128 @@ class CalendarPlanCard extends StatelessWidget {
         ),
     ];
 
-    return Card(
-      margin: EdgeInsets.zero,
-      elevation: 0,
-      color: colors.surfaceContainerLow,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: dimensions.cardPadding + 3,
-            vertical: dimensions.cardPadding + 1,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+    return Material(
+      color: Colors.transparent,
+      child: Ink(
+        decoration: InstrumentTheme.cardDecoration(
+          context,
+          color: colors.surfaceContainerLow,
+          borderColor: plan.isActive
+              ? colors.primary.withValues(alpha: 0.45)
+              : null,
+          borderWidth: plan.isActive ? 1.5 : 1.0,
+          radius: 14,
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: dimensions.cardPadding + 2,
+                vertical: dimensions.cardPadding,
+              ),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      plan.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        height: 1.25,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.chevron_right,
-                    color: colors.onSurfaceVariant,
-                    size: 18,
-                  ),
-                ],
-              ),
-              if (goal != null || level != null) ...[
-                const SizedBox(height: 5),
-                Text.rich(
-                  TextSpan(
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (goal != null)
-                        TextSpan(
-                          text: goal,
-                          style: TextStyle(color: colors.primary),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (plan.isActive)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colors.primary.withValues(
+                                      alpha: 0.14,
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'ACTIVE',
+                                    style: InstrumentTheme.microLabel(
+                                      context,
+                                      color: colors.primary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            Text(
+                              plan.name,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.2,
+                                height: 1.25,
+                              ),
+                            ),
+                          ],
                         ),
-                      if (goal != null && level != null)
-                        const TextSpan(text: ' · '),
-                      if (level != null) TextSpan(text: level),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.chevron_right,
+                        color: colors.onSurfaceVariant,
+                        size: 20,
+                      ),
                     ],
                   ),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-              if (metrics.isNotEmpty) ...[
-                const SizedBox(height: 7),
-                Wrap(spacing: 12, runSpacing: 5, children: metrics),
-              ],
-            ],
+                  if (goal != null || level != null) ...[
+                    const SizedBox(height: 6),
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          if (goal != null)
+                            TextSpan(
+                              text: goal,
+                              style: TextStyle(
+                                color: colors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          if (goal != null && level != null)
+                            const TextSpan(text: ' · '),
+                          if (level != null) TextSpan(text: level),
+                        ],
+                      ),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  if (metrics.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 7,
+                      ),
+                      decoration: InstrumentTheme.cardDecoration(
+                        context,
+                        color: colors.surfaceContainerHighest.withValues(
+                          alpha: 0.45,
+                        ),
+                        borderColor: colors.outlineVariant.withValues(
+                          alpha: 0.3,
+                        ),
+                        radius: 10,
+                      ),
+                      child: Wrap(spacing: 12, runSpacing: 5, children: metrics),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -147,13 +210,17 @@ class _PlanMetric extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 12, color: theme.colorScheme.onSurfaceVariant),
+        Icon(icon, size: 13, color: theme.colorScheme.onSurfaceVariant),
         const SizedBox(width: 5),
         Flexible(
           child: Text(
             label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+            style: InstrumentTheme.tabular(
+              theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ) ??
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
             ),
           ),
         ),

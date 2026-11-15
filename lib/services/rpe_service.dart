@@ -2,9 +2,7 @@ import 'package:workout_app/services/api_client.dart';
 import 'package:workout_app/config/rpe_table.dart' as rpe_table;
 
 class RpeService {
-  final ApiClient _apiClient;
-
-  RpeService(this._apiClient);
+  RpeService(ApiClient _);
 
 
 
@@ -50,7 +48,7 @@ class RpeService {
 
   List<double> getAvailableRpes(int intensity) {
     final rpes = rpe_table.RpeTable.getAvailableRpes(intensity);
-    return rpes?.map((rpe) => rpe.toDouble()).toList() ?? [];
+    return rpes.map((rpe) => rpe.toDouble()).toList();
   }
 
 

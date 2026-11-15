@@ -1,72 +1,52 @@
 import 'package:flutter/material.dart';
-import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:workout_app/models/workout_session.dart';
 import 'package:workout_app/providers/providers.dart';
-import 'package:workout_app/config/constants/theme_constants.dart';
-import 'package:workout_app/widgets/primary_app_bar.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
+import 'package:workout_app/widgets/empty_state.dart';
+import 'package:workout_app/widgets/error_message.dart';
+import 'package:workout_app/widgets/loading_indicator.dart';
+import 'package:workout_app/widgets/primary_app_bar.dart';
+import 'package:workout_app/widgets/session_instrument_card.dart';
 
 class WorkoutSessionHistoryScreen extends ConsumerStatefulWidget {
   final int workoutId;
   const WorkoutSessionHistoryScreen({super.key, required this.workoutId});
 
   @override
-  ConsumerState<WorkoutSessionHistoryScreen> createState() => _WorkoutSessionHistoryScreenState();
+  ConsumerState<WorkoutSessionHistoryScreen> createState() =>
+      _WorkoutSessionHistoryScreenState();
 }
 
-class _WorkoutSessionHistoryScreenState extends ConsumerState<WorkoutSessionHistoryScreen> {
-  final DateFormat _dateFormat = DateFormat('yyyy-MM-dd HH:mm');
+class _WorkoutSessionHistoryScreenState
+    extends ConsumerState<WorkoutSessionHistoryScreen> {
   bool _hasValue = false;
-
-  String _formatDate(DateTime? dt) => dt == null ? '-' : _dateFormat.format(dt.toLocal());
-
-  Widget _tile(WorkoutSession s) {
-    int completedSets = 0;
-    final completed = s.progress['completed'];
-    if (completed is Map) {
-      for (final v in completed.values) {
-        if (v is List) completedSets += v.length;
-      }
-    }
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 6, horizontal: UiDimensions.of(context).pagePadding),
-      child: ListTile(
-        title: Text('Session #${s.id ?? '-'} | ${s.status.toUpperCase()}'),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Started: ${_formatDate(s.startedAt)}'),
-            Text('Finished: ${_formatDate(s.finishedAt)}'),
-            Text('Duration: ${s.durationSeconds ?? 0} sec'),
-            Text('Completed sets: $completedSets'),
-          ],
-        ),
-        trailing: Icon(
-          s.isActive ? Icons.play_arrow : Icons.check,
-          color: s.isActive ? Colors.orange : Colors.green,
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
-    final sessionsAsync = ref.watch(sessionsHistorySWRProvider(widget.workoutId));
-
+    final sessionsAsync = ref.watch(
+      sessionsHistorySWRProvider(widget.workoutId),
+    );
     final canShowLoader = !_hasValue && sessionsAsync.isLoading;
 
     return AssistantChatHost(
+      contextBuilder: () async => {
+        'screen': 'workout_session_history',
+        'entities': {'workout_id': widget.workoutId},
+      },
       builder: (context, openChat) {
-        return Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surface,
+        final topInset = AmbientScaffoldShell.topContentInset(context);
+        final bottomInset = AmbientScaffoldShell.bottomContentInset(context);
+
+        return AmbientScaffoldShell(
           appBar: PrimaryAppBar(
             title: 'Session History',
             onTitleTap: openChat,
+            showBack: true,
             actions: [
               IconButton(
-                icon: const Icon(Icons.refresh),
+                tooltip: 'Refresh',
+                icon: const Icon(Icons.refresh_rounded),
                 onPressed: () {
                   ref.invalidate(sessionsHistorySWRProvider(widget.workoutId));
                 },
@@ -75,9 +55,20 @@ class _WorkoutSessionHistoryScreenState extends ConsumerState<WorkoutSessionHist
           ),
           body: sessionsAsync.when(
             loading: () => canShowLoader
-                ? const Center(child: CircularProgressIndicator())
+                ? Padding(
+                    padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
+                    child: const LoadingIndicator(),
+                  )
                 : const SizedBox.shrink(),
-            error: (e, _) => Center(child: Text('Ошибка загрузки: $e', style: const TextStyle(color: Colors.red))),
+            error: (e, _) => Padding(
+              padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
+              child: ErrorMessage(
+                message: 'Ошибка загрузки: $e',
+                onRetry: () => ref.invalidate(
+                  sessionsHistorySWRProvider(widget.workoutId),
+                ),
+              ),
+            ),
             data: (sessions) {
               if (!_hasValue) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -85,11 +76,33 @@ class _WorkoutSessionHistoryScreenState extends ConsumerState<WorkoutSessionHist
                 });
               }
               if (sessions.isEmpty) {
-                return const Center(child: Text('Нет данных для отображения'));
+                return ListView(
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    topInset + 24,
+                    16,
+                    bottomInset + 24,
+                  ),
+                  children: const [
+                    EmptyState(
+                      icon: Icons.history_rounded,
+                      title: 'Нет данных для отображения',
+                      description:
+                          'Завершённые сессии по этой тренировке появятся здесь.',
+                    ),
+                  ],
+                );
               }
-              return ListView.builder(
+              return ListView.separated(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  topInset + 8,
+                  16,
+                  bottomInset + 24,
+                ),
                 itemCount: sessions.length,
-                itemBuilder: (_, i) => _tile(sessions[i]),
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (_, i) => SessionInstrumentCard(session: sessions[i]),
               );
             },
           ),

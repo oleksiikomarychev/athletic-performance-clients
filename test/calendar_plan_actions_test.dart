@@ -150,8 +150,9 @@ void main() {
       await tester.tap(find.text('Удалить'));
       await tester.pumpAndSettle();
       expect(api.calls, [null]);
-      expect(find.text('• Variant A'), findsOneWidget);
-      expect(find.text('• Original'), findsNothing);
+      expect(find.text('Variant A'), findsOneWidget);
+      expect(find.text('Original'), findsNothing);
+      expect(find.byIcon(Icons.subdirectory_arrow_right_rounded), findsOneWidget);
       await tester.tap(find.text(confirmCascade ? 'Удалить всё' : 'Отмена'));
       await tester.pumpAndSettle();
       expect(result, confirmCascade);

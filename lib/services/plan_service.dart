@@ -55,17 +55,6 @@ class PlanService extends BaseApiService {
       return null;
     } catch (e, stackTrace) {
       handleError('Failed to get active plan', e, stackTrace);
-
-      try {
-        final endpoint = ApiConfig.getActivePlanEndpoint;
-        final cached = await apiClient.getCachedGet(endpoint, allowExpired: true);
-        if (cached is Map<String, dynamic>) {
-          _logger.w('Returning cached active plan due to error');
-          return AppliedCalendarPlan.fromJson(cached);
-        }
-      } catch (_) {}
-
-      return null;
     }
   }
 
@@ -95,7 +84,6 @@ class PlanService extends BaseApiService {
       return ok;
     } catch (e, stackTrace) {
       handleError('Failed to apply plan', e, stackTrace);
-      return false;
     }
   }
 
@@ -115,7 +103,6 @@ class PlanService extends BaseApiService {
       return null;
     } catch (e, stackTrace) {
       handleError('Failed to get next workout in active plan', e, stackTrace);
-      return null;
     }
   }
 
@@ -150,7 +137,6 @@ class PlanService extends BaseApiService {
       return null;
     } catch (e, stackTrace) {
       handleError('Failed to get applied plan analytics', e, stackTrace);
-      return null;
     }
   }
 
@@ -182,7 +168,6 @@ class PlanService extends BaseApiService {
       return ok;
     } catch (e, stackTrace) {
       handleError('Failed to cancel applied plan', e, stackTrace);
-      return false;
     }
   }
 }

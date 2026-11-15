@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:workout_app/config/constants/legal_constants.dart';
+import 'package:workout_app/screens/settings/settings_legal_screen.dart';
 
 class SignInScreen extends StatelessWidget {
   const SignInScreen({super.key});
@@ -91,12 +93,67 @@ class SignInScreen extends StatelessWidget {
         );
       },
       footerBuilder: (context, action) {
-        return const Padding(
-          padding: EdgeInsets.only(top: 16),
-          child: Text(
-            'Продолжая, вы принимаете наши условия использования.',
-            style: TextStyle(color: Colors.grey),
-            textAlign: TextAlign.center,
+        void openLegal(LegalDocumentType docType) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => SettingsLegalScreen(initialDocument: docType),
+            ),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Продолжая, вы соглашаетесь с Условиями использования и подтверждаете ознакомление с Политикой конфиденциальности:',
+                style: TextStyle(color: Colors.grey, fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    onPressed: () => openLegal(LegalDocumentType.terms),
+                    child: const Text(
+                      'Условия использования',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    onPressed: () => openLegal(LegalDocumentType.privacy),
+                    child: const Text(
+                      'Политика конфиденциальности',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    onPressed: () =>
+                        openLegal(LegalDocumentType.healthDisclaimer),
+                    child: const Text(
+                      'Мед. дисклеймер',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         );
       },

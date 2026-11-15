@@ -1,11 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:workout_app/src/widgets/snack_utils.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 import 'package:workout_app/models/microcycle.dart';
 import 'package:workout_app/models/user_max.dart';
 import 'package:workout_app/src/api/plan_api.dart';
+import 'package:workout_app/src/widgets/snack_utils.dart';
 
 class ApplyPlanWidget extends StatefulWidget {
   final CalendarPlan plan;
@@ -33,6 +34,11 @@ class ApplyPlanWidget extends StatefulWidget {
 
 class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
   static const String _prefsKeyPrefix = 'apply_plan_last_user_max_ids';
+  static const List<({String code, String label})> _roundingModes = [
+    (code: 'nearest', label: 'Ближ.'),
+    (code: 'ceil', label: 'Вверх'),
+    (code: 'floor', label: 'Вниз'),
+  ];
 
   final _formKey = GlobalKey<FormState>();
 
@@ -170,104 +176,172 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
     final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
       builder: (sheetContext) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 16,
-            bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
+        final theme = Theme.of(sheetContext);
+        final scheme = theme.colorScheme;
+        final instrument = InstrumentTheme.of(sheetContext);
+        final isDark = theme.brightness == Brightness.dark;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? InstrumentPalette.obsidianCardLow : scheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border(
+              top: BorderSide(
+                color: isDark ? instrument.hairlineBorder : scheme.outlineVariant,
+              ),
+            ),
+          ),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            12,
+            16,
+            MediaQuery.of(sheetContext).viewInsets.bottom +
+                MediaQuery.of(sheetContext).padding.bottom +
+                20,
           ),
           child: StatefulBuilder(
             builder: (context, setModalState) {
               return Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: scheme.onSurfaceVariant.withValues(alpha: 0.35),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
                   Text(
-                    'Добавить максимум для «${exercise.exerciseName}»',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    'USER MAX · 1RM',
+                    style: InstrumentTheme.microLabel(context),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    exercise.exerciseName,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  TextField(
-                    controller: weightController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Вес (кг)'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: repsController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Повторения'),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: weightController,
+                          keyboardType: TextInputType.number,
+                          style: InstrumentTheme.tabular(
+                            theme.textTheme.bodyLarge ?? const TextStyle(),
+                          ),
+                          decoration: InputDecoration(
+                            labelText: 'Вес (кг)',
+                            filled: true,
+                            fillColor: isDark
+                                ? InstrumentPalette.obsidianSlotHigh
+                                : scheme.surfaceContainer,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: repsController,
+                          keyboardType: TextInputType.number,
+                          style: InstrumentTheme.tabular(
+                            theme.textTheme.bodyLarge ?? const TextStyle(),
+                          ),
+                          decoration: InputDecoration(
+                            labelText: 'Повторения',
+                            filled: true,
+                            fillColor: isDark
+                                ? InstrumentPalette.obsidianSlotHigh
+                                : scheme.surfaceContainer,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   if (errorMessage != null) ...[
                     const SizedBox(height: 12),
                     Text(
                       errorMessage!,
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
+                        color: instrument.peakEffortColor,
                         fontSize: 12,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: isSubmitting
-                          ? null
-                          : () async {
-                              final weight = int.tryParse(
-                                weightController.text,
-                              );
-                              final reps = int.tryParse(repsController.text);
-                              if (weight == null || weight <= 0) {
-                                setModalState(() {
-                                  errorMessage = 'Введите корректный вес';
-                                });
-                                return;
-                              }
-                              if (reps == null || reps <= 0 || reps > 12) {
-                                setModalState(() {
-                                  errorMessage = 'Введите 1–12 повторений';
-                                });
-                                return;
-                              }
-
-                              setModalState(() {
-                                isSubmitting = true;
-                                errorMessage = null;
-                              });
-
-                              try {
-                                await PlanApi.createUserMax(
-                                  exerciseId: exercise.exerciseDefinitionId,
-                                  maxWeight: weight,
-                                  repMax: reps,
-                                  date: DateTime.now()
-                                      .toIso8601String()
-                                      .split('T')
-                                      .first,
-                                );
-                                if (Navigator.of(sheetContext).canPop()) {
-                                  Navigator.of(sheetContext).pop(true);
-                                }
-                              } catch (e) {
-                                setModalState(() {
-                                  errorMessage =
-                                      'Не удалось сохранить максимум: $e';
-                                  isSubmitting = false;
-                                });
-                              }
-                            },
-                      child: isSubmitting
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Сохранить'),
+                  const SizedBox(height: 18),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 48),
+                      backgroundColor: instrument.workingAura,
+                      foregroundColor:
+                          isDark ? const Color(0xFF04131E) : scheme.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
+                    onPressed: isSubmitting
+                        ? null
+                        : () async {
+                            final weight = int.tryParse(weightController.text);
+                            final reps = int.tryParse(repsController.text);
+                            if (weight == null || weight <= 0) {
+                              setModalState(() {
+                                errorMessage = 'Введите корректный вес';
+                              });
+                              return;
+                            }
+                            if (reps == null || reps <= 0 || reps > 12) {
+                              setModalState(() {
+                                errorMessage = 'Введите 1–12 повторений';
+                              });
+                              return;
+                            }
+
+                            setModalState(() {
+                              isSubmitting = true;
+                              errorMessage = null;
+                            });
+
+                            try {
+                              await PlanApi.createUserMax(
+                                exerciseId: exercise.exerciseDefinitionId,
+                                maxWeight: weight,
+                                repMax: reps,
+                                date: DateTime.now()
+                                    .toIso8601String()
+                                    .split('T')
+                                    .first,
+                              );
+                              if (sheetContext.mounted &&
+                                  Navigator.of(sheetContext).canPop()) {
+                                Navigator.of(sheetContext).pop(true);
+                              }
+                            } catch (e) {
+                              setModalState(() {
+                                errorMessage =
+                                    'Не удалось сохранить максимум: $e';
+                                isSubmitting = false;
+                              });
+                            }
+                          },
+                    child: isSubmitting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Сохранить максимум'),
                   ),
                 ],
               );
@@ -369,6 +443,16 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
     });
   }
 
+  void _toggleUserMaxId(int id) {
+    setState(() {
+      if (_selectedUserMaxIds.contains(id)) {
+        _selectedUserMaxIds.remove(id);
+      } else {
+        _selectedUserMaxIds.add(id);
+      }
+    });
+  }
+
   void _handleUseLastValues(
     Map<String, List<UserMax>> groupedUserMaxes,
     Set<int> availableUserMaxIds,
@@ -394,23 +478,77 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
     _applySelection(latestIds);
   }
 
+  Future<void> _submitPlan(Set<int> availableUserMaxIds) async {
+    final validSelection = _selectedUserMaxIds
+        .where(availableUserMaxIds.contains)
+        .toList();
+
+    if (validSelection.isEmpty) {
+      showAppSnackBar(
+        context,
+        'Пожалуйста, выберите хотя бы один User Max',
+        isError: true,
+      );
+      return;
+    }
+
+    setState(() {
+      _isApplying = true;
+      _progressStage = null;
+      _workoutsTotal = null;
+      _workoutsDone = null;
+    });
+
+    try {
+      await _saveCurrentSelection(validSelection);
+
+      await widget.onApply({
+        'user_max_ids': validSelection,
+        'compute_weights': _computeWeights,
+        'rounding_step': _roundingStep,
+        'rounding_mode': _roundingMode,
+        'generate_workouts': true,
+        'on_progress': (String? stage, int? total, int? done) {
+          setProgress(
+            stage: stage,
+            workoutsTotal: total,
+            workoutsDone: done,
+          );
+        },
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isApplying = false;
+          _progressStage = null;
+          _workoutsTotal = null;
+          _workoutsDone = null;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final accent = instrument.workingAura;
+    final hairline = isDark ? instrument.hairlineBorder : scheme.outlineVariant;
+    final cardBg = isDark
+        ? InstrumentPalette.obsidianCardMid
+        : scheme.surfaceContainerLow;
+
     final filteredUserMaxes = widget.userMaxList
         .where(_isExerciseAllowed)
         .toList();
-
     final useFallback =
         filteredUserMaxes.isEmpty && widget.userMaxList.isNotEmpty;
-    final effectiveUserMaxes = useFallback
-        ? widget.userMaxList
-        : filteredUserMaxes;
-
-    final availableUserMaxIds = effectiveUserMaxes
-        .map((userMax) => userMax.id)
-        .toSet();
+    final effectiveUserMaxes =
+        useFallback ? widget.userMaxList : filteredUserMaxes;
+    final availableUserMaxIds =
+        effectiveUserMaxes.map((userMax) => userMax.id).toSet();
 
     final groupedUserMaxes = <String, List<UserMax>>{};
     for (final userMax in effectiveUserMaxes) {
@@ -425,351 +563,577 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
           b.value.first.exerciseName.toLowerCase(),
         ),
       );
+    final planExercises = _getAllPlanExercises();
 
-    return FractionallySizedBox(
-      heightFactor: 0.7,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 12,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Apply Training Plan',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? InstrumentPalette.obsidianCardLow : scheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border(top: BorderSide(color: hairline)),
+      ),
+      child: DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.78,
+        minChildSize: 0.5,
+        maxChildSize: 0.94,
+        builder: (context, scrollController) {
+          return Form(
+            key: _formKey,
+            child: ListView(
+              controller: scrollController,
+              padding: EdgeInsets.fromLTRB(
+                16,
+                12,
+                16,
+                MediaQuery.of(context).padding.bottom +
+                    MediaQuery.of(context).viewInsets.bottom +
+                    24,
               ),
-              const Divider(height: 24),
-              if (_isApplying) ...[
-                const SizedBox(height: 8),
-                LinearProgressIndicator(
-                  minHeight: 3,
-                  value:
-                      (_workoutsTotal != null &&
-                          _workoutsDone != null &&
-                          _workoutsTotal! > 0)
-                      ? (_workoutsDone! / _workoutsTotal!).clamp(0.0, 1.0)
-                      : null,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: scheme.onSurfaceVariant.withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  _buildProgressText(),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 8),
-              ],
-              Form(
-                key: _formKey,
-                child: Column(
+                const SizedBox(height: 14),
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Select User Max',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        if (groupedEntries.isNotEmpty)
-                          TextButton.icon(
-                            onPressed: () => _handleUseLastValues(
-                              groupedUserMaxes,
-                              availableUserMaxIds,
-                            ),
-                            icon: const Icon(Icons.history),
-                            label: const Text('Использовать последние'),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isDark ? theme.colorScheme.primaryContainer : Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: isDark ? theme.colorScheme.primary : Colors.blue.shade200),
-                      ),
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.info_outline,
-                                size: 18,
-                                color: isDark ? theme.colorScheme.onPrimaryContainer : Colors.blue.shade700,
+                          Text(
+                            'PLAN APPLICATION',
+                            style: InstrumentTheme.microLabel(context),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Применить план',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          if (widget.plan.name.trim().isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              widget.plan.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: scheme.onSurfaceVariant,
                               ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Упражнения в плане',
-                                style: TextStyle(
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Закрыть',
+                      style: IconButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                        tapTargetSize: MaterialTapTargetSize.padded,
+                      ),
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                if (_isApplying) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: InstrumentTheme.cardDecoration(
+                      context,
+                      color: cardBg,
+                      borderColor: accent.withValues(alpha: 0.5),
+                      radius: 16,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        LinearProgressIndicator(
+                          minHeight: 3,
+                          borderRadius: BorderRadius.circular(999),
+                          value: (_workoutsTotal != null &&
+                                  _workoutsDone != null &&
+                                  _workoutsTotal! > 0)
+                              ? (_workoutsDone! / _workoutsTotal!)
+                                  .clamp(0.0, 1.0)
+                              : null,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _buildProgressText(),
+                          style: InstrumentTheme.tabular(
+                            theme.textTheme.bodySmall?.copyWith(
+                                  color: accent,
                                   fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                  color: isDark ? theme.colorScheme.onPrimaryContainer : Colors.blue.shade700,
+                                ) ??
+                                TextStyle(color: accent, fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                  decoration: InstrumentTheme.cardDecoration(
+                    context,
+                    color: cardBg,
+                    radius: 20,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'БАЗОВЫЕ МАКСИМУМЫ · USER MAX',
+                                style: InstrumentTheme.microLabel(context),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Выбрано: ${_selectedUserMaxIds.where(availableUserMaxIds.contains).length}',
+                                style: InstrumentTheme.tabular(
+                                  theme.textTheme.titleSmall?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ) ??
+                                      const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          ..._getAllPlanExercises().map((exercise) {
-                            final userMaxes = _userMaxesForExercise(exercise);
-                            final latestUserMax = _latestUserMax(userMaxes);
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          exercise.exerciseName,
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w500,
-                                            color: isDark ? theme.colorScheme.onPrimaryContainer : null,
-                                          ),
-                                        ),
-                                        if (latestUserMax != null)
-                                          Text(
-                                            '${latestUserMax.maxWeight} кг × ${latestUserMax.repMax}',
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: isDark ? Colors.green.shade300 : Colors.green.shade700,
-                                            ),
-                                          )
-                                        else
-                                          Text(
-                                            'Максимум не задан',
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: isDark ? theme.colorScheme.onPrimaryContainer : Colors.grey.shade600,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  TextButton.icon(
-                                    onPressed: () =>
-                                        _showAddUserMaxSheet(exercise),
-                                    icon: const Icon(Icons.add, size: 16),
-                                    label: const Text('Добавить'),
-                                    style: TextButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      minimumSize: Size.zero,
-                                      tapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
-                                    ),
-                                  ),
-                                ],
+                          if (groupedEntries.isNotEmpty)
+                            TextButton.icon(
+                              style: TextButton.styleFrom(
+                                minimumSize: const Size(48, 48),
+                                foregroundColor: accent,
                               ),
-                            );
-                          }).toList(),
+                              onPressed: () => _handleUseLastValues(
+                                groupedUserMaxes,
+                                availableUserMaxIds,
+                              ),
+                              icon: const Icon(Icons.history, size: 18),
+                              label: const Text('Последние'),
+                            ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (groupedEntries.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Text(
-                          'Нет сохранённых максимумов для упражнений в плане.',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      )
-                    else if (useFallback)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Text(
-                          'В плане не найдено совпадающих упражнений, показаны все ваши User Max.',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
-                      )
-                    else
-                      Column(
-                        children: groupedEntries.map((entry) {
-                          final userMaxes = entry.value;
-                          return ExpansionTile(
-                            key: ValueKey(entry.key),
-                            title: Text(userMaxes.first.exerciseName),
-                            children: userMaxes.map((userMax) {
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 4,
-                                ),
-                                child: FilterChip.elevated(
-                                  label: Text(
-                                    '${userMax.maxWeight} kg x ${userMax.repMax}',
-                                  ),
-                                  selected: _selectedUserMaxIds.contains(
-                                    userMax.id,
-                                  ),
-                                  onSelected: (selected) {
-                                    setState(() {
-                                      if (selected) {
-                                        _selectedUserMaxIds.add(userMax.id);
-                                      } else {
-                                        _selectedUserMaxIds.remove(userMax.id);
-                                      }
-                                    });
-                                  },
-                                ),
-                              );
-                            }).toList(),
-                          );
-                        }).toList(),
-                      ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Switch.adaptive(
-                          value: _computeWeights,
-                          onChanged: (value) {
-                            setState(() => _computeWeights = value);
-                          },
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Compute weights',
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'Rounding Step',
-                              border: OutlineInputBorder(),
-                              isDense: true,
+                      if (planExercises.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        for (int i = 0; i < planExercises.length; i++) ...[
+                          Divider(height: 1, thickness: 1, color: hairline),
+                          _PlanExerciseMaxRow(
+                            exercise: planExercises[i],
+                            latestUserMax: _latestUserMax(
+                              _userMaxesForExercise(planExercises[i]),
                             ),
-                            keyboardType: TextInputType.number,
-                            initialValue: _roundingStep.toString(),
-                            onChanged: (value) {
-                              _roundingStep = double.tryParse(value) ?? 2.5;
-                            },
+                            onAddTap: () =>
+                                _showAddUserMaxSheet(planExercises[i]),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: _roundingMode,
-                            decoration: const InputDecoration(
-                              labelText: 'Rounding Mode',
-                              border: OutlineInputBorder(),
-                              isDense: true,
-                            ),
-                            items: const ['nearest', 'ceil', 'floor']
-                                .map(
-                                  (mode) => DropdownMenuItem(
-                                    value: mode,
-                                    child: Text(mode),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                _roundingMode = value ?? 'nearest';
-                              });
-                            },
-                          ),
-                        ),
+                        ],
                       ],
-                    ),
-                    const SizedBox(height: 24),
-                    FilledButton.tonal(
-                      onPressed: _isApplying
-                          ? null
-                          : () async {
-                              final validSelection = _selectedUserMaxIds
-                                  .where(availableUserMaxIds.contains)
-                                  .toList();
-
-                              if (validSelection.isEmpty) {
-                                showAppSnackBar(
-                                  context,
-                                  'Пожалуйста, выберите хотя бы один User Max',
-                                  isError: true,
-                                );
-                                return;
-                              }
-
-                              setState(() {
-                                _isApplying = true;
-                                _progressStage = null;
-                                _workoutsTotal = null;
-                                _workoutsDone = null;
-                              });
-
-                              try {
-                                await _saveCurrentSelection(validSelection);
-
-                                await widget.onApply({
-                                  'user_max_ids': validSelection,
-                                  'compute_weights': _computeWeights,
-                                  'rounding_step': _roundingStep,
-                                  'rounding_mode': _roundingMode,
-                                  'generate_workouts': true,
-                                  'on_progress':
-                                      (String? stage, int? total, int? done) {
-                                        setProgress(
-                                          stage: stage,
-                                          workoutsTotal: total,
-                                          workoutsDone: done,
-                                        );
-                                      },
-                                });
-                              } finally {
-                                if (!mounted) return;
-                                setState(() {
-                                  _isApplying = false;
-                                  _progressStage = null;
-                                  _workoutsTotal = null;
-                                  _workoutsDone = null;
-                                });
-                              }
-                            },
-                      child: _isApplying
-                          ? const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Apply Plan'),
-                    ),
-                  ],
+                      Divider(height: 16, thickness: 1, color: hairline),
+                      if (groupedEntries.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            'Нет сохранённых максимумов для упражнений в плане. Добавьте 1RM выше.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        )
+                      else ...[
+                        if (useFallback) ...[
+                          Text(
+                            'Точного совпадения упражнений нет — показаны все ваши User Max:',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: accent,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                        ],
+                        for (int i = 0; i < groupedEntries.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 12),
+                          _UserMaxGroupSelector(
+                            exerciseName:
+                                groupedEntries[i].value.first.exerciseName,
+                            userMaxes: groupedEntries[i].value,
+                            selectedIds: _selectedUserMaxIds,
+                            accent: accent,
+                            isDark: isDark,
+                            onToggle: _toggleUserMaxId,
+                          ),
+                        ],
+                      ],
+                    ],
+                  ),
                 ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: InstrumentTheme.cardDecoration(
+                    context,
+                    color: cardBg,
+                    radius: 20,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'РАСЧЁТ РАБОЧИХ ВЕСОВ',
+                        style: InstrumentTheme.microLabel(context),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Вычислять веса',
+                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  'Автоподбор по % от выбранного максимума',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Switch.adaptive(
+                            value: _computeWeights,
+                            onChanged: (value) {
+                              setState(() => _computeWeights = value);
+                            },
+                          ),
+                        ],
+                      ),
+                      Divider(height: 22, thickness: 1, color: hairline),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final stacked = constraints.maxWidth < 300 ||
+                              MediaQuery.textScalerOf(context).scale(14) > 20;
+                          final stepField = SizedBox(
+                            width: stacked ? double.infinity : 110,
+                            child: TextFormField(
+                              initialValue: _roundingStep.toString(),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              style: InstrumentTheme.tabular(
+                                theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ) ??
+                                    const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                              ),
+                              decoration: InputDecoration(
+                                labelText: 'Шаг (кг)',
+                                filled: true,
+                                fillColor: isDark
+                                    ? InstrumentPalette.obsidianSlotHigh
+                                    : scheme.surfaceContainer,
+                              ),
+                              onChanged: (value) {
+                                _roundingStep = double.tryParse(value) ?? 2.5;
+                              },
+                            ),
+                          );
+                          final roundingSelector = Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'ОКРУГЛЕНИЕ',
+                                style: InstrumentTheme.microLabel(context),
+                              ),
+                              const SizedBox(height: 6),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: _roundingModes.map((mode) {
+                                  final selected = _roundingMode == mode.code;
+                                  return _InstrumentSelectPill(
+                                    label: mode.label,
+                                    selected: selected,
+                                    accent: accent,
+                                    isDark: isDark,
+                                    onTap: () {
+                                      setState(() {
+                                        _roundingMode = mode.code;
+                                      });
+                                    },
+                                  );
+                                }).toList(growable: false),
+                              ),
+                            ],
+                          );
+                          if (stacked) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                stepField,
+                                const SizedBox(height: 12),
+                                roundingSelector,
+                              ],
+                            );
+                          }
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              stepField,
+                              const SizedBox(width: 12),
+                              Expanded(child: roundingSelector),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 52),
+                    backgroundColor: accent,
+                    foregroundColor:
+                        isDark ? const Color(0xFF04131E) : scheme.onPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  onPressed: _isApplying
+                      ? null
+                      : () => _submitPlan(availableUserMaxIds),
+                  child: _isApplying
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(
+                          'Применить план',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: isDark
+                                ? const Color(0xFF04131E)
+                                : scheme.onPrimary,
+                          ),
+                        ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _PlanExerciseMaxRow extends StatelessWidget {
+  final PlanExercise exercise;
+  final UserMax? latestUserMax;
+  final VoidCallback onAddTap;
+
+  const _PlanExerciseMaxRow({
+    required this.exercise,
+    required this.latestUserMax,
+    required this.onAddTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  exercise.exerciseName,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                if (latestUserMax != null)
+                  Text(
+                    '${latestUserMax!.maxWeight} кг × ${latestUserMax!.repMax}',
+                    style: InstrumentTheme.tabular(
+                      theme.textTheme.labelSmall?.copyWith(
+                            color: instrument.successColor,
+                            fontWeight: FontWeight.w700,
+                          ) ??
+                          TextStyle(
+                            color: instrument.successColor,
+                            fontSize: 11,
+                          ),
+                    ),
+                  )
+                else
+                  Text(
+                    'Максимум не задан',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          TextButton.icon(
+            style: TextButton.styleFrom(
+              minimumSize: const Size(48, 48),
+              foregroundColor: instrument.workingAura,
+            ),
+            onPressed: onAddTap,
+            icon: const Icon(Icons.add, size: 16),
+            label: const Text('Добавить'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UserMaxGroupSelector extends StatelessWidget {
+  final String exerciseName;
+  final List<UserMax> userMaxes;
+  final List<int> selectedIds;
+  final Color accent;
+  final bool isDark;
+  final ValueChanged<int> onToggle;
+
+  const _UserMaxGroupSelector({
+    required this.exerciseName,
+    required this.userMaxes,
+    required this.selectedIds,
+    required this.accent,
+    required this.isDark,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          exerciseName,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: scheme.onSurfaceVariant,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: userMaxes.map((userMax) {
+            final selected = selectedIds.contains(userMax.id);
+            return _InstrumentSelectPill(
+              label: '${userMax.maxWeight} кг × ${userMax.repMax}',
+              selected: selected,
+              accent: accent,
+              isDark: isDark,
+              tabular: true,
+              onTap: () => onToggle(userMax.id),
+            );
+          }).toList(growable: false),
+        ),
+      ],
+    );
+  }
+}
+
+/// Borderless surface-stepped selection pill adhering to Max Border Depth = 1
+/// inside outer [InstrumentTheme.cardDecoration] containers.
+class _InstrumentSelectPill extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final Color accent;
+  final bool isDark;
+  final bool tabular;
+  final VoidCallback onTap;
+
+  const _InstrumentSelectPill({
+    required this.label,
+    required this.selected,
+    required this.accent,
+    required this.isDark,
+    this.tabular = false,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final fillColor = selected
+        ? accent.withValues(alpha: isDark ? 0.22 : 0.16)
+        : (isDark
+              ? InstrumentPalette.obsidianSlotHigh
+              : scheme.surfaceContainer);
+    final fgColor = selected ? accent : scheme.onSurface;
+    final baseStyle = theme.textTheme.labelMedium?.copyWith(
+          color: fgColor,
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+        ) ??
+        TextStyle(color: fgColor, fontSize: 12);
+
+    return Material(
+      color: fillColor,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 40),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Center(
+              widthFactor: 1,
+              child: Text(
+                label,
+                style: tabular ? InstrumentTheme.tabular(baseStyle) : baseStyle,
               ),
-            ],
+            ),
           ),
         ),
       ),

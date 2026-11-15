@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:workout_app/providers/target_data_providers.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
+import 'package:workout_app/providers/target_data_providers.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
 
 class TargetSelector extends ConsumerStatefulWidget {
   final Map<String, dynamic>? initial;
@@ -13,10 +15,8 @@ class TargetSelector extends ConsumerStatefulWidget {
 }
 
 class _TargetSelectorState extends ConsumerState<TargetSelector> {
-
   String _mode = 'tags';
   final _exerciseIdsCtrl = TextEditingController();
-
 
   final Set<String> _mt = {};
   final Set<String> _rg = {};
@@ -36,7 +36,8 @@ class _TargetSelectorState extends ConsumerState<TargetSelector> {
         _exerciseIdsCtrl.text = init['exercise_id'].toString();
       }
       final selector = init['selector'];
-      if (selector is Map && (selector['type']?.toString().toLowerCase() == 'tags')) {
+      if (selector is Map &&
+          (selector['type']?.toString().toLowerCase() == 'tags')) {
         _mode = 'tags';
         final val = (selector['value'] as Map?) ?? {};
         void fill(Set<String> s, dynamic v) {
@@ -48,14 +49,13 @@ class _TargetSelectorState extends ConsumerState<TargetSelector> {
             }
           }
         }
+
         fill(_mt, val['movement_type']);
         fill(_rg, val['region']);
         fill(_mg, val['muscle_group']);
         fill(_eq, val['equipment']);
       }
     }
-
-
   }
 
   @override
@@ -69,8 +69,7 @@ class _TargetSelectorState extends ConsumerState<TargetSelector> {
       final ids = _exerciseIdsCtrl.text
           .split(',')
           .map((s) => int.tryParse(s.trim()))
-          .where((v) => v != null)
-          .map((v) => v!)
+          .whereType<int>()
           .toList();
       if (ids.isEmpty) {
         widget.onChanged(null);
@@ -88,84 +87,141 @@ class _TargetSelectorState extends ConsumerState<TargetSelector> {
     if (value.isEmpty) {
       widget.onChanged(null);
     } else {
-      widget.onChanged({'selector': {'type': 'tags', 'value': value}});
+      widget.onChanged({
+        'selector': {'type': 'tags', 'value': value},
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final instrument = InstrumentTheme.of(context);
     final defsAsync = ref.watch(exerciseDefinitionsProvider);
     final tags = ref.watch(tagCatalogProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
           children: [
-            Text(l10n.macroTargetBy),
-            const SizedBox(width: 8),
-            SegmentedButton<String>(
-              segments: [
-                ButtonSegment(value: 'tags', label: Text(l10n.macroTargetTags)),
-                ButtonSegment(value: 'ids', label: Text(l10n.macroTargetIds)),
-              ],
-              selected: {_mode},
-              onSelectionChanged: (s) {
-                setState(() => _mode = s.first);
+            Text(
+              l10n.macroTargetBy,
+              style: InstrumentTheme.microLabel(context),
+            ),
+            InstrumentSelectablePill(
+              label: l10n.macroTargetTags,
+              selected: _mode == 'tags',
+              bordered: false,
+              onTap: () {
+                setState(() => _mode = 'tags');
+                _emit();
+              },
+            ),
+            InstrumentSelectablePill(
+              label: l10n.macroTargetIds,
+              selected: _mode == 'ids',
+              bordered: false,
+              onTap: () {
+                setState(() => _mode = 'ids');
                 _emit();
               },
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         if (_mode == 'ids')
           TextFormField(
             controller: _exerciseIdsCtrl,
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+            decoration: InstrumentTheme.inputDecoration(
+              context,
               labelText: l10n.macroTargetIdsLabel,
               hintText: '101,205,309',
             ),
             onChanged: (_) => _emit(),
           )
         else ...[
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _TagGroup(
-                title: 'movement_type',
-                values: tags.movementTypes,
-                selected: _mt,
-                onChanged: (s) { setState(() => _mt..clear()..addAll(s)); _emit(); },
-              ),
-              _TagGroup(
-                title: 'region',
-                values: tags.regions,
-                selected: _rg,
-                onChanged: (s) { setState(() => _rg..clear()..addAll(s)); _emit(); },
-              ),
-              _TagGroup(
-                title: 'muscle_group',
-                values: tags.muscleGroups,
-                selected: _mg,
-                onChanged: (s) { setState(() => _mg..clear()..addAll(s)); _emit(); },
-              ),
-              _TagGroup(
-                title: 'equipment',
-                values: tags.equipment,
-                selected: _eq,
-                onChanged: (s) { setState(() => _eq..clear()..addAll(s)); _emit(); },
-              ),
-            ],
-          )
+          _TagGroup(
+            title: 'movement_type',
+            values: tags.movementTypes,
+            selected: _mt,
+            onChanged: (s) {
+              setState(() {
+                _mt
+                  ..clear()
+                  ..addAll(s);
+              });
+              _emit();
+            },
+          ),
+          const SizedBox(height: 10),
+          _TagGroup(
+            title: 'region',
+            values: tags.regions,
+            selected: _rg,
+            onChanged: (s) {
+              setState(() {
+                _rg
+                  ..clear()
+                  ..addAll(s);
+              });
+              _emit();
+            },
+          ),
+          const SizedBox(height: 10),
+          _TagGroup(
+            title: 'muscle_group',
+            values: tags.muscleGroups,
+            selected: _mg,
+            onChanged: (s) {
+              setState(() {
+                _mg
+                  ..clear()
+                  ..addAll(s);
+              });
+              _emit();
+            },
+          ),
+          const SizedBox(height: 10),
+          _TagGroup(
+            title: 'equipment',
+            values: tags.equipment,
+            selected: _eq,
+            onChanged: (s) {
+              setState(() {
+                _eq
+                  ..clear()
+                  ..addAll(s);
+              });
+              _emit();
+            },
+          ),
         ],
         const SizedBox(height: 8),
         defsAsync.when(
           data: (_) => const SizedBox.shrink(),
-          loading: () => const LinearProgressIndicator(minHeight: 2),
-          error: (_, __) => const Text('Failed to load exercises', style: TextStyle(color: Colors.red)),
-        )
+          loading: () => ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              minHeight: 3,
+              color: instrument.workingAura,
+              backgroundColor: instrument.hairlineBorder,
+            ),
+          ),
+          error: (_, __) => Text(
+            'Failed to load exercises',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: instrument.peakEffortColor,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -176,29 +232,42 @@ class _TagGroup extends StatelessWidget {
   final Set<String> values;
   final Set<String> selected;
   final ValueChanged<Set<String>> onChanged;
-  const _TagGroup({required this.title, required this.values, required this.selected, required this.onChanged});
+  const _TagGroup({
+    required this.title,
+    required this.values,
+    required this.selected,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (values.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: Theme.of(context).textTheme.labelLarge),
+        Text(title.toUpperCase(), style: InstrumentTheme.microLabel(context)),
+        const SizedBox(height: 6),
         Wrap(
           spacing: 8,
+          runSpacing: 8,
           children: values.map((v) {
             final isSel = selected.contains(v);
-            return FilterChip(
+            return InstrumentSelectablePill(
+              label: v,
               selected: isSel,
-              label: Text(v),
-              onSelected: (sel) {
+              bordered: false,
+              onTap: () {
                 final next = Set<String>.from(selected);
-                if (sel) next.add(v); else next.remove(v);
+                if (isSel) {
+                  next.remove(v);
+                } else {
+                  next.add(v);
+                }
                 onChanged(next);
               },
             );
           }).toList(),
-        )
+        ),
       ],
     );
   }

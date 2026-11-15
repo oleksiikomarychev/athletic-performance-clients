@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:workout_app/config/api_config.dart';
 import 'package:workout_app/services/api_client.dart';
 import 'package:workout_app/models/templates.dart';

@@ -17,8 +17,14 @@ import 'package:workout_app/src/widgets/apply_plan_widget.dart'
     show ApplyPlanWidget;
 import 'package:workout_app/models/calendar_plan_summary.dart';
 import 'package:workout_app/screens/plan_editor_screen.dart';
-import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/providers/ambient_environment_provider.dart';
+import 'package:workout_app/providers/interface_maker_provider.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
+import 'package:workout_app/widgets/instrument_metric_matrix.dart';
+import 'package:workout_app/widgets/interface_maker_sheet.dart';
+import 'package:workout_app/widgets/plan_detail/plan_instrument_widgets.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/plan_analytics_chart.dart';
 import 'package:workout_app/screens/user_profile_screen.dart';
@@ -27,6 +33,7 @@ import 'package:workout_app/providers/plan_providers.dart';
 import 'package:workout_app/services/service_locator.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'dart:async';
+import 'dart:math' as math;
 
 class CalendarPlanDetail extends StatefulWidget {
   final CalendarPlan plan;
@@ -213,22 +220,24 @@ class _SingleSelectSheetState<T> extends State<_SingleSelectSheet<T>> {
             const SizedBox(height: 12),
             Flexible(
               child: SingleChildScrollView(
-                child: Column(
-                  children: widget.options
-                      .map(
-                        (option) => RadioListTile<T>(
-                          value: option.value,
-                          groupValue: _value,
-                          onChanged: (selected) {
-                            if (selected != null) {
-                              _select(selected);
-                            }
-                          },
-                          title: Text(option.label),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      )
-                      .toList(),
+                child: RadioGroup<T>(
+                  groupValue: _value,
+                  onChanged: (selected) {
+                    if (selected != null) {
+                      _select(selected);
+                    }
+                  },
+                  child: Column(
+                    children: widget.options
+                        .map(
+                          (option) => RadioListTile<T>(
+                            value: option.value,
+                            title: Text(option.label),
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        )
+                        .toList(),
+                  ),
                 ),
               ),
             ),
@@ -298,9 +307,9 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
   final List<String> _metrics = const ['sets', 'volume', 'intensity', 'effort'];
   String _metricX = 'intensity';
   String _metricY = 'intensity';
+  MetricSlot? _selectedChartSlot = MetricSlot.peakIntensity;
   late List<PlanAnalyticsPoint> _planAnalytics;
   _TimeBucket _timeBucket = _TimeBucket.session;
-  bool _analyticsExpanded = true;
 
   int? _adoptersCount;
   bool _adoptersLoading = false;
@@ -431,48 +440,11 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     );
   }
 
-  Widget _buildInfoChip({
-    required IconData icon,
-    required String label,
-    double? maxWidth,
-  }) {
-    final colors = Theme.of(context).colorScheme;
-    final chip = Container(
-      constraints: maxWidth != null ? BoxConstraints(maxWidth: maxWidth) : null,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: colors.onSurfaceVariant),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-    if (maxWidth != null) {
-      return chip;
-    }
-    return chip;
-  }
-
   Future<void> _openPlanEditor() async {
     await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => PlanEditorScreen(plan: _currentPlan)),
     );
-    final id = _currentPlan.id;
-    if (id != null) {
-      _subscribePlanById(id);
-    }
+    _subscribePlanById(_currentPlan.id);
   }
 
   String? _normalizeExerciseName(String? name) {
@@ -572,135 +544,6 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     }
   }
 
-  Future<void> _showAddUserMaxSheet(PlanExercise exercise) async {
-    final weightController = TextEditingController();
-    final repsController = TextEditingController(text: '1');
-    bool isSubmitting = false;
-    String? errorMessage;
-
-    final result = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 16,
-            bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
-          ),
-          child: StatefulBuilder(
-            builder: (context, setModalState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Добавить максимум для «${exercise.exerciseName}»',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: weightController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Вес (кг)'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: repsController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Повторения'),
-                  ),
-                  if (errorMessage != null) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      errorMessage!,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: isSubmitting
-                          ? null
-                          : () async {
-                              final weight = int.tryParse(
-                                weightController.text,
-                              );
-                              final reps = int.tryParse(repsController.text);
-                              if (weight == null || weight <= 0) {
-                                setModalState(() {
-                                  errorMessage = 'Введите корректный вес';
-                                });
-                                return;
-                              }
-                              if (reps == null || reps <= 0 || reps > 12) {
-                                setModalState(() {
-                                  errorMessage = 'Введите 1–12 повторений';
-                                });
-                                return;
-                              }
-
-                              setModalState(() {
-                                isSubmitting = true;
-                                errorMessage = null;
-                              });
-
-                              try {
-                                await PlanApi.createUserMax(
-                                  exerciseId: exercise.exerciseDefinitionId,
-                                  maxWeight: weight,
-                                  repMax: reps,
-                                  date: DateTime.now()
-                                      .toIso8601String()
-                                      .split('T')
-                                      .first,
-                                );
-                                if (Navigator.of(sheetContext).canPop()) {
-                                  Navigator.of(sheetContext).pop(true);
-                                }
-                              } catch (e) {
-                                setModalState(() {
-                                  errorMessage =
-                                      'Не удалось сохранить максимум: $e';
-                                  isSubmitting = false;
-                                });
-                              }
-                            },
-                      child: isSubmitting
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Сохранить'),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-      },
-    );
-
-    weightController.dispose();
-    repsController.dispose();
-
-    if (result == true) {
-      await _fetchUserMaxes();
-      if (!mounted) return;
-      showAppSnackBar(
-        context,
-        'Максимум для ${exercise.exerciseName} сохранён',
-      );
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -770,10 +613,6 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     });
     try {
       final planId = _currentPlan.id;
-      if (planId == null) {
-        showAppSnackBar(context, 'Нет ID плана для пересчёта', isError: true);
-        return;
-      }
       final updated = await PlanApi.recalcCalendarPlanSets(planId);
       if (!mounted) return;
       _setPlan(updated);
@@ -938,6 +777,8 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
         builder: (context) => ApplyPlanWidget(
           plan: _currentPlan,
           userMaxList: _userMaxList,
@@ -1030,26 +871,431 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     }
   }
 
+  String _mapSlotToPlanMetric(MetricSlot slot) {
+    switch (slot) {
+      case MetricSlot.peakIntensity:
+      case MetricSlot.e1rm:
+        return 'intensity';
+      case MetricSlot.peakRpe:
+      case MetricSlot.avgRpe:
+        return 'effort';
+      case MetricSlot.tonnage:
+      case MetricSlot.kpsh:
+        return 'volume';
+      case MetricSlot.setsCount:
+      case MetricSlot.density:
+      case MetricSlot.durationWeeks:
+      case MetricSlot.frequencyPerWeek:
+        return 'sets';
+    }
+  }
+
+  List<InstrumentMetricCellData> _buildPlanMetricCells(
+    List<MetricSlot> slots,
+    TrainingEnvironmentData env,
+    InstrumentTheme instrument,
+    ColorScheme colors,
+  ) {
+    int totalSets = 0;
+    int totalReps = 0;
+    int totalWorkouts = 0;
+    double? peakIntensity;
+    double? peakRpe;
+    double rpeSum = 0;
+    int rpeCount = 0;
+
+    for (final meso in _currentPlan.mesocycles) {
+      for (final micro in meso.microcycles) {
+        totalWorkouts += micro.planWorkouts.length;
+        for (final pw in micro.planWorkouts) {
+          for (final ex in pw.exercises) {
+            for (final set in ex.sets) {
+              totalSets++;
+              if (set.volume != null) totalReps += set.volume!;
+              if (set.intensity != null && set.intensity! > 0) {
+                final v = set.intensity!.toDouble();
+                if (peakIntensity == null || v > peakIntensity) {
+                  peakIntensity = v;
+                }
+              }
+              if (set.effort != null && set.effort! > 0) {
+                final e = set.effort!.toDouble();
+                rpeSum += e;
+                rpeCount++;
+                if (peakRpe == null || e > peakRpe) {
+                  peakRpe = e;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    peakIntensity ??= env.peakIntensity;
+    peakRpe ??= env.peakRpe;
+    final avgRpe = rpeCount > 0 ? rpeSum / rpeCount : env.avgRpe;
+    final topUserMax = _userMaxList.isEmpty
+        ? null
+        : _userMaxList
+              .map((m) => m.maxWeight.toDouble())
+              .reduce(math.max);
+
+    InstrumentMetricCellData cellFor(MetricSlot slot) {
+      switch (slot) {
+        case MetricSlot.peakIntensity:
+          return InstrumentMetricCellData(
+            slot: slot,
+            value: peakIntensity != null ? '${peakIntensity.round()}%' : '—',
+          );
+        case MetricSlot.e1rm:
+          return InstrumentMetricCellData(
+            slot: slot,
+            value: topUserMax != null
+                ? '${topUserMax.round()} кг'
+                : (peakIntensity != null ? '${peakIntensity.round()}%' : '—'),
+          );
+        case MetricSlot.peakRpe:
+          return InstrumentMetricCellData(
+            slot: slot,
+            value: peakRpe != null ? 'RPE ${peakRpe.toStringAsFixed(1)}' : '—',
+            valueColor: peakRpe != null
+                ? instrument.colorForRpe(peakRpe, colors)
+                : null,
+          );
+        case MetricSlot.avgRpe:
+          return InstrumentMetricCellData(
+            slot: slot,
+            value: avgRpe != null ? 'RPE ${avgRpe.toStringAsFixed(1)}' : '—',
+            valueColor: avgRpe != null
+                ? instrument.colorForRpe(avgRpe, colors)
+                : null,
+          );
+        case MetricSlot.tonnage:
+          return InstrumentMetricCellData(
+            slot: slot,
+            label: 'ОБЪЁМ',
+            value: totalReps > 0 ? '$totalReps повт.' : '—',
+          );
+        case MetricSlot.kpsh:
+          return InstrumentMetricCellData(
+            slot: slot,
+            value: totalReps > 0 ? '$totalReps' : '—',
+          );
+        case MetricSlot.setsCount:
+          return InstrumentMetricCellData(
+            slot: slot,
+            value: '$totalSets',
+          );
+        case MetricSlot.density:
+          return InstrumentMetricCellData(
+            slot: slot,
+            value: totalWorkouts > 0
+                ? '${(totalSets / totalWorkouts).toStringAsFixed(1)}/тр'
+                : '—',
+          );
+        case MetricSlot.durationWeeks:
+          return InstrumentMetricCellData(
+            slot: slot,
+            value: '${_currentPlan.durationWeeks} wk',
+          );
+        case MetricSlot.frequencyPerWeek:
+          return InstrumentMetricCellData(
+            slot: slot,
+            value: _currentPlan.intendedFrequencyPerWeek != null
+                ? '${_currentPlan.intendedFrequencyPerWeek}×/wk'
+                : '—',
+          );
+      }
+    }
+
+    return slots.map(cellFor).toList(growable: false);
+  }
+
+  Future<void> _showSecondaryFiltersSheet() async {
+    final filtersReady = !_loadingMeta && _metaError == null;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            final theme = Theme.of(sheetContext);
+            final hasFilters =
+                _selectedExerciseIds.isNotEmpty || _selectedMuscles.isNotEmpty;
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Фильтры аналитики',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      if (hasFilters)
+                        TextButton(
+                          onPressed: () {
+                            _clearFilters();
+                            setSheetState(() {});
+                          },
+                          child: const Text('Сбросить'),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'ГРАНУЛЯРНОСТЬ',
+                    style: InstrumentTheme.microLabel(sheetContext),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _TimeBucket.values
+                        .map((bucket) {
+                          return ChoiceChip(
+                            label: Text(_timeBucketLabel(bucket)),
+                            selected: _timeBucket == bucket,
+                            onSelected: (_) {
+                              setState(() => _timeBucket = bucket);
+                              _applyFilters();
+                              setSheetState(() {});
+                            },
+                          );
+                        })
+                        .toList(growable: false),
+                  ),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    enabled: filtersReady,
+                    leading: const Icon(Icons.fitness_center_outlined),
+                    title: const Text('Упражнения'),
+                    subtitle: Text(
+                      filtersReady
+                          ? _exerciseSummaryText()
+                          : (_loadingMeta ? 'Загрузка…' : (_metaError ?? '')),
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: filtersReady
+                        ? () async {
+                            await _showExerciseFilter();
+                            setSheetState(() {});
+                          }
+                        : null,
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    enabled: filtersReady,
+                    leading: const Icon(Icons.accessibility_new_outlined),
+                    title: const Text('Мышечные группы'),
+                    subtitle: Text(
+                      filtersReady
+                          ? _muscleSummaryText()
+                          : (_loadingMeta ? 'Загрузка…' : (_metaError ?? '')),
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: filtersReady
+                        ? () async {
+                            await _showMuscleFilter();
+                            setSheetState(() {});
+                          }
+                        : null,
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.scatter_plot_outlined),
+                    title: const Text('Ось X / Ось Y'),
+                    subtitle: Text(
+                      '${_metricLabel(_metricX)} × ${_metricLabel(_metricY)}',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () async {
+                      await _showMetricPicker(isX: false);
+                      setSheetState(() {});
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer(
       builder: (context, ref, _) {
+        final interfaceConfig = ref.watch(interfaceMakerProvider);
+        final env = TrainingEnvironmentData.fromPlan(_currentPlan);
+        final hasFilters =
+            _selectedExerciseIds.isNotEmpty || _selectedMuscles.isNotEmpty;
+        final filterCount =
+            _selectedExerciseIds.length + _selectedMuscles.length;
+
         return AssistantChatHost(
           contextBuilder: () async {
             return {
+              'v': 1,
+              'app': 'WorkoutApp',
               'screen': 'plan_details',
+              'metric_x': _metricX,
+              'metric_y': _metricY,
               'entities': {
                 'calendar_plan_id': _currentPlan.id,
                 'root_plan_id': _rootPlanId,
+                'plan_name': _currentPlan.name,
+                'duration_weeks': _currentPlan.durationWeeks,
               },
             };
           },
           builder: (context, openChat) {
+            final dimensions = UiDimensions.of(context);
+            final theme = Theme.of(context);
+            final colors = theme.colorScheme;
+            final instrument = InstrumentTheme.of(context);
+
+            final accent = env.accentColor(instrument);
+            final metricCells = _buildPlanMetricCells(
+              interfaceConfig.slots,
+              env,
+              instrument,
+              colors,
+            );
+            final MetricSlot selectedMetricSlot =
+                _selectedChartSlot != null &&
+                        interfaceConfig.slots.contains(_selectedChartSlot)
+                    ? _selectedChartSlot!
+                    : (interfaceConfig.slots.isNotEmpty
+                        ? interfaceConfig.slots.first
+                        : MetricSlot.peakIntensity);
+
+            Widget buildModule(LayoutModule module) {
+              switch (module) {
+                case LayoutModule.variantOrHorizonStrip:
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: dimensions.sectionGap),
+                    child: PlanVariantsBar(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: dimensions.pagePadding,
+                      ),
+                      currentPlanId: _currentPlan.id,
+                      rootPlanId: _rootPlanId,
+                      variants: _variants,
+                      isLoading: _variantsLoading || _changingVariant,
+                      errorText: _variantsError,
+                      onSelectOriginal: () {
+                        final orig = _variants.firstWhere(
+                          (v) => v.isOriginal,
+                          orElse: () => CalendarPlanSummary(
+                            id: _rootPlanId,
+                            name: '',
+                            durationWeeks: 0,
+                            isActive: true,
+                            rootPlanId: _rootPlanId,
+                            isOriginal: true,
+                          ),
+                        );
+                        if (_currentPlan.id == orig.id) return;
+                        _subscribePlanById(orig.id);
+                      },
+                      onSelectVariant: _switchToVariant,
+                      onCreateVariant: _createVariantDialog,
+                      extraPills: [
+                        CanvasPillItem(
+                          label: hasFilters
+                              ? 'Фильтры · ${_bucketShort()} ($filterCount)'
+                              : 'Фильтры · ${_bucketShort()}',
+                          icon: Icons.tune_rounded,
+                          selected: hasFilters,
+                          accentColor: accent,
+                          onTap: _showSecondaryFiltersSheet,
+                        ),
+                        CanvasPillItem(
+                          label: 'Сетка',
+                          icon: Icons.grid_view_rounded,
+                          onTap: () => InterfaceMakerSheet.show(context),
+                        ),
+                      ],
+                    ),
+                  );
+                case LayoutModule.commandBriefing:
+                  // Rendered inside the unified PlanPassportCard header.
+                  return const SizedBox.shrink();
+                case LayoutModule.primaryTelemetry:
+                  return Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      dimensions.pagePadding,
+                      0,
+                      dimensions.pagePadding,
+                      dimensions.sectionGap,
+                    ),
+                    child: _buildPlanInfo(
+                      context,
+                      environment: env,
+                      snarkyVoice: interfaceConfig.snarkyVoice,
+                      showBriefing: interfaceConfig.isModuleVisible(
+                        LayoutModule.commandBriefing,
+                      ),
+                      chartSlot: interfaceConfig.showChart
+                          ? SizedBox(
+                              height: 152,
+                              child: PlanAnalyticsChart(
+                                points: _planAnalytics,
+                                metricX: _metricX,
+                                metricY: _metricY,
+                                bleedMode: true,
+                                accentColor: accent,
+                                emptyText: 'Нет данных для плана',
+                              ),
+                            )
+                          : null,
+                      metricCells: metricCells,
+                      selectedSlot: selectedMetricSlot,
+                      onSelectSlot: (slot) {
+                        final mapped = _mapSlotToPlanMetric(slot);
+                        setState(() {
+                          _selectedChartSlot = slot;
+                          _metricX = mapped;
+                          _metricY = mapped;
+                        });
+                      },
+                    ),
+                  );
+                case LayoutModule.scheduleOrLibrary:
+                  if (_currentPlan.mesocycles.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  return Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: dimensions.pagePadding,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: _currentPlan.mesocycles
+                          .map((m) => _buildMesocycleExpansionTile(m, accent))
+                          .toList(growable: false),
+                    ),
+                  );
+              }
+            }
+
             return PopScope(
               canPop: !_deletingPlan,
               child: AbsorbPointer(
                 absorbing: _deletingPlan,
-                child: Scaffold(
+                child: AmbientScaffoldShell(
+                  environment: env,
                   appBar: PrimaryAppBar(
                     title: _shortPlanTitle(_currentPlan.name),
                     onTitleTap: openChat,
@@ -1057,7 +1303,9 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                     actions: [
                       IconButton(
                         icon: const Icon(Icons.check),
-                        onPressed: _deletingPlan ? null : () => _applyPlan(context, ref),
+                        onPressed: _deletingPlan
+                            ? null
+                            : () => _applyPlan(context, ref),
                         tooltip: 'Apply Plan',
                       ),
                       _buildOverflowMenu(ref),
@@ -1067,123 +1315,17 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                     onRefresh: () async => _subscribePlanById(_currentPlan.id),
                     child: SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      padding: EdgeInsets.all(UiDimensions.of(context).densePagePadding),
+                      padding: EdgeInsets.fromLTRB(
+                        0,
+                        AmbientScaffoldShell.topContentInset(context, extra: 6),
+                        0,
+                        MediaQuery.paddingOf(context).bottom + 28,
+                      ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           if (_deletingPlan) const LinearProgressIndicator(),
-                          _buildPlanInfo(context),
-                          SizedBox(height: UiDimensions.of(context).rowGap),
-                          Card(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 10,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Варианты',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  if (_variantsLoading || _changingVariant)
-                                    const LinearProgressIndicator(minHeight: 2)
-                                  else if (_variantsError != null)
-                                    Text(
-                                      _variantsError!,
-                                      style: const TextStyle(
-                                        color: Colors.redAccent,
-                                      ),
-                                    )
-                                  else
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 6,
-                                      children: [
-                                        InputChip(
-                                          avatar: const Icon(
-                                            Icons.star,
-                                            size: 18,
-                                            color: Colors.orange,
-                                          ),
-                                          label: const Text('Оригинал'),
-                                          selected: (() {
-                                            final origId = _variants
-                                                .firstWhere(
-                                                  (v) => v.isOriginal,
-                                                  orElse: () => CalendarPlanSummary(
-                                                    id: _rootPlanId,
-                                                    name: '',
-                                                    durationWeeks: 0,
-                                                    isActive: true,
-                                                    rootPlanId: _rootPlanId,
-                                                    isOriginal: true,
-                                                  ),
-                                                )
-                                                .id;
-                                            return _currentPlan.id == origId;
-                                          })(),
-                                          onPressed: () async {
-                                            final orig = _variants.firstWhere(
-                                              (v) => v.isOriginal,
-                                              orElse: () => CalendarPlanSummary(
-                                                id: _rootPlanId,
-                                                name: '',
-                                                durationWeeks: 0,
-                                                isActive: true,
-                                                rootPlanId: _rootPlanId,
-                                                isOriginal: true,
-                                              ),
-                                            );
-                                            if (_currentPlan.id == orig.id) return;
-                                            _subscribePlanById(orig.id);
-                                          },
-                                        ),
-                                        ..._variants
-                                            .where((v) => !v.isOriginal)
-                                            .map(
-                                              (v) => InputChip(
-                                                avatar: const Icon(
-                                                  Icons.fork_right,
-                                                  size: 18,
-                                                ),
-                                                label: Text(v.name),
-                                                selected: v.id == _currentPlan.id,
-                                                onPressed: v.id == _currentPlan.id
-                                                    ? null
-                                                    : () => _switchToVariant(v),
-                                              ),
-                                            ),
-                                        ActionChip(
-                                          avatar: const Icon(Icons.add, size: 18),
-                                          label: const Text('Добавить variant+'),
-                                          onPressed: _createVariantDialog,
-                                        ),
-                                      ],
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          _buildAnalyticsSection(context),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Mesocycles',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          ..._currentPlan.mesocycles.map(
-                            (mesocycle) => _buildMesocycleExpansionTile(mesocycle),
-                          ),
+                          ...interfaceConfig.visibleModules.map(buildModule),
                         ],
                       ),
                     ),
@@ -1380,13 +1522,6 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
       return points;
     }
 
-    int? _tryParseDayNumber(String key) {
-      final match = RegExp(r'\\d+').firstMatch(key);
-      if (match == null) return null;
-      return int.tryParse(match.group(0)!);
-    }
-
-    final startDate = plan.startDate;
     final sessions = <({Map<String, double> values, double dayOffset})>[];
     double cumulativeDays = 0.0;
 
@@ -1523,252 +1658,9 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     });
   }
 
-  Widget _buildAnalyticsSection(BuildContext context) {
-    final filtersReady = !_loadingMeta && _metaError == null;
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    return Card(
-      elevation: 1,
-      color: Colors.transparent,
-      shadowColor: Colors.deepPurple.withOpacity(0.12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark ? theme.colorScheme.surfaceContainerLow : null,
-          gradient: isDark ? null : const LinearGradient(
-            colors: [Color(0xFFFDF7FF), Color(0xFFEFF5FF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).cardPadding, vertical: UiDimensions.of(context).rowGap),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            const spacing = 10.0;
-            final width = constraints.maxWidth;
-            final twoColumnBreakpoint = 330.0;
-            final useTwoColumns = width >= twoColumnBreakpoint;
-            final fieldWidth = useTwoColumns
-                ? ((width - spacing) / 2).clamp(0.0, 280.0)
-                : width;
-
-            Widget buildFilterSummary({required bool forExercises}) {
-              return _buildFilterDropdown(
-                label: forExercises ? 'Упражнения' : 'Мышцы',
-                valueText: filtersReady
-                    ? (forExercises
-                          ? _exerciseSummaryText()
-                          : _muscleSummaryText())
-                    : _loadingMeta
-                    ? 'Загрузка…'
-                    : (_metaError ?? ''),
-                enabled: filtersReady,
-                onTap: forExercises ? _showExerciseFilter : _showMuscleFilter,
-              );
-            }
-
-            final expandedContent = Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: UiDimensions.of(context).rowGap),
-                Wrap(
-                  spacing: spacing,
-                  runSpacing: spacing,
-                  children: [
-                    SizedBox(
-                      width: fieldWidth,
-                      child: _buildMetricPicker('Ось X', true),
-                    ),
-                    SizedBox(
-                      width: fieldWidth,
-                      child: _buildMetricPicker('Ось Y', false),
-                    ),
-                  ],
-                ),
-                SizedBox(height: UiDimensions.of(context).rowGap),
-                Wrap(
-                  spacing: spacing,
-                  runSpacing: spacing,
-                  children: [
-                    SizedBox(
-                      width: fieldWidth,
-                      child: buildFilterSummary(forExercises: true),
-                    ),
-                    SizedBox(
-                      width: fieldWidth,
-                      child: buildFilterSummary(forExercises: false),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 250),
-                  child: _metaError != null
-                      ? Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Text(
-                            _metaError!,
-                            key: const ValueKey('metaError'),
-                            style: const TextStyle(
-                              color: Colors.redAccent,
-                              fontSize: 12,
-                            ),
-                          ),
-                        )
-                      : _loadingMeta
-                      ? const Padding(
-                          padding: EdgeInsets.only(bottom: 4),
-                          child: LinearProgressIndicator(
-                            key: ValueKey('metaLoading'),
-                            minHeight: 4,
-                          ),
-                        )
-                      : const SizedBox.shrink(key: ValueKey('metaIdle')),
-                ),
-                const SizedBox(height: 4),
-                Builder(
-                  builder: (context) {
-                    final totalLabel = Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.scatter_plot,
-                          size: 16,
-                          color: isDark ? theme.colorScheme.onSurfaceVariant : const Color(0xFF6B5BFF),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Всего точек (${_bucketShort()}): ${_planAnalytics.length}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? theme.colorScheme.onSurface : const Color(0xFF443A7A),
-                          ),
-                        ),
-                      ],
-                    );
-
-                    if (useTwoColumns) {
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(child: totalLabel),
-                          SizedBox(
-                            width: fieldWidth,
-                            child: _buildTimeBucketPicker(),
-                          ),
-                        ],
-                      );
-                    }
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        totalLabel,
-                        const SizedBox(height: 6),
-                        SizedBox(width: width, child: _buildTimeBucketPicker()),
-                      ],
-                    );
-                  },
-                ),
-                SizedBox(height: UiDimensions.of(context).rowGap),
-                SizedBox(
-                  height: useTwoColumns ? 200 : 220,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: isDark ? theme.colorScheme.surfaceContainerHighest : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.deepPurple.withOpacity(0.04),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: DefaultTextStyle.merge(
-                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                          child: PlanAnalyticsChart(
-                            points: _planAnalytics,
-                            metricX: _metricX,
-                            metricY: _metricY,
-                            emptyText: 'Нет данных для плана',
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? theme.colorScheme.surfaceContainerHighest
-                            : const Color(0xFF8066FF).withOpacity(0.18),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.analytics_outlined,
-                        color: isDark ? theme.colorScheme.onSurfaceVariant : const Color(0xFF6745FF),
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Аналитика плана',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: _analyticsExpanded ? 'Свернуть' : 'Развернуть',
-                      icon: AnimatedRotation(
-                        duration: const Duration(milliseconds: 200),
-                        turns: _analyticsExpanded ? 0 : 0.5,
-                        child: const Icon(Icons.keyboard_arrow_up_rounded),
-                      ),
-                      onPressed: () {
-                        setState(
-                          () => _analyticsExpanded = !_analyticsExpanded,
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                AnimatedCrossFade(
-                  firstChild: const SizedBox.shrink(),
-                  secondChild: expandedContent,
-                  crossFadeState: _analyticsExpanded
-                      ? CrossFadeState.showSecond
-                      : CrossFadeState.showFirst,
-                  duration: const Duration(milliseconds: 200),
-                  alignment: Alignment.topCenter,
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
+  // Legacy multi-row analytics dropdown section decommissioned in favor of
+  // unified PlanPassportCard bleed-to-edge wave + InstrumentMetricMatrix +
+  // _showSecondaryFiltersSheet().
 
   List<ExerciseDefinition> _availableExercises() {
     final defs =
@@ -1834,61 +1726,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     return '$displayed и еще ${selected.length - 2}';
   }
 
-  Widget _buildFilterDropdown({
-    required String label,
-    required String valueText,
-    required VoidCallback onTap,
-    bool enabled = true,
-  }) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-        ),
-        const SizedBox(height: 2),
-        GestureDetector(
-          onTap: enabled ? onTap : null,
-          behavior: HitTestBehavior.opaque,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 48),
-            child: InputDecorator(
-              decoration: InputDecoration(
-                suffixIcon: const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  size: 18,
-                ),
-                suffixIconConstraints: const BoxConstraints(
-                  minWidth: 28,
-                  minHeight: 28,
-                ),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: Text(
-                valueText,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: enabled
-                      ? theme.textTheme.bodyMedium?.color
-                      : Colors.grey,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  // Removed legacy _buildFilterDropdown, _buildMetricPicker, and _buildTimeBucketPicker.
 
   Future<void> _showExerciseFilter() async {
     final options = _availableExercises();
@@ -2007,14 +1845,6 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     );
   }
 
-  Widget _buildMetricPicker(String label, bool isX) {
-    return _buildFilterDropdown(
-      label: label,
-      valueText: _metricLabel(isX ? _metricX : _metricY),
-      onTap: () => _showMetricPicker(isX: isX),
-    );
-  }
-
   String _metricLabel(String m) {
     switch (m) {
       case 'sets':
@@ -2052,59 +1882,6 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     }
   }
 
-  Widget _buildTimeBucketPicker() {
-    return _buildFilterDropdown(
-      label: 'Гранулярность',
-      valueText: _timeBucketLabel(_timeBucket),
-      onTap: _showTimeBucketPicker,
-    );
-  }
-
-  Future<void> _showTimeBucketPicker() async {
-    final options = <_MultiSelectOption<_TimeBucket>>[
-      _MultiSelectOption(
-        value: _TimeBucket.session,
-        label: _timeBucketLabel(_TimeBucket.session),
-      ),
-      _MultiSelectOption(
-        value: _TimeBucket.microcycle,
-        label: _timeBucketLabel(_TimeBucket.microcycle),
-      ),
-      _MultiSelectOption(
-        value: _TimeBucket.calendarWeek,
-        label: _timeBucketLabel(_TimeBucket.calendarWeek),
-      ),
-    ];
-
-    final result = await showModalBottomSheet<_TimeBucket>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => _SingleSelectSheet<_TimeBucket>(
-        title: 'Выберите временную гранулярность',
-        options: options,
-        initialValue: _timeBucket,
-      ),
-    );
-
-    if (result == null || result == _timeBucket) return;
-    setState(() => _timeBucket = result);
-    _applyFilters();
-  }
-
-  Future<void> _fetchAnalytics() async {}
-
-  Widget _buildPlanWorkoutsTable(List<PlanWorkout> planWorkouts) {
-    if (planWorkouts.isEmpty) {
-      return const Text('No plan workouts available');
-    }
-
-    return Column(
-      children: planWorkouts.map((pw) => _buildWorkoutDayCard(pw)).toList(),
-    );
-  }
-
   (Set<int>, Set<String>) _collectPlanExerciseData(CalendarPlan plan) {
     final ids = <int>{};
     final names = <String>{};
@@ -2135,74 +1912,55 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     return (ids, names);
   }
 
-  Widget _buildWorkoutDayCard(PlanWorkout workout) {
-    final colors = Theme.of(context).colorScheme;
-    final dimensions = UiDimensions.of(context);
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.only(bottom: 8.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          tilePadding: EdgeInsets.symmetric(
-            horizontal: dimensions.denseCardPadding,
-            vertical: 4.0,
-          ),
-          childrenPadding: EdgeInsets.only(
-            left: dimensions.denseCardPadding,
-            right: dimensions.denseCardPadding,
-            bottom: 8.0,
-          ),
-          title: Row(
-            children: [
-              Icon(Icons.fitness_center, size: 16, color: colors.onSurfaceVariant),
-              const SizedBox(width: 8),
-              Text(
+  Widget _buildWorkoutDayCard(PlanWorkout workout, Color hairline) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Theme(
+      data: theme.copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+        title: Row(
+          children: [
+            Icon(Icons.fitness_center, size: 15, color: colors.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
                 workout.dayLabel,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(width: 8),
-              Text(
-                '(${workout.exercises.length} ex)',
-                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
+            ),
+            Text(
+              '${workout.exercises.length} EX',
+              style: InstrumentTheme.tabular(
+                InstrumentTheme.microLabel(context),
               ),
-            ],
-          ),
-          children: [
-            Column(
-              children: workout.exercises.asMap().entries.map((entry) {
-                int idx = entry.key;
-                var exercise = entry.value;
-                return _buildExerciseCard(exercise, idx + 1);
-              }).toList(),
             ),
           ],
         ),
+        children: [
+          for (var i = 0; i < workout.exercises.length; i++) ...[
+            if (i > 0) Container(height: 1, color: hairline),
+            _buildExerciseCard(workout.exercises[i], i + 1, hairline),
+          ],
+        ],
       ),
     );
   }
 
-  Widget _buildExerciseCard(PlanExercise exercise, int index) {
-    final colors = Theme.of(context).colorScheme;
-    final dimensions = UiDimensions.of(context);
+  Widget _buildExerciseCard(PlanExercise exercise, int index, Color hairline) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final userMaxes = _userMaxesForExercise(exercise);
     final latestUserMax = _latestUserMax(userMaxes);
     final hasNotes =
         (exercise.notes != null && exercise.notes!.trim().isNotEmpty);
     final hasRest = exercise.restSeconds != null;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8.0),
-      padding: EdgeInsets.symmetric(horizontal: dimensions.denseCardPadding, vertical: dimensions.rowGap),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: colors.outlineVariant, width: 1),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2210,370 +1968,314 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
             children: [
               Text(
                 '$index.',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                style: InstrumentTheme.tabular(
+                  theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: colors.primary,
+                      ) ??
+                      const TextStyle(fontWeight: FontWeight.w800),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   exercise.exerciseName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
           if (hasRest || hasNotes) ...[
-            Wrap(
-              spacing: 8,
-              runSpacing: 6,
-              children: [
-                if (hasRest)
-                  _buildInfoChip(
-                    icon: Icons.timer_outlined,
-                    label: 'Rest ${exercise.restSeconds}s',
-                  ),
-                if (hasNotes)
-                  _buildInfoChip(
-                    icon: Icons.sticky_note_2_outlined,
-                    label: exercise.notes!.trim(),
-                    maxWidth: MediaQuery.of(context).size.width - 140,
-                  ),
-              ],
+            const SizedBox(height: 4),
+            Text(
+              [
+                if (hasRest) 'Rest ${exercise.restSeconds}s',
+                if (hasNotes) exercise.notes!.trim(),
+              ].join(' · '),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colors.onSurfaceVariant,
+              ),
             ),
-            const SizedBox(height: 8),
           ],
+          const SizedBox(height: 4),
           Text(
             latestUserMax != null
                 ? 'Текущий максимум: ${latestUserMax.maxWeight} кг × ${latestUserMax.repMax}'
                 : 'Максимум не задан',
-            style: TextStyle(
-              fontSize: 12,
-              color: latestUserMax != null
-                  ? colors.tertiary
-                  : colors.onSurfaceVariant,
-              fontWeight: latestUserMax != null
-                  ? FontWeight.w600
-                  : FontWeight.w500,
+            style: InstrumentTheme.tabular(
+              theme.textTheme.bodySmall?.copyWith(
+                    color: latestUserMax != null
+                        ? colors.tertiary
+                        : colors.onSurfaceVariant,
+                    fontWeight: latestUserMax != null
+                        ? FontWeight.w600
+                        : FontWeight.w500,
+                  ) ??
+                  const TextStyle(fontSize: 12),
             ),
           ),
           if (exercise.sets.isNotEmpty) ...[
             const SizedBox(height: 8),
-            _buildSetsSection(exercise.sets),
+            _buildSetsSection(exercise.sets, hairline),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildSetsSection(List<PlanSet> sets) {
-    final colors = Theme.of(context).colorScheme;
+  Widget _buildSetsSection(List<PlanSet> sets, Color hairline) {
+    final labelStyle = InstrumentTheme.microLabel(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '${sets.length} set${sets.length != 1 ? 's' : ''}',
-          style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 34,
+                child: Text('SET', style: labelStyle),
+              ),
+              Expanded(
+                child: Text(
+                  'INT',
+                  textAlign: TextAlign.center,
+                  style: labelStyle,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  'REPS',
+                  textAlign: TextAlign.center,
+                  style: labelStyle,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  'RPE',
+                  textAlign: TextAlign.center,
+                  style: labelStyle,
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 6),
-        ...sets.asMap().entries.map((entry) {
-          int setIndex = entry.key;
-          var set = entry.value;
-          return _buildSetRow(set, setIndex + 1);
-        }).toList(),
+        Container(height: 1, color: hairline),
+        for (var i = 0; i < sets.length; i++) ...[
+          if (i > 0) Container(height: 1, color: hairline.withValues(alpha: 0.45)),
+          _buildSetRow(sets[i], i + 1),
+        ],
       ],
     );
   }
 
   Widget _buildSetRow(PlanSet set, int setNumber) {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final rpeValue = set.effort?.toDouble();
+    final rpeColor = instrument.colorForRpe(rpeValue, colors);
+    final hasRpe = rpeValue != null && rpeValue > 0;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
       child: Row(
         children: [
           SizedBox(
-            width: 50,
+            width: 34,
             child: Text(
-              'Set $setNumber',
-              style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
+              '$setNumber',
+              style: InstrumentTheme.tabular(
+                theme.textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                    ) ??
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+              ),
             ),
           ),
           Expanded(
-            child: Row(
-              children: [
-                _buildCompactParameter(
-                  'Int',
-                  set.intensity != null ? '${set.intensity}%' : '-',
-                ),
-                const SizedBox(width: 12),
-                _buildCompactParameter(
-                  'Reps',
-                  set.volume != null ? '${set.volume}' : '-',
-                ),
-                const SizedBox(width: 12),
-                _buildCompactParameter(
-                  'RPE',
-                  set.effort != null ? '${set.effort}' : '-',
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompactParameter(String label, String value) {
-    final colors = Theme.of(context).colorScheme;
-    return Expanded(
-      child: Row(
-        children: [
-          Text(
-            '$label:',
-            style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 90,
             child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+              set.intensity != null ? '${set.intensity}%' : '—',
+              textAlign: TextAlign.center,
+              style: InstrumentTheme.tabular(
+                theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colors.onSurface,
+                    ) ??
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              ),
             ),
           ),
-          const SizedBox(width: 8),
-          Expanded(child: Text(value, style: const TextStyle(fontSize: 12))),
+          Expanded(
+            child: Text(
+              set.volume != null ? '${set.volume}' : '—',
+              textAlign: TextAlign.center,
+              style: InstrumentTheme.tabular(
+                theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colors.onSurface,
+                    ) ??
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              set.effort != null ? '${set.effort}' : '—',
+              textAlign: TextAlign.center,
+              style: InstrumentTheme.tabular(
+                theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: hasRpe ? rpeColor : colors.onSurfaceVariant,
+                    ) ??
+                    const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCompactInfo(String label, String value) {
-    final colors = Theme.of(context).colorScheme;
-    return Text(
-      '$label: $value',
-      style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
+  Widget _buildPlanInfo(
+    BuildContext context, {
+    required TrainingEnvironmentData environment,
+    required bool snarkyVoice,
+    required bool showBriefing,
+    required Widget? chartSlot,
+    required List<InstrumentMetricCellData> metricCells,
+    required MetricSlot selectedSlot,
+    required ValueChanged<MetricSlot> onSelectSlot,
+  }) {
+    return PlanPassportCard(
+      plan: _currentPlan,
+      adoptersLoading: _adoptersLoading,
+      adoptersError: _adoptersError,
+      adoptersCount: _adoptersCount,
+      updatingPublic: _updatingPublic,
+      environment: environment,
+      snarkyVoice: snarkyVoice,
+      showBriefing: showBriefing,
+      chartSlot: chartSlot,
+      metricCells: metricCells,
+      selectedSlot: selectedSlot,
+      onSelectSlot: onSelectSlot,
+      onPublicChanged: (value) async {
+        setState(() {
+          _updatingPublic = true;
+        });
+        try {
+          final updated = await PlanApi.updateCalendarPlanPublic(
+            planId: _currentPlan.id,
+            isPublic: value,
+          );
+          if (!mounted) return;
+          _setPlan(updated);
+          showAppSnackBar(
+            context,
+            value ? 'План сделан публичным' : 'План скрыт (только для вас)',
+          );
+        } catch (e) {
+          if (!mounted) return;
+          showAppSnackBar(
+            context,
+            'Не удалось обновить видимость плана: $e',
+            isError: true,
+          );
+        } finally {
+          if (mounted) {
+            setState(() {
+              _updatingPublic = false;
+            });
+          }
+        }
+      },
     );
   }
 
-  Widget _buildPlanInfo(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final dimensions = UiDimensions.of(context);
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: Padding(
-        padding: EdgeInsets.all(dimensions.denseCardPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildMesocycleExpansionTile(Mesocycle mesocycle, Color accent) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final hairline = (isDark
+            ? instrument.hairlineBorder
+            : colors.outlineVariant)
+        .withValues(alpha: isDark ? 0.85 : 0.55);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: InstrumentTheme.instrumentCardDecoration(
+        context,
+        radius: 22,
+      ),
+      child: Theme(
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded:
+              mesocycle.orderIndex <= 1 || _currentPlan.mesocycles.length == 1,
+          tilePadding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          childrenPadding: const EdgeInsets.only(bottom: 8),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'MESOCYCLE ${mesocycle.orderIndex} · ${mesocycle.microcycles.length} MICRO',
+                style: InstrumentTheme.tabular(
+                  InstrumentTheme.microLabel(context, color: accent),
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                mesocycle.name,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ],
+          ),
           children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.calendar_today,
-                  size: 18,
-                  color: Theme.of(context).primaryColor,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _currentPlan.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            _buildInfoRow('Duration', '${_currentPlan.durationWeeks} weeks'),
-            _buildInfoRow('Active', _currentPlan.isActive ? 'Yes' : 'No'),
-            _buildInfoRow(
-              'Applied by',
-              _adoptersLoading
-                  ? 'Loading...'
-                  : (_adoptersError != null
-                        ? '—'
-                        : ((_adoptersCount ?? 0).toString())),
-            ),
-            if (_adoptersError != null)
+            if (mesocycle.weeksCount != null ||
+                mesocycle.microcycleLengthDays != null ||
+                (mesocycle.normalizationValue != null &&
+                    mesocycle.normalizationUnit != null)) ...[
+              Container(height: 1, color: hairline),
               Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  _adoptersError!,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.error,
-                    fontSize: 12,
-                  ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
                 ),
-              ),
-            if (_currentPlan.startDate != null)
-              _buildInfoRow(
-                'Start Date',
-                _currentPlan.startDate!.toLocal().toString().split(' ')[0],
-              ),
-            if (_currentPlan.endDate != null)
-              _buildInfoRow(
-                'End Date',
-                _currentPlan.endDate!.toLocal().toString().split(' ')[0],
-              ),
-            if (_currentPlan.primaryGoal != null &&
-                _currentPlan.primaryGoal!.isNotEmpty)
-              _buildInfoRow('Goal', _currentPlan.primaryGoal!),
-            if (_currentPlan.intendedExperienceLevel != null &&
-                _currentPlan.intendedExperienceLevel!.isNotEmpty)
-              _buildInfoRow(
-                'Experience',
-                _currentPlan.intendedExperienceLevel!,
-              ),
-            if (_currentPlan.intendedFrequencyPerWeek != null)
-              _buildInfoRow(
-                'Frequency',
-                '${_currentPlan.intendedFrequencyPerWeek} sessions/week',
-              ),
-            if (_currentPlan.sessionDurationTargetMin != null)
-              _buildInfoRow(
-                'Session length',
-                '${_currentPlan.sessionDurationTargetMin} min',
-              ),
-            if (_currentPlan.nutritionPlan != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.tertiaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: colors.tertiary),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.restaurant,
-                        size: 14,
-                        color: colors.onTertiaryContainer,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Linked to nutrition',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: colors.onTertiaryContainer,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Text('Public template'),
-                const Spacer(),
-                Switch(
-                  value: _currentPlan.isPublic,
-                  onChanged: _updatingPublic
-                      ? null
-                      : (value) async {
-                          setState(() {
-                            _updatingPublic = true;
-                          });
-                          try {
-                            final updated =
-                                await PlanApi.updateCalendarPlanPublic(
-                                  planId: _currentPlan.id,
-                                  isPublic: value,
-                                );
-                            if (!mounted) return;
-                            _setPlan(updated);
-                            showAppSnackBar(
-                              context,
-                              value
-                                  ? 'План сделан публичным'
-                                  : 'План скрыт (только для вас)',
-                            );
-                          } catch (e) {
-                            if (!mounted) return;
-                            showAppSnackBar(
-                              context,
-                              'Не удалось обновить видимость плана: $e',
-                              isError: true,
-                            );
-                          } finally {
-                            if (mounted) {
-                              setState(() {
-                                _updatingPublic = false;
-                              });
-                            }
-                          }
-                        },
-                ),
-              ],
-            ),
-            if (_updatingPublic)
-              const Align(
-                alignment: Alignment.centerRight,
-                child: SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            if (_currentPlan.requiredEquipment != null &&
-                _currentPlan.requiredEquipment!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
+                child: Wrap(
+                  spacing: 14,
+                  runSpacing: 4,
                   children: [
-                    for (final equipment in _currentPlan.requiredEquipment!) ...[
-                      Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: Chip(
-                          label: Text(equipment),
-                          labelPadding: const EdgeInsets.symmetric(horizontal: 2),
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
+                    if (mesocycle.weeksCount != null)
+                      _buildCompactInfo('Weeks', '${mesocycle.weeksCount}'),
+                    if (mesocycle.microcycleLengthDays != null)
+                      _buildCompactInfo(
+                        'Length',
+                        '${mesocycle.microcycleLengthDays}d',
                       ),
-                    ],
+                    if (mesocycle.normalizationValue != null &&
+                        mesocycle.normalizationUnit != null)
+                      _buildCompactInfo(
+                        'Norm',
+                        '${mesocycle.normalizationValue}${mesocycle.normalizationUnit}',
+                      ),
                   ],
                 ),
               ),
             ],
-            if (_currentPlan.notes != null &&
-                _currentPlan.notes!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                _currentPlan.notes!,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+            for (var i = 0; i < mesocycle.microcycles.length; i++) ...[
+              Container(height: 1, color: hairline),
+              _buildMicrocycleCard(mesocycle.microcycles[i], hairline),
             ],
           ],
         ),
@@ -2581,87 +2283,9 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     );
   }
 
-  Widget _buildMesocycleExpansionTile(Mesocycle mesocycle) {
-    final colors = Theme.of(context).colorScheme;
-    final dimensions = UiDimensions.of(context);
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.only(bottom: 8.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-      child: ExpansionTile(
-        tilePadding: EdgeInsets.symmetric(
-          horizontal: dimensions.denseCardPadding,
-          vertical: 4.0,
-        ),
-        childrenPadding: EdgeInsets.only(
-          left: dimensions.denseCardPadding,
-          right: dimensions.denseCardPadding,
-          bottom: 8.0,
-        ),
-        title: Row(
-          children: [
-            Text(
-              'Meso ${mesocycle.orderIndex}',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                mesocycle.name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-            Text(
-              '(${mesocycle.microcycles.length} micro)',
-              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
-            ),
-          ],
-        ),
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (mesocycle.weeksCount != null ||
-                  mesocycle.microcycleLengthDays != null ||
-                  (mesocycle.normalizationValue != null &&
-                      mesocycle.normalizationUnit != null))
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Wrap(
-                    spacing: 12,
-                    children: [
-                      if (mesocycle.weeksCount != null)
-                        _buildCompactInfo('Weeks', '${mesocycle.weeksCount}'),
-                      if (mesocycle.microcycleLengthDays != null)
-                        _buildCompactInfo(
-                          'Length',
-                          '${mesocycle.microcycleLengthDays}d',
-                        ),
-                      if (mesocycle.normalizationValue != null &&
-                          mesocycle.normalizationUnit != null)
-                        _buildCompactInfo(
-                          'Norm',
-                          '${mesocycle.normalizationValue}${mesocycle.normalizationUnit}',
-                        ),
-                    ],
-                  ),
-                ),
-              ...mesocycle.microcycles.map(
-                (microcycle) => _buildMicrocycleCard(microcycle),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMicrocycleCard(Microcycle microcycle) {
-    final colors = Theme.of(context).colorScheme;
-    final dimensions = UiDimensions.of(context);
+  Widget _buildMicrocycleCard(Microcycle microcycle, Color hairline) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final name = microcycle.name.trim();
     final orderIndex = microcycle.orderIndex;
     final orderNumber = orderIndex >= 0 ? orderIndex + 1 : 1;
@@ -2672,89 +2296,64 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     final plannedDays = microcycle.planWorkouts.length;
     final dayCount =
         microcycle.daysCount ?? (plannedDays > 0 ? plannedDays : null);
-    final subtitleText = dayCount != null ? '(${dayCount}d)' : null;
+    final subtitleParts = <String>[
+      if (hasSecondaryLabel) fallbackLabel,
+      if (dayCount != null) '${dayCount}d',
+      if (microcycle.normalizationValue != null &&
+          microcycle.normalizationUnit != null)
+        'Norm ${microcycle.normalizationValue}${microcycle.normalizationUnit}',
+    ];
 
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.only(bottom: 6.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-      color: colors.surfaceContainerLow,
+    return Theme(
+      data: theme.copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
-        tilePadding: EdgeInsets.symmetric(
-          horizontal: dimensions.denseCardPadding,
-          vertical: 2.0,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+        childrenPadding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+        title: Text(
+          primaryLabel,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        childrenPadding: EdgeInsets.only(
-          left: dimensions.denseCardPadding,
-          right: dimensions.denseCardPadding,
-          bottom: 8.0,
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              primaryLabel,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-            ),
-            if (hasSecondaryLabel)
-              Text(
-                fallbackLabel,
-                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 11),
-              ),
-          ],
-        ),
-        subtitle: subtitleText != null
+        subtitle: subtitleParts.isNotEmpty
             ? Text(
-                subtitleText,
-                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 11),
+                subtitleParts.join(' · '),
+                style: InstrumentTheme.tabular(
+                  theme.textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ) ??
+                      TextStyle(color: colors.onSurfaceVariant, fontSize: 11),
+                ),
               )
             : null,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (dayCount != null ||
-                  (microcycle.normalizationValue != null &&
-                      microcycle.normalizationUnit != null))
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6.0),
-                  child: Wrap(
-                    spacing: 12,
-                    children: [
-                      if (dayCount != null)
-                        _buildCompactInfo('Length', '${dayCount}d'),
-                      if (microcycle.normalizationValue != null &&
-                          microcycle.normalizationUnit != null)
-                        _buildCompactInfo(
-                          'Norm',
-                          '${microcycle.normalizationValue}${microcycle.normalizationUnit}',
-                        ),
-                    ],
+          if (microcycle.normalizationRules.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 2, 12, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'NORMALIZATION RULES',
+                    style: InstrumentTheme.microLabel(context),
                   ),
-                ),
-              if (microcycle.normalizationRules.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Normalization rules',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      ...microcycle.normalizationRules.map(
-                        (rule) => _buildNormalizationRuleChip(rule),
-                      ),
-                    ],
+                  const SizedBox(height: 4),
+                  ...microcycle.normalizationRules.map(
+                    (rule) => _buildNormalizationRuleChip(rule),
                   ),
-                ),
-              _buildPlanWorkoutsTable(microcycle.planWorkouts),
+                ],
+              ),
+            ),
+          if (microcycle.planWorkouts.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Text('No plan workouts available'),
+            )
+          else
+            for (var i = 0; i < microcycle.planWorkouts.length; i++) ...[
+              Container(height: 1, color: hairline),
+              _buildWorkoutDayCard(microcycle.planWorkouts[i], hairline),
             ],
-          ),
         ],
       ),
     );
@@ -2762,19 +2361,20 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
 
   Widget _buildNormalizationRuleChip(NormalizationRule rule) {
     final colors = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(6),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Δ ${rule.value}${rule.unit}',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            style: InstrumentTheme.tabular(
+              TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: colors.primary,
+              ),
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -2784,6 +2384,16 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCompactInfo(String label, String value) {
+    final colors = Theme.of(context).colorScheme;
+    return Text(
+      '$label: $value',
+      style: InstrumentTheme.tabular(
+        TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
       ),
     );
   }

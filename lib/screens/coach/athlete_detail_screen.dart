@@ -1,13 +1,18 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:fl_chart/fl_chart.dart';
-import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/models/crm_analytics.dart';
+import 'package:workout_app/providers/ambient_environment_provider.dart';
+import 'package:workout_app/providers/interface_maker_provider.dart';
 import 'package:workout_app/services/service_locator.dart' as sl;
-import 'package:workout_app/widgets/floating_header_bar.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
+import 'package:workout_app/widgets/assistant_chat_host.dart';
+import 'package:workout_app/widgets/instrument_metric_matrix.dart';
 import 'package:workout_app/widgets/plan_analytics_chart.dart';
+import 'package:workout_app/widgets/primary_app_bar.dart';
 
 final athleteDetailedAnalyticsProvider =
     FutureProvider.family<AthleteDetailedAnalyticsModel, String>((
@@ -18,20 +23,18 @@ final athleteDetailedAnalyticsProvider =
       return svc.getAthleteAnalytics(athleteId: athleteId);
     });
 
-final athleteDetailDisplayNameProvider = FutureProvider.family<String, String>((
-  ref,
-  athleteId,
-) async {
-  final profileService = ref.watch(sl.profileServiceProvider);
-  try {
-    final profile = await profileService.fetchProfileById(athleteId);
-    final displayName = profile.displayName;
-    if (displayName != null && displayName.trim().isNotEmpty) {
-      return displayName;
-    }
-  } catch (_) {}
-  return athleteId;
-});
+final athleteDetailDisplayNameProvider =
+    FutureProvider.family<String, String>((ref, athleteId) async {
+      final profileService = ref.watch(sl.profileServiceProvider);
+      try {
+        final profile = await profileService.fetchProfileById(athleteId);
+        final displayName = profile.displayName;
+        if (displayName != null && displayName.trim().isNotEmpty) {
+          return displayName;
+        }
+      } catch (_) {}
+      return athleteId;
+    });
 
 class AthleteDetailScreen extends ConsumerWidget {
   final String athleteId;
@@ -44,6 +47,16 @@ class AthleteDetailScreen extends ConsumerWidget {
     final displayNameAsync = ref.watch(
       athleteDetailDisplayNameProvider(athleteId),
     );
+    final env = ref.watch(activeTrainingEnvironmentProvider(null));
+    final instrument = InstrumentTheme.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final dims = UiDimensions.of(context);
+    final hairline =
+        (theme.brightness == Brightness.dark
+                ? instrument.hairlineBorder
+                : scheme.outlineVariant)
+            .withValues(alpha: 0.65);
     final df = DateFormat('dd.MM.yyyy');
 
     final headerTitle = displayNameAsync.when(
@@ -52,159 +65,349 @@ class AthleteDetailScreen extends ConsumerWidget {
       error: (_, __) => 'Athlete',
     );
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: SafeArea(
-        bottom: false,
-        child: Stack(
-          children: [
-            asyncData.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(child: Text('Error: $error')),
-              data: (details) {
-                final cardName = displayNameAsync.when(
-                  data: (name) => name,
-                  loading: () => athleteId,
-                  error: (_, __) => athleteId,
-                );
-                return SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Padding(
-                    padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(height: kToolbarHeight + UiDimensions.of(context).sectionGap),
-                        Container(
-                          padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
-                          decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: AppShadows.sm,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                cardName,
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text('Sessions: ${details.sessionsCount}'),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Total volume: ${details.totalVolume?.toStringAsFixed(1) ?? '-'}',
-                              ),
-                              const SizedBox(height: 4),
-                              if (details.sessionsPerWeek != null)
-                                Text(
-                                  'Sessions/week: ${details.sessionsPerWeek!.toStringAsFixed(1)}',
-                                ),
-                              if (details.sessionsPerWeek != null)
-                                const SizedBox(height: 4),
-                              if (details.planAdherence != null)
-                                Text(
-                                  'Plan adherence: ${(details.planAdherence! * 100).round()}%',
-                                ),
-                              if (details.planAdherence != null)
-                                const SizedBox(height: 4),
-                              if (details.avgIntensity != null)
-                                Text(
-                                  'Avg intensity: ${details.avgIntensity!.toStringAsFixed(1)}',
-                                ),
-                              if (details.avgIntensity != null)
-                                const SizedBox(height: 4),
-                              if (details.avgEffort != null)
-                                Text(
-                                  'Avg effort (RPE): ${details.avgEffort!.toStringAsFixed(1)}',
-                                ),
-                              if (details.avgEffort != null)
-                                const SizedBox(height: 4),
-                              if (details.lastWorkoutAt != null)
-                                Text(
-                                  'Last workout: ${df.format(details.lastWorkoutAt!)}',
-                                ),
-                              const SizedBox(height: 4),
-                              if (details.daysSinceLastWorkout != null)
-                                Text(
-                                  'Days since last workout: ${details.daysSinceLastWorkout}',
-                                ),
-                              const SizedBox(height: 8),
-                              if (details.activePlanName != null)
-                                Text('Active plan: ${details.activePlanName}'),
-                              const SizedBox(height: 16),
-                              const Text('Trend by week'),
-                              const SizedBox(height: 8),
-                              SizedBox(
-                                height: 220,
-                                child: _TrendChart(details: details),
-                              ),
-                              const SizedBox(height: 16),
-                              if (details.effortDistribution != null &&
-                                  details.effortDistribution!.isNotEmpty) ...[
-                                const Text('RPE distribution'),
-                                SizedBox(height: 8),
-                                SizedBox(
-                                  height: 140,
-                                  child: _RpeMiniChart(
-                                    distribution: details.effortDistribution,
-                                  ),
-                                ),
-                                SizedBox(height: 16),
-                              ],
-                              ListView.separated(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: details.trend.length,
-                                separatorBuilder: (_, __) =>
-                                    const Divider(height: 1),
-                                itemBuilder: (context, index) {
-                                  final t = details.trend[index];
-                                  return ListTile(
-                                    title: Text(df.format(t.periodStart)),
-                                    subtitle: Text(
-                                      'Sessions: ${t.sessionsCount}',
-                                    ),
-                                    trailing: Text(
-                                      'Vol: ${t.totalVolume.toStringAsFixed(1)}',
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+    Future<Map<String, dynamic>> buildChatContext() async {
+      final details = asyncData.valueOrNull;
+      return <String, dynamic>{
+        'v': 1,
+        'app': 'WorkoutApp',
+        'screen': 'athlete_detail',
+        'role': 'coach',
+        'timestamp': DateTime.now().toUtc().toIso8601String(),
+        'selection': <String, dynamic>{
+          'athlete_id': athleteId,
+          'athlete_name': headerTitle,
+        },
+        if (details != null)
+          'entities': <String, dynamic>{
+            'analytics': {
+              'sessions_count': details.sessionsCount,
+              'total_volume': details.totalVolume,
+              'sessions_per_week': details.sessionsPerWeek,
+              'plan_adherence': details.planAdherence,
+              'avg_intensity': details.avgIntensity,
+              'avg_effort': details.avgEffort,
+              'active_plan_name': details.activePlanName,
+            },
+          },
+      };
+    }
+
+    return AssistantChatHost(
+      initialMessage:
+          'Открываю ассистента из AthleteDetailScreen. Используй контекст v1 для анализа метрик и тренда атлета.',
+      contextBuilder: buildChatContext,
+      builder: (context, openChat) {
+        return AmbientScaffoldShell(
+          environment: env,
+          appBar: PrimaryAppBar(
+            title: headerTitle,
+            showBack: true,
+            onTitleTap: openChat,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                tooltip: 'Refresh',
+                onPressed: () {
+                  ref.invalidate(athleteDetailedAnalyticsProvider(athleteId));
+                },
+              ),
+            ],
+          ),
+          body: asyncData.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, _) => Center(
+              child: Padding(
+                padding: EdgeInsets.all(dims.pagePadding),
+                child: Text(
+                  'Error: $error',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
                   ),
-                );
-              },
-            ),
-            Align(
-              alignment: Alignment.topCenter,
-              child: FloatingHeaderBar(
-                title: headerTitle,
-                leading: IconButton(
-                  icon: Icon(
-                    Icons.arrow_back,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                  onPressed: () => Navigator.of(context).maybePop(),
                 ),
-                onProfileTap: null,
               ),
             ),
-          ],
-        ),
-      ),
+            data: (details) {
+              final cardName = displayNameAsync.when(
+                data: (name) => name,
+                loading: () => athleteId,
+                error: (_, __) => athleteId,
+              );
+              final adherencePct = details.planAdherence != null
+                  ? '${(details.planAdherence! * 100).round()}%'
+                  : '—';
+              final lastWorkoutText = details.lastWorkoutAt != null
+                  ? df.format(details.lastWorkoutAt!.toLocal())
+                  : '—';
+
+              return RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(athleteDetailedAnalyticsProvider(athleteId));
+                  await ref.read(
+                    athleteDetailedAnalyticsProvider(athleteId).future,
+                  );
+                },
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(
+                    dims.pagePadding,
+                    AmbientScaffoldShell.topContentInset(context),
+                    dims.pagePadding,
+                    AmbientScaffoldShell.bottomContentInset(context),
+                  ),
+                  children: [
+                    Container(
+                      decoration: InstrumentTheme.instrumentCardDecoration(
+                        context,
+                        accentColor: instrument.workingAura,
+                        radius: 22,
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              dims.cardPadding,
+                              dims.cardPadding,
+                              dims.cardPadding,
+                              12,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  (details.activePlanName ?? 'ATHLETE TELEMETRY')
+                                      .toUpperCase(),
+                                  style: InstrumentTheme.microLabel(
+                                    context,
+                                    color: instrument.workingAura,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  cardName,
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                if (details.daysSinceLastWorkout != null) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Last workout $lastWorkoutText · ${details.daysSinceLastWorkout}d ago',
+                                    style: InstrumentTheme.tabular(
+                                      (theme.textTheme.bodySmall ??
+                                              const TextStyle())
+                                          .copyWith(
+                                            color: scheme.onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            height: 210,
+                            child: _TrendChart(details: details),
+                          ),
+                          Container(height: 1, color: hairline),
+                          Padding(
+                            padding: EdgeInsets.all(dims.cardPadding),
+                            child: InstrumentMetricMatrix(
+                              cells: [
+                                InstrumentMetricCellData(
+                                  slot: MetricSlot.setsCount,
+                                  label: 'SESSIONS',
+                                  value: '${details.sessionsCount}',
+                                ),
+                                InstrumentMetricCellData(
+                                  slot: MetricSlot.tonnage,
+                                  label: 'VOLUME',
+                                  value:
+                                      details.totalVolume?.toStringAsFixed(1) ??
+                                      '—',
+                                  valueColor: instrument.workingAura,
+                                ),
+                                InstrumentMetricCellData(
+                                  slot: MetricSlot.frequencyPerWeek,
+                                  label: 'SESS / WK',
+                                  value:
+                                      details.sessionsPerWeek?.toStringAsFixed(
+                                        1,
+                                      ) ??
+                                      '—',
+                                ),
+                                InstrumentMetricCellData(
+                                  slot: MetricSlot.density,
+                                  label: 'PLAN %',
+                                  value: adherencePct,
+                                  valueColor: (details.planAdherence ?? 0) >= 0.8
+                                      ? instrument.successColor
+                                      : null,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(height: 1, color: hairline),
+                          Padding(
+                            padding: EdgeInsets.all(dims.cardPadding),
+                            child: InstrumentMetricMatrix(
+                              cells: [
+                                InstrumentMetricCellData(
+                                  slot: MetricSlot.peakIntensity,
+                                  label: 'INTENSITY',
+                                  value:
+                                      details.avgIntensity?.toStringAsFixed(1) ??
+                                      '—',
+                                ),
+                                InstrumentMetricCellData(
+                                  slot: MetricSlot.avgRpe,
+                                  label: 'AVG RPE',
+                                  value:
+                                      details.avgEffort?.toStringAsFixed(1) ??
+                                      '—',
+                                  valueColor: instrument.colorForRpe(
+                                    details.avgEffort,
+                                    scheme,
+                                  ),
+                                ),
+                                InstrumentMetricCellData(
+                                  slot: MetricSlot.durationWeeks,
+                                  label: 'LAST DAY',
+                                  value: lastWorkoutText,
+                                ),
+                                InstrumentMetricCellData(
+                                  slot: MetricSlot.kpsh,
+                                  label: 'DAYS GAP',
+                                  value: details.daysSinceLastWorkout != null
+                                      ? '${details.daysSinceLastWorkout}d'
+                                      : '—',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (details.effortDistribution != null &&
+                        details.effortDistribution!.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        decoration: InstrumentTheme.instrumentCardDecoration(
+                          context,
+                          radius: 22,
+                        ),
+                        padding: EdgeInsets.all(dims.cardPadding),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'EFFORT SPECTRUM · RPE',
+                              style: InstrumentTheme.microLabel(context),
+                            ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              height: 140,
+                              child: _RpeMiniChart(
+                                distribution: details.effortDistribution,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (details.trend.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        decoration: InstrumentTheme.instrumentCardDecoration(
+                          context,
+                          radius: 22,
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                dims.cardPadding,
+                                dims.cardPadding,
+                                dims.cardPadding,
+                                10,
+                              ),
+                              child: Text(
+                                'WEEKLY BREAKDOWN',
+                                style: InstrumentTheme.microLabel(context),
+                              ),
+                            ),
+                            for (var i = 0; i < details.trend.length; i++) ...[
+                              Container(height: 1, color: hairline),
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: dims.cardPadding,
+                                  vertical: 12,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            df.format(
+                                              details.trend[i].periodStart,
+                                            ),
+                                            style: InstrumentTheme.tabular(
+                                              (theme.textTheme.titleSmall ??
+                                                      const TextStyle())
+                                                  .copyWith(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'Sessions: ${details.trend[i].sessionsCount}',
+                                            style: InstrumentTheme.tabular(
+                                              (theme.textTheme.bodySmall ??
+                                                      const TextStyle())
+                                                  .copyWith(
+                                                    color:
+                                                        scheme.onSurfaceVariant,
+                                                  ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Vol ${details.trend[i].totalVolume.toStringAsFixed(1)}',
+                                      style: InstrumentTheme.tabular(
+                                        (theme.textTheme.labelLarge ??
+                                                const TextStyle())
+                                            .copyWith(
+                                              color: instrument.workingAura,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
@@ -217,7 +420,14 @@ class _TrendChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (details.trend.isEmpty) {
-      return const Center(child: Text('No trend data'));
+      return Center(
+        child: Text(
+          'No trend data',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      );
     }
 
     final df = DateFormat('dd.MM');
@@ -254,8 +464,16 @@ class _RpeMiniChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = distribution;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
     if (data == null || data.isEmpty) {
-      return const Text('No RPE data');
+      return Text(
+        'No RPE data',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: scheme.onSurfaceVariant,
+        ),
+      );
     }
 
     final entries =
@@ -267,55 +485,63 @@ class _RpeMiniChart extends StatelessWidget {
 
     final barGroups = <BarChartGroupData>[];
     for (var i = 0; i < entries.length; i++) {
+      final rpe = entries[i].key.toDouble();
       barGroups.add(
         BarChartGroupData(
           x: entries[i].key,
           barRods: [
             BarChartRodData(
               toY: entries[i].value * 100,
-              color: Theme.of(context).colorScheme.primary,
-              width: 6,
+              color: instrument.colorForRpe(rpe, scheme),
+              width: 8,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(4),
+              ),
             ),
           ],
         ),
       );
     }
 
-    return SizedBox(
-      height: 140,
-      child: BarChart(
-        BarChartData(
-          barTouchData: BarTouchData(enabled: false),
-          titlesData: FlTitlesData(
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 32,
-                interval: 20,
-                getTitlesWidget: (value, meta) => Text('${value.toInt()}%'),
-              ),
-            ),
-            rightTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            topTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 22,
-                getTitlesWidget: (value, meta) => Text(
-                  value.toInt().toString(),
-                  style: const TextStyle(fontSize: 10),
+    return BarChart(
+      BarChartData(
+        barTouchData: BarTouchData(enabled: false),
+        titlesData: FlTitlesData(
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 36,
+              interval: 25,
+              getTitlesWidget: (value, meta) => Text(
+                '${value.toInt()}%',
+                style: InstrumentTheme.tabular(
+                  TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
                 ),
               ),
             ),
           ),
-          gridData: FlGridData(show: false),
-          borderData: FlBorderData(show: false),
-          barGroups: barGroups,
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 22,
+              getTitlesWidget: (value, meta) => Text(
+                value.toInt().toString(),
+                style: InstrumentTheme.tabular(
+                  TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
+                ),
+              ),
+            ),
+          ),
         ),
+        gridData: FlGridData(show: false),
+        borderData: FlBorderData(show: false),
+        barGroups: barGroups,
       ),
     );
   }

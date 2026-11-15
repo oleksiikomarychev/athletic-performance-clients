@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider_package;
-import 'package:workout_app/main.dart';
 import 'package:workout_app/models/exercise_definition.dart';
 import 'package:workout_app/models/plan_schedule.dart';
-import 'package:workout_app/models/microcycle.dart';
 import 'package:workout_app/screens/exercise_selection_screen.dart';
 import 'package:workout_app/services/api_client.dart';
 import 'package:workout_app/config/api_config.dart';
@@ -198,7 +197,6 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
 
   void _updateMicrocyclesCount(int index, int microcyclesCount) {
     setState(() {
-      final oldCount = _mesocycles[index].microcycles.length;
       _mesocycles[index] = _mesocycles[index].copyWith(microcycles: []);
 
 
@@ -250,13 +248,6 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
     if (result != null && result is ExerciseDefinition) {
       _addExerciseForDay(mesocycleIndex, microcycleIndex, day, result);
     }
-  }
-
-  void _editExercise(int mesocycleIndex, int microcycleIndex, int day, ExerciseWithSets exercise) async {
-    setState(() {
-      editingDay = day;
-      selectedExercises[day] = exercise.exercise;
-    });
   }
 
   void _replaceMicrocycle(int mesocycleIndex, int microcycleIndex, MicrocycleCreate updated) {
@@ -352,44 +343,73 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
     return 'Δ $value $unitLabel$rulesLabel';
   }
 
-  Widget _buildNormalizationSection(int mesocycleIndex, int microIndex, MicrocycleCreate microcycle) {
+  Widget _buildNormalizationSection(
+    int mesocycleIndex,
+    int microIndex,
+    MicrocycleCreate microcycle,
+  ) {
+    final dimensions = UiDimensions.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Нормализация после микроцикла',
-          style: TextStyle(fontWeight: FontWeight.w600),
+        Text(
+          'НОРМАЛИЗАЦИЯ ПОСЛЕ МИКРОЦИКЛА',
+          style: InstrumentTheme.microLabel(context),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: dimensions.rowGap),
         Row(
           children: [
             Expanded(
               child: TextFormField(
                 key: ValueKey('norm-value-$mesocycleIndex-$microIndex'),
                 initialValue: microcycle.normalizationValueInput,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                decoration: const InputDecoration(
-                  labelText: 'Изменение (например, -2.5)',
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                  signed: true,
+                ),
+                style: InstrumentTheme.tabular(
+                  Theme.of(context).textTheme.bodyMedium ?? const TextStyle(),
+                ),
+                decoration: InstrumentTheme.inputDecoration(
+                  context,
+                  labelText: 'Изменение (напр. -2.5)',
                   hintText: 'В кг или %',
                 ),
-                onChanged: (value) => _updateMicrocycleNormalizationValue(mesocycleIndex, microIndex, value),
+                onChanged: (value) => _updateMicrocycleNormalizationValue(
+                  mesocycleIndex,
+                  microIndex,
+                  value,
+                ),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: dimensions.rowGap),
             Expanded(
               child: DropdownButtonFormField<String>(
                 key: ValueKey('norm-unit-$mesocycleIndex-$microIndex'),
-                value: microcycle.normalizationUnit,
-                hint: const Text('Ед. измерения'),
+                initialValue: microcycle.normalizationUnit,
+                isExpanded: true,
+                decoration: InstrumentTheme.inputDecoration(
+                  context,
+                  labelText: 'Ед. измерения',
+                ),
                 items: _normalizationUnits
                     .map(
                       (unit) => DropdownMenuItem(
                         value: unit,
-                        child: Text(unit == '%' ? '% (мультипликативно)' : 'кг (абсолютно)'),
+                        child: Text(
+                          unit == '%'
+                              ? '% (мультипликативно)'
+                              : 'кг (абсолютно)',
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     )
                     .toList(),
-                onChanged: (value) => _updateMicrocycleNormalizationUnit(mesocycleIndex, microIndex, value),
+                onChanged: (value) => _updateMicrocycleNormalizationUnit(
+                  mesocycleIndex,
+                  microIndex,
+                  value,
+                ),
               ),
             ),
           ],
@@ -399,32 +419,44 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
           'Можно указать одно общее изменение и/или список правил для конкретных упражнений, групп мышц или target-мышц.',
           style: Theme.of(context).textTheme.bodySmall,
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: dimensions.sectionGap),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Правила нормализации', style: TextStyle(fontWeight: FontWeight.w600)),
+            Expanded(
+              child: Text(
+                'ПРАВИЛА НОРМАЛИЗАЦИИ',
+                style: InstrumentTheme.microLabel(context),
+              ),
+            ),
             TextButton.icon(
+              style: TextButton.styleFrom(
+                minimumSize: const Size(48, 48),
+                tapTargetSize: MaterialTapTargetSize.padded,
+              ),
               onPressed: () => _addNormalizationRule(mesocycleIndex, microIndex),
-              icon: const Icon(Icons.add),
+              icon: const Icon(Icons.add, size: 18),
               label: const Text('Добавить правило'),
             ),
           ],
         ),
         if (microcycle.normalizationRules.isEmpty)
-          const Padding(
-            padding: EdgeInsets.only(bottom: 8.0),
-            child: Text('Пока нет индивидуальных правил'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Text(
+              'Пока нет индивидуальных правил',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           )
         else
           ...microcycle.normalizationRules.asMap().entries.map(
-                (entry) => _buildNormalizationRuleCard(
-                  mesocycleIndex,
-                  microIndex,
-                  entry.key,
-                  entry.value,
-                ),
-              ),
+            (entry) => _buildNormalizationRuleCard(
+              mesocycleIndex,
+              microIndex,
+              entry.key,
+              entry.value,
+            ),
+          ),
       ],
     );
   }
@@ -435,113 +467,165 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
     int ruleIndex,
     NormalizationRuleDraft rule,
   ) {
-    return Card(
+    final colors = Theme.of(context).colorScheme;
+    final dimensions = UiDimensions.of(context);
+    return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Правило ${ruleIndex + 1}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                IconButton(
+      padding: EdgeInsets.all(dimensions.cardPadding),
+      decoration: InstrumentTheme.cardDecoration(
+        context,
+        color: colors.surfaceContainerHighest.withValues(alpha: 0.35),
+        radius: 12,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'ПРАВИЛО ${ruleIndex + 1}',
+                style: InstrumentTheme.tabular(
+                  InstrumentTheme.microLabel(context),
+                ),
+              ),
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: IconButton(
                   tooltip: 'Удалить правило',
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => _removeNormalizationRule(mesocycleIndex, microIndex, ruleIndex),
-                ),
-              ],
-            ),
-            TextFormField(
-              key: ValueKey('rule-ex-$mesocycleIndex-$microIndex-$ruleIndex'),
-              initialValue: rule.exerciseIdsRaw,
-              decoration: const InputDecoration(
-                labelText: 'ID упражнений (через запятую)',
-                hintText: 'Напр.: 12, 45, 103',
-              ),
-              onChanged: (value) => _updateNormalizationRule(
-                mesocycleIndex,
-                microIndex,
-                ruleIndex,
-                (r) => r.exerciseIdsRaw = value,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              key: ValueKey('rule-mg-$mesocycleIndex-$microIndex-$ruleIndex'),
-              initialValue: rule.muscleGroupsRaw,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Muscle groups (через запятую)',
-                hintText: 'Напр.: chest, quads',
-              ),
-              onChanged: (value) => _updateNormalizationRule(
-                mesocycleIndex,
-                microIndex,
-                ruleIndex,
-                (r) => r.muscleGroupsRaw = value,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              key: ValueKey('rule-target-$mesocycleIndex-$microIndex-$ruleIndex'),
-              initialValue: rule.targetMusclesRaw,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Target muscles (через запятую)',
-                hintText: 'Напр.: biceps_long, lats',
-              ),
-              onChanged: (value) => _updateNormalizationRule(
-                mesocycleIndex,
-                microIndex,
-                ruleIndex,
-                (r) => r.targetMusclesRaw = value,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    key: ValueKey('rule-value-$mesocycleIndex-$microIndex-$ruleIndex'),
-                    initialValue: rule.valueRaw,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                    decoration: const InputDecoration(labelText: 'Δ значение'),
-                    onChanged: (value) => _updateNormalizationRule(
-                      mesocycleIndex,
-                      microIndex,
-                      ruleIndex,
-                      (r) => r.valueRaw = value,
-                    ),
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    tapTargetSize: MaterialTapTargetSize.padded,
+                  ),
+                  icon: Icon(Icons.delete_outline, color: colors.error),
+                  onPressed: () => _removeNormalizationRule(
+                    mesocycleIndex,
+                    microIndex,
+                    ruleIndex,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    key: ValueKey('rule-unit-$mesocycleIndex-$microIndex-$ruleIndex'),
-                    value: rule.unit,
-                    hint: const Text('Ед. изм.'),
-                    items: _normalizationUnits
-                        .map(
-                          (unit) => DropdownMenuItem(
-                            value: unit,
-                            child: Text(unit == '%' ? '% (мультипликативно)' : 'кг (абсолютно)'),
+              ),
+            ],
+          ),
+          TextFormField(
+            key: ValueKey('rule-ex-$mesocycleIndex-$microIndex-$ruleIndex'),
+            initialValue: rule.exerciseIdsRaw,
+            style: InstrumentTheme.tabular(
+              Theme.of(context).textTheme.bodyMedium ?? const TextStyle(),
+            ),
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              labelText: 'ID упражнений (через запятую)',
+              hintText: 'Напр.: 12, 45, 103',
+            ),
+            onChanged: (value) => _updateNormalizationRule(
+              mesocycleIndex,
+              microIndex,
+              ruleIndex,
+              (r) => r.exerciseIdsRaw = value,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            key: ValueKey('rule-mg-$mesocycleIndex-$microIndex-$ruleIndex'),
+            initialValue: rule.muscleGroupsRaw,
+            maxLines: 2,
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              labelText: 'Muscle groups (через запятую)',
+              hintText: 'Напр.: chest, quads',
+            ),
+            onChanged: (value) => _updateNormalizationRule(
+              mesocycleIndex,
+              microIndex,
+              ruleIndex,
+              (r) => r.muscleGroupsRaw = value,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            key: ValueKey(
+              'rule-target-$mesocycleIndex-$microIndex-$ruleIndex',
+            ),
+            initialValue: rule.targetMusclesRaw,
+            maxLines: 2,
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              labelText: 'Target muscles (через запятую)',
+              hintText: 'Напр.: biceps_long, lats',
+            ),
+            onChanged: (value) => _updateNormalizationRule(
+              mesocycleIndex,
+              microIndex,
+              ruleIndex,
+              (r) => r.targetMusclesRaw = value,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  key: ValueKey(
+                    'rule-value-$mesocycleIndex-$microIndex-$ruleIndex',
+                  ),
+                  initialValue: rule.valueRaw,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
+                  ),
+                  style: InstrumentTheme.tabular(
+                    Theme.of(context).textTheme.bodyMedium ?? const TextStyle(),
+                  ),
+                  decoration: InstrumentTheme.inputDecoration(
+                    context,
+                    labelText: 'Δ значение',
+                  ),
+                  onChanged: (value) => _updateNormalizationRule(
+                    mesocycleIndex,
+                    microIndex,
+                    ruleIndex,
+                    (r) => r.valueRaw = value,
+                  ),
+                ),
+              ),
+              SizedBox(width: dimensions.rowGap),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  key: ValueKey(
+                    'rule-unit-$mesocycleIndex-$microIndex-$ruleIndex',
+                  ),
+                  initialValue: rule.unit,
+                  isExpanded: true,
+                  decoration: InstrumentTheme.inputDecoration(
+                    context,
+                    labelText: 'Ед. изм.',
+                  ),
+                  items: _normalizationUnits
+                      .map(
+                        (unit) => DropdownMenuItem(
+                          value: unit,
+                          child: Text(
+                            unit == '%'
+                                ? '% (мультипликативно)'
+                                : 'кг (абсолютно)',
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        )
-                        .toList(),
-                    onChanged: (value) => _updateNormalizationRule(
-                      mesocycleIndex,
-                      microIndex,
-                      ruleIndex,
-                      (r) => r.unit = value,
-                    ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) => _updateNormalizationRule(
+                    mesocycleIndex,
+                    microIndex,
+                    ruleIndex,
+                    (r) => r.unit = value,
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -566,7 +650,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
         'mesocycles': _mesocycles.map((meso) => meso.toJson()).toList(),
       };
 
-      final response = await _apiClient.post(ApiConfig.createCalendarPlanEndpoint(), planData);
+      await _apiClient.post(ApiConfig.createCalendarPlanEndpoint(), planData);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Plan created successfully')),
@@ -617,118 +701,197 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final dimensions = UiDimensions.of(context);
+
     return AssistantChatHost(
+      contextBuilder: () async => {
+        'screen': 'calendar_plan_create',
+        'entities': {
+          'plan_name': _planNameController.text.trim(),
+          'mesocycles_count': _mesocycles.length,
+        },
+      },
       builder: (context, openChat) {
         return Scaffold(
           appBar: PrimaryAppBar(
             title: 'Create Calendar Plan',
             onTitleTap: openChat,
             actions: [
-              TextButton(
-                onPressed: _isSaving ? null : _savePlan,
-                child: _isSaving
-                    ? const CircularProgressIndicator()
-                    : const Text('Save', style: TextStyle(color: Colors.white)),
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: IconButton(
+                  tooltip: 'Save',
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    tapTargetSize: MaterialTapTargetSize.padded,
+                  ),
+                  onPressed: _isSaving ? null : _savePlan,
+                  icon: _isSaving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.save_outlined),
+                ),
               ),
             ],
           ),
           body: Padding(
-        padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _planNameController,
-              decoration: const InputDecoration(
-                labelText: 'Plan Name',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
+            padding: EdgeInsets.all(dimensions.pagePadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                TextField(
+                  controller: _planNameController,
+                  decoration: InstrumentTheme.inputDecoration(
+                    context,
+                    labelText: 'Plan Name',
+                  ),
+                ),
+                SizedBox(height: dimensions.sectionGap),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'MESOCYCLES · ${_mesocycles.length}',
+                        style: InstrumentTheme.tabular(
+                          InstrumentTheme.microLabel(context),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: IconButton(
+                        style: IconButton.styleFrom(
+                          minimumSize: const Size(48, 48),
+                          tapTargetSize: MaterialTapTargetSize.padded,
+                        ),
+                        onPressed: _addMesocycle,
+                        icon: const Icon(Icons.add),
+                        tooltip: 'Add Mesocycle',
+                      ),
+                    ),
+                    SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: IconButton(
+                        style: IconButton.styleFrom(
+                          minimumSize: const Size(48, 48),
+                          tapTargetSize: MaterialTapTargetSize.padded,
+                        ),
+                        onPressed: _mesocycles.isEmpty
+                            ? null
+                            : () => _removeMesocycle(_mesocycles.length - 1),
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: _mesocycles.isEmpty ? null : colors.error,
+                        ),
+                        tooltip: 'Remove Mesocycle',
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: dimensions.rowGap),
                 Expanded(
-                  child: Text('Mesocycles', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                ),
-                IconButton(
-                  onPressed: _addMesocycle,
-                  icon: const Icon(Icons.add),
-                  tooltip: 'Add Mesocycle',
-                ),
-                IconButton(
-                  onPressed: _mesocycles.isEmpty ? null : () => _removeMesocycle(_mesocycles.length - 1),
-                  icon: const Icon(Icons.delete),
-                  tooltip: 'Remove Mesocycle',
+                  child: ListView.separated(
+                    itemCount: _mesocycles.length,
+                    separatorBuilder: (_, __) =>
+                        SizedBox(height: dimensions.rowGap),
+                    itemBuilder: (context, index) => _buildMesocycleCard(index),
+                  ),
                 ),
               ],
             ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _mesocycles.length,
-                itemBuilder: (context, index) {
-                  return _buildMesocycleCard(index);
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+          ),
+        );
       },
     );
   }
 
-  Widget _buildSetRow(int mesocycleIndex, int microcycleIndex, int day, ExerciseWithSets exercise, int setIndex, ParamsSets set) {
-    final draft = exercise.setDrafts[setIndex];
-    if (draft == null) return Container();
+  Widget _buildSetNumericField(
+    BuildContext context, {
+    required TextEditingController controller,
+    String? labelText,
+    String? hintText,
+    required List<TextInputFormatter> formatters,
+    ValueChanged<String>? onChanged,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      textAlign: TextAlign.center,
+      inputFormatters: formatters,
+      style: InstrumentTheme.tabular(
+        (Theme.of(context).textTheme.bodyMedium ?? const TextStyle()).copyWith(
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      decoration: InstrumentTheme.inputDecoration(
+        context,
+        labelText: labelText,
+        hintText: hintText,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+      ),
+      onChanged: onChanged,
+    );
+  }
 
-    draft.intensityCtrl.addListener(() async {
-      await updateThirdParameter(draft);
-    });
-    draft.effortCtrl.addListener(() async {
-      await updateThirdParameter(draft);
-    });
-    draft.volumeCtrl.addListener(() async {
-      await updateThirdParameter(draft);
-    });
-
+  Widget _buildStepperRow(
+    BuildContext context, {
+    required String label,
+    required int value,
+    required VoidCallback onDecrement,
+    required VoidCallback onIncrement,
+  }) {
+    final theme = Theme.of(context);
     return Row(
       children: [
-        Expanded(child: TextField(
-          controller: draft.intensityCtrl,
-          keyboardType: TextInputType.number,
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-            LengthLimitingTextInputFormatter(5),
-          ],
-          decoration: InputDecoration(hintText: 'Intensity (%)')
-        )),
-        Expanded(child: TextField(
-          controller: draft.volumeCtrl,
-          keyboardType: TextInputType.number,
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-            LengthLimitingTextInputFormatter(3),
-          ],
-          decoration: InputDecoration(hintText: 'Volume')
-        )),
-        Expanded(child: TextField(
-          controller: draft.effortCtrl,
-          keyboardType: TextInputType.number,
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'\d*\.?\d*')),
-            LengthLimitingTextInputFormatter(3),
-          ],
-          decoration: InputDecoration(hintText: 'Effort')
-        )),
         Expanded(
+          child: Text(
+            label,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        SizedBox(
+          width: 48,
+          height: 48,
           child: IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () {
-              setState(() {
-                exercise.sets.removeAt(setIndex);
-              });
-            },
+            style: IconButton.styleFrom(
+              minimumSize: const Size(48, 48),
+              tapTargetSize: MaterialTapTargetSize.padded,
+            ),
+            onPressed: onDecrement,
+            icon: const Icon(Icons.remove, size: 18),
+          ),
+        ),
+        SizedBox(
+          width: 32,
+          child: Text(
+            '$value',
+            textAlign: TextAlign.center,
+            style: InstrumentTheme.tabular(
+              theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700) ??
+                  const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ),
+        SizedBox(
+          width: 48,
+          height: 48,
+          child: IconButton(
+            style: IconButton.styleFrom(
+              minimumSize: const Size(48, 48),
+              tapTargetSize: MaterialTapTargetSize.padded,
+            ),
+            onPressed: onIncrement,
+            icon: const Icon(Icons.add, size: 18),
           ),
         ),
       ],
@@ -737,139 +900,226 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
 
   Widget _buildMesocycleCard(int index) {
     final mesocycle = _mesocycles[index];
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Padding(
-        padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: const InputDecoration(labelText: 'Mesocycle Name'),
-                    onChanged: (value) => _updateMesocycleName(index, value),
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final dimensions = UiDimensions.of(context);
+
+    return Container(
+      padding: EdgeInsets.all(dimensions.cardPadding),
+      decoration: InstrumentTheme.cardDecoration(
+        context,
+        color: colors.surfaceContainerLow,
+        radius: 14,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              labelText: 'Mesocycle Name',
+            ),
+            onChanged: (value) => _updateMesocycleName(index, value),
+          ),
+          SizedBox(height: dimensions.rowGap),
+          _buildStepperRow(
+            context,
+            label: 'Microcycles',
+            value: mesocycle.microcycles.length,
+            onDecrement: () => _updateMicrocyclesCount(
+              index,
+              mesocycle.microcycles.length - 1,
+            ),
+            onIncrement: () => _updateMicrocyclesCount(
+              index,
+              mesocycle.microcycles.length + 1,
+            ),
+          ),
+          _buildStepperRow(
+            context,
+            label: 'Microcycle Length (days)',
+            value: mesocycle.microcycleLengthDays,
+            onDecrement: () => _updateMicrocycleLengthDays(
+              index,
+              mesocycle.microcycleLengthDays - 1,
+            ),
+            onIncrement: () => _updateMicrocycleLengthDays(
+              index,
+              mesocycle.microcycleLengthDays + 1,
+            ),
+          ),
+          SizedBox(height: dimensions.rowGap),
+          Text(
+            'MICROCYCLES · ${mesocycle.microcycles.length}',
+            style: InstrumentTheme.tabular(
+              InstrumentTheme.microLabel(context),
+            ),
+          ),
+          SizedBox(height: dimensions.rowGap),
+          ...mesocycle.microcycles.asMap().entries.map((entry) {
+            final microIndex = entry.key;
+            final microcycle = entry.value;
+            return Container(
+              margin: EdgeInsets.only(bottom: dimensions.rowGap),
+              decoration: InstrumentTheme.cardDecoration(
+                context,
+                color: colors.surfaceContainer,
+                radius: 12,
+              ),
+              child: ExpansionTile(
+                shape: const Border(),
+                collapsedShape: const Border(),
+                title: Text(
+                  microcycle.name.isEmpty
+                      ? 'Microcycle ${microIndex + 1}'
+                      : microcycle.name,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Text('Microcycles: '),
-                IconButton(
-                  onPressed: () => _updateMicrocyclesCount(index, mesocycle.microcycles.length - 1),
-                  icon: const Icon(Icons.remove),
+                subtitle: Text(
+                  _normalizationSummary(microcycle),
+                  style: theme.textTheme.bodySmall,
                 ),
-                Text('${mesocycle.microcycles.length}'),
-                IconButton(
-                  onPressed: () => _updateMicrocyclesCount(index, mesocycle.microcycles.length + 1),
-                  icon: const Icon(Icons.add),
+                childrenPadding: EdgeInsets.fromLTRB(
+                  dimensions.cardPadding,
+                  0,
+                  dimensions.cardPadding,
+                  dimensions.cardPadding,
                 ),
-              ],
-            ),
-            Row(
-              children: [
-                const Text('Microcycle Length (days): '),
-                IconButton(
-                  onPressed: () => _updateMicrocycleLengthDays(index, mesocycle.microcycleLengthDays - 1),
-                  icon: const Icon(Icons.remove),
-                ),
-                Text('${mesocycle.microcycleLengthDays}'),
-                IconButton(
-                  onPressed: () => _updateMicrocycleLengthDays(index, mesocycle.microcycleLengthDays + 1),
-                  icon: const Icon(Icons.add),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Text('Microcycles', style: TextStyle(fontWeight: FontWeight.bold)),
-            ...mesocycle.microcycles.asMap().entries.map((entry) {
-              final microIndex = entry.key;
-              final microcycle = entry.value;
-              return ExpansionTile(
-                title: Text(microcycle.name.isEmpty ? 'Microcycle ${microIndex + 1}' : microcycle.name),
-                subtitle: Text(_normalizationSummary(microcycle)),
-                childrenPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 children: [
                   TextFormField(
                     key: ValueKey('micro-name-$index-$microIndex'),
                     initialValue: microcycle.name,
-                    decoration: const InputDecoration(labelText: 'Название микроцикла'),
-                    onChanged: (value) => _updateMicrocycleNameField(index, microIndex, value),
+                    decoration: InstrumentTheme.inputDecoration(
+                      context,
+                      labelText: 'Название микроцикла',
+                    ),
+                    onChanged: (value) =>
+                        _updateMicrocycleNameField(index, microIndex, value),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: dimensions.rowGap),
                   _buildNormalizationSection(index, microIndex, microcycle),
-                  const Divider(height: 32),
+                  const Divider(height: 24),
                   for (int day = 1; day <= microcycle.daysCount; day++) ...[
-                    ListTile(
-                      title: Text('Day $day'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.add),
-                        onPressed: () => _selectExerciseForDay(index, microIndex, day),
-                      ),
-                      onTap: () => _startEditingDay(index, microIndex, day),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: () =>
+                                _startEditingDay(index, microIndex, day),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 10,
+                                horizontal: 4,
+                              ),
+                              child: Text(
+                                'Day $day',
+                                style: InstrumentTheme.tabular(
+                                  theme.textTheme.titleSmall?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ) ??
+                                      const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: IconButton(
+                            tooltip: 'Add exercise',
+                            style: IconButton.styleFrom(
+                              minimumSize: const Size(48, 48),
+                              tapTargetSize: MaterialTapTargetSize.padded,
+                            ),
+                            icon: const Icon(Icons.add),
+                            onPressed: () =>
+                                _selectExerciseForDay(index, microIndex, day),
+                          ),
+                        ),
+                      ],
                     ),
                     ...(microcycle.schedule['$day'] ?? []).map(
                       (workout) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 16.0, bottom: 4),
-                            child: Text(
-                              workout.name ?? '',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                          if ((workout.name ?? '').isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text(
+                                workout.name!,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ),
-                          ),
-                          ListView.builder(
+                          ListView.separated(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: workout.exercises.length,
+                            separatorBuilder: (_, __) =>
+                                SizedBox(height: dimensions.rowGap),
                             itemBuilder: (context, exerciseIndex) {
                               final exercise = workout.exercises[exerciseIndex];
-                              return ListTile(
-                                title: Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextField(
-                                        controller: exercise.setDrafts[0].intensityCtrl,
-                                        decoration: const InputDecoration(labelText: 'Intensity'),
-                                        keyboardType: TextInputType.number,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.allow(RegExp(r'\d*\.?\d*')),
-                                          LengthLimitingTextInputFormatter(5),
-                                        ],
-                                        onChanged: (value) => updateThirdParameter(exercise.setDrafts[0]),
+                              return Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildSetNumericField(
+                                      context,
+                                      controller:
+                                          exercise.setDrafts[0].intensityCtrl,
+                                      labelText: '%1RM',
+                                      formatters: [
+                                        FilteringTextInputFormatter.allow(
+                                          RegExp(r'\d*\.?\d*'),
+                                        ),
+                                        LengthLimitingTextInputFormatter(5),
+                                      ],
+                                      onChanged: (_) => updateThirdParameter(
+                                        exercise.setDrafts[0],
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: TextField(
-                                        controller: exercise.setDrafts[0].volumeCtrl,
-                                        decoration: const InputDecoration(labelText: 'Volume'),
-                                        keyboardType: TextInputType.number,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.digitsOnly,
-                                          LengthLimitingTextInputFormatter(3),
-                                        ],
-                                        onChanged: (value) => updateThirdParameter(exercise.setDrafts[0]),
+                                  ),
+                                  SizedBox(width: dimensions.rowGap),
+                                  Expanded(
+                                    child: _buildSetNumericField(
+                                      context,
+                                      controller:
+                                          exercise.setDrafts[0].volumeCtrl,
+                                      labelText: 'Reps',
+                                      formatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                        LengthLimitingTextInputFormatter(3),
+                                      ],
+                                      onChanged: (_) => updateThirdParameter(
+                                        exercise.setDrafts[0],
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: TextField(
-                                        controller: exercise.setDrafts[0].effortCtrl,
-                                        decoration: const InputDecoration(labelText: 'Effort'),
-                                        keyboardType: TextInputType.number,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.allow(RegExp(r'\d*\.?\d*')),
-                                          LengthLimitingTextInputFormatter(3),
-                                        ],
-                                        onChanged: (value) => updateThirdParameter(exercise.setDrafts[0]),
+                                  ),
+                                  SizedBox(width: dimensions.rowGap),
+                                  Expanded(
+                                    child: _buildSetNumericField(
+                                      context,
+                                      controller:
+                                          exercise.setDrafts[0].effortCtrl,
+                                      labelText: 'RPE',
+                                      formatters: [
+                                        FilteringTextInputFormatter.allow(
+                                          RegExp(r'\d*\.?\d*'),
+                                        ),
+                                        LengthLimitingTextInputFormatter(3),
+                                      ],
+                                      onChanged: (_) => updateThirdParameter(
+                                        exercise.setDrafts[0],
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               );
                             },
                           ),
@@ -878,10 +1128,10 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
                     ),
                   ],
                 ],
-              );
-            }),
-          ],
-        ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }

@@ -3,7 +3,6 @@ import 'package:workout_app/models/applied_calendar_plan.dart';
 import 'package:workout_app/models/workout.dart';
 import 'package:workout_app/models/plan_analytics.dart';
 import 'package:workout_app/services/service_locator.dart';
-import 'package:workout_app/services/crm_coach_service.dart';
 
 DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
 
