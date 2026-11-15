@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:workout_app/config/api_config.dart';
 import 'package:workout_app/config/constants/app_constants.dart';
 import 'package:workout_app/services/logger_service.dart';
 import 'package:workout_app/services/exercise_service.dart';
+import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/widgets/empty_state.dart';
+import 'package:workout_app/widgets/error_message.dart';
+import 'package:workout_app/widgets/loading_indicator.dart';
+import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/models/exercise_definition.dart';
 import 'package:workout_app/services/service_locator.dart';
 import 'package:workout_app/models/muscle_info.dart';
@@ -356,17 +359,21 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                       );
                     }
                     if (snapshot.hasError) {
+                      final colors = Theme.of(context).colorScheme;
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Muscle group',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colors.onSurfaceVariant,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             'Failed to load groups: ${snapshot.error}',
-                            style: const TextStyle(color: Colors.red),
+                            style: TextStyle(color: colors.error),
                           ),
                         ],
                       );
@@ -411,7 +418,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                     if (snap.hasError) {
                       return Text(
                         'Failed to load muscles: ${snap.error}',
-                        style: const TextStyle(color: Colors.red),
+                        style: TextStyle(color: Theme.of(context).colorScheme.error),
                       );
                     }
                     final muscles = snap.data ?? const <MuscleInfo>[];
@@ -485,7 +492,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                     if (snap.hasError) {
                       return Text(
                         'Failed to load muscles: ${snap.error}',
-                        style: const TextStyle(color: Colors.red),
+                        style: TextStyle(color: Theme.of(context).colorScheme.error),
                       );
                     }
                     final muscles = snap.data ?? const <MuscleInfo>[];
@@ -651,202 +658,287 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Consumer(
-        builder: (context, ref, child) {
-          final exercisesState = ref.watch(exercisesNotifierProvider);
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final dimensions = UiDimensions.of(context);
 
-          return exercisesState.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stackTrace) {
-              _logger.e('Error loading exercises: $error\n$stackTrace');
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      color: Colors.red,
-                      size: 48,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Error loading exercises',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      error.toString(),
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        final _ = ref.refresh(exercisesNotifierProvider);
+    return AssistantChatHost(
+      contextBuilder: () async => {
+        'screen': 'exercises',
+        'entities': {'show_only_main_exercises': _showOnlyMainExercises},
+      },
+      builder: (context, openChat) {
+        return Scaffold(
+          appBar: PrimaryAppBar(
+            title: 'Exercises',
+            onTitleTap: openChat,
+          ),
+          body: Consumer(
+            builder: (context, ref, child) {
+              final exercisesState = ref.watch(exercisesNotifierProvider);
+
+              return exercisesState.when(
+                loading: () => const LoadingIndicator(),
+                error: (error, stackTrace) {
+                  _logger.e('Error loading exercises: $error\n$stackTrace');
+                  return ErrorMessage(
+                    message: 'Error loading exercises: $error',
+                    onRetry: () {
+                      final _ = ref.refresh(exercisesNotifierProvider);
+                    },
+                  );
+                },
+                data: (exercises) {
+                  if (exercises.isEmpty) {
+                    return EmptyState(
+                      icon: Icons.fitness_center,
+                      title: 'No Exercises',
+                      description: 'No exercises found. Add your first exercise!',
+                      action: ElevatedButton.icon(
+                        onPressed: () {
+                          final _ = ref.refresh(exercisesNotifierProvider);
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Refresh'),
+                      ),
+                    );
+                  }
+
+                  final displayedExercises = _showOnlyMainExercises
+                      ? exercises
+                            .where(
+                              (e) =>
+                                  e.rootExerciseId == null ||
+                                  e.rootExerciseId == e.id,
+                            )
+                            .toList()
+                      : exercises;
+
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      final _ = ref.refresh(exercisesNotifierProvider);
+                      await ref
+                          .read(exercisesNotifierProvider.notifier)
+                          .loadExercises();
+                    },
+                    child: ListView.separated(
+                      padding: EdgeInsets.all(dimensions.pagePadding),
+                      itemCount: displayedExercises.length + 1,
+                      separatorBuilder: (_, __) =>
+                          SizedBox(height: dimensions.rowGap),
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          return Container(
+                            decoration: InstrumentTheme.cardDecoration(
+                              context,
+                              color: colors.surfaceContainerLow,
+                              radius: 14,
+                            ),
+                            child: SwitchListTile(
+                              title: Text(
+                                'Show only main exercises',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              subtitle: const Text(
+                                'Hide variants (exercises with root_exercise_id) in the list',
+                              ),
+                              value: _showOnlyMainExercises,
+                              onChanged: (v) {
+                                setState(() => _showOnlyMainExercises = v);
+                              },
+                            ),
+                          );
+                        }
+
+                        final exercise = displayedExercises[index - 1];
+                        return _buildExerciseInstrumentCard(
+                          context,
+                          exercise,
+                          dimensions,
+                        );
                       },
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Retry'),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => _showExerciseDialog(),
+            child: const Icon(Icons.add),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildExerciseInstrumentCard(
+    BuildContext context,
+    ExerciseDefinition exercise,
+    UiDimensions dimensions,
+  ) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Container(
+      decoration: InstrumentTheme.cardDecoration(
+        context,
+        color: colors.surfaceContainerLow,
+        radius: 14,
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () {
+            if (exercise.id == null) return;
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    ExerciseDetailScreen(exerciseId: exercise.id!),
+              ),
+            );
+          },
+          onLongPress: () => _showExerciseDialog(initial: exercise),
+          child: Padding(
+            padding: EdgeInsets.all(dimensions.cardPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: InstrumentTheme.cardDecoration(
+                        context,
+                        color: colors.surfaceContainerHigh,
+                        radius: 10,
+                      ),
+                      child: Icon(
+                        Icons.fitness_center,
+                        size: 18,
+                        color: colors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            exercise.name,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${exercise.muscleGroup ?? 'No muscle group'} • ${exercise.equipment ?? 'No equipment'}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: IconButton(
+                        tooltip: 'Upload Image',
+                        style: IconButton.styleFrom(
+                          minimumSize: const Size(48, 48),
+                          tapTargetSize: MaterialTapTargetSize.padded,
+                        ),
+                        icon: const Icon(Icons.upload, size: 20),
+                        onPressed: () => _uploadExerciseImage(exercise),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: IconButton(
+                        tooltip: 'Edit',
+                        style: IconButton.styleFrom(
+                          minimumSize: const Size(48, 48),
+                          tapTargetSize: MaterialTapTargetSize.padded,
+                        ),
+                        icon: const Icon(Icons.edit, size: 20),
+                        onPressed: () =>
+                            _showExerciseDialog(initial: exercise),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: IconButton(
+                        tooltip: 'Delete',
+                        style: IconButton.styleFrom(
+                          minimumSize: const Size(48, 48),
+                          tapTargetSize: MaterialTapTargetSize.padded,
+                        ),
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: colors.error,
+                          size: 20,
+                        ),
+                        onPressed: () => _confirmDeleteExercise(exercise),
+                      ),
                     ),
                   ],
                 ),
-              );
-            },
-            data: (exercises) {
-              if (exercises.isEmpty) {
-                return EmptyState(
-                  icon: Icons.fitness_center,
-                  title: 'No Exercises',
-                  description: 'No exercises found. Add your first exercise!',
-                  action: ElevatedButton.icon(
-                    onPressed: () {
-                      final _ = ref.refresh(exercisesNotifierProvider);
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Refresh'),
-                  ),
-                );
-              }
-
-              final displayedExercises = _showOnlyMainExercises
-                  ? exercises
-                        .where(
-                          (e) =>
-                              e.rootExerciseId == null ||
-                              e.rootExerciseId == e.id,
-                        )
-                        .toList()
-                  : exercises;
-
-              return RefreshIndicator(
-                onRefresh: () async {
-                  final _ = ref.refresh(exercisesNotifierProvider);
-                  await ref
-                      .read(exercisesNotifierProvider.notifier)
-                      .loadExercises();
-                },
-                child: ListView.builder(
-                  padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
-                  itemCount: displayedExercises.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return Card(
-                        margin: EdgeInsets.only(bottom: UiDimensions.of(context).rowGap),
-                        child: SwitchListTile(
-                          title: const Text('Show only main exercises'),
-                          subtitle: const Text(
-                            'Hide variants (exercises with root_exercise_id) in the list',
-                          ),
-                          value: _showOnlyMainExercises,
-                          onChanged: (v) {
-                            setState(() => _showOnlyMainExercises = v);
-                          },
-                        ),
-                      );
-                    }
-
-                    final exercise = displayedExercises[index - 1];
-                    return Card(
-                      margin: EdgeInsets.only(bottom: UiDimensions.of(context).rowGap),
-                      child: ListTile(
-                        leading: const Icon(Icons.fitness_center),
-                        title: Text(
-                          exercise.name,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        subtitle: Text(
-                          '${exercise.muscleGroup ?? 'No muscle group'} • ${exercise.equipment ?? 'No equipment'}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.upload),
-                              tooltip: 'Upload Image',
-                              onPressed: () => _uploadExerciseImage(exercise),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () =>
-                                  _showExerciseDialog(initial: exercise),
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete,
-                                color: Colors.redAccent,
-                              ),
-                              onPressed: () async {
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: const Text('Delete exercise?'),
-                                    content: Text(
-                                      'Are you sure you want to delete "${exercise.name}"?',
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.of(ctx).pop(false),
-                                        child: const Text('Cancel'),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () =>
-                                            Navigator.of(ctx).pop(true),
-                                        child: const Text('Delete'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                                if (confirm != true) return;
-                                try {
-                                  await ref
-                                      .read(exerciseServiceProvider)
-                                      .deleteExerciseDefinition(exercise.id!);
-                                  if (!mounted) return;
-                                  await ref
-                                      .read(exercisesNotifierProvider.notifier)
-                                      .loadExercises();
-                                } catch (e) {
-                                  if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Failed to delete exercise: $e',
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                            ),
-                            const Icon(Icons.chevron_right),
-                          ],
-                        ),
-                        onTap: () {
-                          if (exercise.id == null) return;
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => ExerciseDetailScreen(
-                                exerciseId: exercise.id!,
-                              ),
-                            ),
-                          );
-                        },
-                        onLongPress: () =>
-                            _showExerciseDialog(initial: exercise),
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showExerciseDialog(),
-        child: const Icon(Icons.add),
+              ],
+            ),
+          ),
+        ),
       ),
     );
+  }
+
+  Future<void> _confirmDeleteExercise(ExerciseDefinition exercise) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete exercise?'),
+        content: Text('Are you sure you want to delete "${exercise.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    try {
+      await ref
+          .read(exerciseServiceProvider)
+          .deleteExerciseDefinition(exercise.id!);
+      if (!mounted) return;
+      await ref.read(exercisesNotifierProvider.notifier).loadExercises();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete exercise: $e')),
+      );
+    }
   }
 }

@@ -1,224 +1,616 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:workout_app/providers/macro_preview_providers.dart';
+import 'package:workout_app/config/api_config.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/providers/macro_context_providers.dart';
-import 'package:workout_app/widgets/primary_app_bar.dart';
+import 'package:workout_app/providers/macro_preview_providers.dart';
+import 'package:workout_app/services/api_client.dart';
+import 'package:workout_app/services/macro_service.dart';
+import 'package:workout_app/src/widgets/snack_utils.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
+import 'package:workout_app/widgets/primary_app_bar.dart';
+
+Future<void> showSessionMacroSuggestion(
+  BuildContext context,
+  ApiClient api,
+  int workoutId,
+  int planId,
+) async {
+  try {
+    final endpoint = ApiConfig.macroSuggestionEndpoint(workoutId.toString());
+    final suggestion =
+        await api.get(endpoint, context: 'MacroSuggestion') as Map?;
+    final stored = suggestion?['macro_preview'] as Map?;
+    final preview = stored != null && stored['contract_version'] == 2
+        ? Map<String, dynamic>.from(stored)
+        : await MacroService(
+            apiClient: api,
+          ).runPreview(appliedPlanId: planId, observationWorkoutId: workoutId);
+    final items = (preview['preview'] as List? ?? []).whereType<Map>();
+    final inserts = items
+        .expand((item) => item['plan_changes'] as List? ?? [])
+        .length;
+    final patches = items
+        .expand((item) => item['patches'] as List? ?? [])
+        .length;
+    final missing =
+        (preview['needs_weight_settings'] as List? ?? []).isNotEmpty;
+    if (!context.mounted || (!missing && patches == 0 && inserts == 0)) return;
+    final summary = [
+      if (patches > 0) 'Изменений подходов: $patches',
+      if (inserts > 0) 'Вставок мезоциклов: $inserts',
+      if (missing) 'Для расчёта веса нужны параметры плана.',
+    ].join('\n');
+
+    final open = await showInstrumentDialog<bool>(
+      context: context,
+      eyebrow: 'MACRO SUGGESTIONS',
+      title: 'Предложения по завершённой тренировке',
+      message: summary,
+      actionsBuilder: (dialogContext) => [
+        InstrumentActionButton(
+          label: 'Отмена',
+          variant: InstrumentActionVariant.secondary,
+          onPressed: () => Navigator.pop(dialogContext, false),
+        ),
+        InstrumentActionButton(
+          label: 'Посмотреть изменения',
+          variant: InstrumentActionVariant.primary,
+          onPressed: () => Navigator.pop(dialogContext, true),
+        ),
+      ],
+    );
+    if (open == true && context.mounted) {
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => MacrosPreviewScreen(
+            appliedPlanId: planId,
+            observationWorkoutId: workoutId,
+            initialPreview: preview,
+          ),
+        ),
+      );
+    }
+  } catch (e) {
+    if (context.mounted) {
+      showAppSnackBar(
+        context,
+        'Не удалось загрузить предложения макросов: $e',
+        isError: true,
+      );
+    }
+  }
+}
 
 class MacrosPreviewScreen extends ConsumerStatefulWidget {
   final int appliedPlanId;
-  const MacrosPreviewScreen({super.key, required this.appliedPlanId});
+  final int? observationWorkoutId;
+  final Map<String, dynamic>? initialPreview;
+  const MacrosPreviewScreen({
+    super.key,
+    required this.appliedPlanId,
+    this.initialPreview,
+    this.observationWorkoutId,
+  });
 
   @override
-  ConsumerState<MacrosPreviewScreen> createState() => _MacrosPreviewScreenState();
+  ConsumerState<MacrosPreviewScreen> createState() =>
+      _MacrosPreviewScreenState();
 }
 
-List<Widget> _buildGroupedPatchesWithDiffs(List patches, String Function(int) wname, String Function(int?) ename, Map<int, Map<int?, Map<int?, Map<String, dynamic>>>> originals) {
-  final Map<int, Map<int?, List<Map<String, dynamic>>>> grouped = {};
-  for (final p in patches) {
-    final mp = (p as Map).cast<String, dynamic>();
-    final wid = (mp['workout_id'] as num).toInt();
-    final eid = (mp['exercise_id'] as num?)?.toInt();
-    grouped.putIfAbsent(wid, () => {});
-    grouped[wid]!.putIfAbsent(eid, () => []);
-    grouped[wid]![eid]!.add(mp);
+String _values(Map set) {
+  final parts = set['subsets'];
+  if (parts is List && parts.isNotEmpty) {
+    return '${set['set_type'] ?? ''} [${parts.whereType<Map>().map(_values).join(' / ')}]';
   }
-  final widgets = <Widget>[];
-  grouped.forEach((wid, byEx) {
-    widgets.add(Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Text('• ${wname(wid)}', style: const TextStyle(fontWeight: FontWeight.w600)),
-    ));
-    byEx.forEach((eid, items) {
-      widgets.add(Padding(
-        padding: const EdgeInsets.only(left: 12, bottom: 2),
-        child: Text('↳ ${ename(eid)} (${items.length} change${items.length == 1 ? '' : 's'})'),
-      ));
-      for (final mp in items) {
-        final sid = mp['set_id'] as int?;
-        final changes = (mp['changes'] as Map? ?? const {}).cast<String, dynamic>();
-        final before = originals[wid]?[eid]?[sid] ?? const {};
-        final diffs = <String>[];
-        void addDiff(String key, String label) {
-          if (!changes.containsKey(key)) return;
-          final after = changes[key];
-          final b = before[key];
-          if (b == null) {
-            diffs.add('$label: → $after');
-          } else {
-            diffs.add('$label: $b → $after');
-          }
-        }
-        addDiff('intensity', 'intensity');
-        addDiff('volume', 'reps');
-        addDiff('weight', 'weight');
-        addDiff('working_weight', 'weight');
-
-        if (changes['action'] == 'add_set') {
-          diffs.add('add set');
-        } else if (changes['action'] == 'remove_set') {
-          diffs.add('remove set');
-        }
-        widgets.add(Padding(
-          padding: const EdgeInsets.only(left: 24, bottom: 4),
-          child: Text('Set ${sid ?? '-'} → ${diffs.isEmpty ? changes.toString() : diffs.join(', ')}'),
-        ));
-      }
-    });
-  });
-  return widgets;
+  final volume = set['volume'] ?? set['reps'];
+  final effort = set['effort'] ?? set['rpe'];
+  final weight = set['working_weight'] ?? set['weight'];
+  return [
+    if (volume != null) '$volume повт.',
+    if (set['intensity'] != null) "${set['intensity']}%",
+    if (effort != null) 'RPE $effort',
+    if (weight != null) '$weight кг',
+  ].join(', ');
 }
 
 class _MacrosPreviewScreenState extends ConsumerState<MacrosPreviewScreen> {
+  final _maxima = <String, double>{};
+  double? _step = 2.5;
+  String _rounding = 'nearest';
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(macroPreviewNotifierProvider.notifier).runPreview(widget.appliedPlanId));
+    Future.microtask(() {
+      if (!mounted) return;
+      final notifier = ref.read(
+        macroPreviewNotifierProvider(widget.appliedPlanId).notifier,
+      );
+      final stored = widget.initialPreview;
+      if (stored != null &&
+          stored['applied_plan_id'] == widget.appliedPlanId) {
+        notifier.show(stored);
+      } else {
+        notifier.runPreview(
+          widget.appliedPlanId,
+          observationWorkoutId: widget.observationWorkoutId,
+        );
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final st = ref.watch(macroPreviewNotifierProvider);
-    final ctxData = ref.watch(previewContextProvider(widget.appliedPlanId)).maybeWhen(
-      data: (d) => d,
-      orElse: () => null,
+    final id = widget.appliedPlanId;
+    final state = ref.watch(macroPreviewNotifierProvider(id));
+    final notifier = ref.read(macroPreviewNotifierProvider(id).notifier);
+    final names = ref.watch(previewContextProvider(id)).asData?.value;
+    final preview = state.preview;
+    final missing = (preview?['needs_weight_settings'] as List? ?? [])
+        .whereType<int>()
+        .toList();
+    final anchor =
+        preview?['observation_workout_id'] as int? ??
+        widget.observationWorkoutId;
+    final supported = preview?['contract_version'] == 2;
+    final items = (preview?['preview'] as List? ?? []).whereType<Map>();
+    final changes = state.applyResult?['apply_result'];
+    final mesoResults = state.applyResult?['plan_changes'] as List? ?? [];
+    final hasMesos = items.any(
+      (item) => (item['plan_changes'] as List? ?? []).isNotEmpty,
     );
-    final notifier = ref.read(macroPreviewNotifierProvider.notifier);
-
-    final preview = st.preview;
-    final items = (preview != null ? (preview['preview'] as List? ?? const []) : const []) as List;
+    final canApply = supported && !state.loading;
 
     return AssistantChatHost(
       builder: (context, openChat) {
-        return Scaffold(
+        final theme = Theme.of(context);
+        final scheme = theme.colorScheme;
+        final instrument = InstrumentTheme.of(context);
+        final topInset = AmbientScaffoldShell.topContentInset(context);
+        final bottomInset = AmbientScaffoldShell.bottomContentInset(context);
+
+        return AmbientScaffoldShell(
           appBar: PrimaryAppBar(
-            title: 'Macros Preview (applied_plan_id=${widget.appliedPlanId})',
+            title: 'Изменения по макросам',
             onTitleTap: openChat,
+            showBack: true,
             actions: [
               IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: st.loading ? null : () => notifier.runPreview(widget.appliedPlanId),
+                icon: const Icon(Icons.refresh_rounded),
+                tooltip: 'Обновить',
+                onPressed: state.loading
+                    ? null
+                    : () => notifier.runPreview(
+                        id,
+                        observationWorkoutId: anchor,
+                      ),
               ),
             ],
           ),
-          body: st.loading
-          ? const Center(child: CircularProgressIndicator())
-          : (st.error != null)
-              ? Center(child: Text('Error: ${st.error}'))
-              : items.isEmpty
-                  ? const Center(child: Text('No changes suggested'))
-                  : ListView.builder(
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        final it = (items[index] as Map).cast<String, dynamic>();
-                        final patches = (it['patches'] as List? ?? const []) as List;
-                        final matched = (it['matched_workouts'] as List? ?? const []) as List;
-                        String _wname(int id) => ctxData?.workoutNames[id] ?? '#$id';
-                        String _ename(int? id) => id == null ? '-' : (ctxData?.exerciseNames[id] ?? '#$id');
-
-                        final perWorkoutCounts = <int, int>{};
-                        for (final p in patches) {
-                          final mp = (p as Map).cast<String, dynamic>();
-                          final wid = (mp['workout_id'] as num).toInt();
-                          perWorkoutCounts.update(wid, (v) => v + 1, ifAbsent: () => 1);
-                        }
-                        final workoutIds = perWorkoutCounts.keys.toList()..sort();
-                        final originalsAsync = ref.watch(workoutOriginalSetsProvider(workoutIds));
-                        return Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('${it['name']} (prio ${it['priority']})', style: Theme.of(context).textTheme.titleMedium),
-                                Text('Patches: ${patches.length} across ${perWorkoutCounts.length} workouts'),
-                                const SizedBox(height: 4),
-                                Text('Matched workouts: ${matched.map((e) => _wname(e as int)).join(', ')}'),
-                                const SizedBox(height: 8),
-                                if (patches.isEmpty) const Text('No patches') else ...[
-                                  const Text('Patches (grouped + diffs):'),
-                                  const SizedBox(height: 6),
-                                  originalsAsync.when(
-                                    data: (orig) => Column(children: _buildGroupedPatchesWithDiffs(patches, _wname, _ename, orig)),
-                                    loading: () => const LinearProgressIndicator(minHeight: 2),
-                                    error: (_, __) => Column(children: _buildGroupedPatches(patches, _wname, _ename)),
-                                  ),
-                                ]
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-          bottomNavigationBar: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: FilledButton.icon(
-            onPressed: (st.loading || (items.isEmpty)) ? null : () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (_) => AlertDialog(
-                  title: const Text('Apply Macros'),
-                  content: const Text('Apply suggested changes to future workouts?'),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                    FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Apply')),
-                  ],
+          body: ListView(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              topInset + 8,
+              16,
+              bottomInset + 28,
+            ),
+            children: [
+              if (state.loading) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    minHeight: 4,
+                    color: instrument.workingAura,
+                    backgroundColor: instrument.hairlineBorder,
+                  ),
                 ),
-              );
-              if (confirm == true) {
-                await notifier.apply(widget.appliedPlanId);
-                if (!mounted) return;
-                final res = ref.read(macroPreviewNotifierProvider).applyResult;
-                final msg = res != null ? 'Applied: ${res['applied']}\nErrors: ${(res['errors'] ?? []).length}' : 'Done';
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-
-                await notifier.runPreview(widget.appliedPlanId);
-              }
-            },
-            icon: const Icon(Icons.check),
-            label: const Text('Apply changes'),
+                const SizedBox(height: 12),
+              ],
+              if (state.error != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: InstrumentTheme.instrumentCardDecoration(
+                    context,
+                    accentColor: instrument.peakEffortColor,
+                  ),
+                  child: Text(
+                    state.error!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: instrument.peakEffortColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (preview != null && !supported) ...[
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: InstrumentTheme.instrumentCardDecoration(
+                    context,
+                    accentColor: instrument.moderateEffortColor,
+                  ),
+                  child: Text(
+                    'Для подтверждения требуется новая версия сервера.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: instrument.moderateEffortColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (anchor != null) ...[
+                Text(
+                  'Наблюдение: тренировка #$anchor',
+                  style: InstrumentTheme.microLabel(
+                    context,
+                    color: instrument.workingAura,
+                  ).copyWith(
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (missing.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: InstrumentTheme.instrumentCardDecoration(
+                    context,
+                    accentColor: instrument.moderateEffortColor,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'WEIGHT CALIBRATION REQUIRED',
+                        style: InstrumentTheme.microLabel(
+                          context,
+                          color: instrument.moderateEffortColor,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Укажите параметры веса для расчёта этого предпросмотра.',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 12),
+                      for (final eid in missing) ...[
+                        TextFormField(
+                          key: ValueKey(eid),
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                          decoration: InstrumentTheme.inputDecoration(
+                            context,
+                            labelText:
+                                '1ПМ, кг · ${names?.exerciseNames[eid] ?? "#$eid"}',
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          onChanged: (v) => setState(() {
+                            final n = double.tryParse(v.replaceAll(',', '.'));
+                            if (n != null && n.isFinite && n > 0) {
+                              _maxima['$eid'] = n;
+                            } else {
+                              _maxima.remove('$eid');
+                            }
+                          }),
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                      TextFormField(
+                        initialValue: _step?.toString(),
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                        decoration: InstrumentTheme.inputDecoration(
+                          context,
+                          labelText: 'Шаг веса, кг',
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        onChanged: (v) => setState(
+                          () => _step = double.tryParse(v.replaceAll(',', '.')),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'ОКРУГЛЕНИЕ',
+                        style: InstrumentTheme.microLabel(context),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          InstrumentSelectablePill(
+                            label: 'До ближайшего шага',
+                            selected: _rounding == 'nearest',
+                            bordered: false,
+                            onTap: () => setState(() => _rounding = 'nearest'),
+                          ),
+                          InstrumentSelectablePill(
+                            label: 'Округлить вниз',
+                            selected: _rounding == 'floor',
+                            bordered: false,
+                            onTap: () => setState(() => _rounding = 'floor'),
+                          ),
+                          InstrumentSelectablePill(
+                            label: 'Округлить вверх',
+                            selected: _rounding == 'ceil',
+                            bordered: false,
+                            onTap: () => setState(() => _rounding = 'ceil'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      InstrumentActionButton(
+                        label: 'Рассчитать предпросмотр',
+                        icon: Icons.calculate_outlined,
+                        expanded: true,
+                        onPressed:
+                            !missing.every((e) => _maxima.containsKey('$e')) ||
+                                _step == null ||
+                                !_step!.isFinite ||
+                                _step! < 0
+                            ? null
+                            : () => notifier.runPreview(
+                                id,
+                                observationWorkoutId: anchor,
+                                legacyWeights: {
+                                  'effective_maxima': _maxima,
+                                  'rounding_step': _step,
+                                  'rounding_mode': _rounding,
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (supported &&
+                  missing.isEmpty &&
+                  preview?['set_changes_count'] == 0)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: InstrumentTheme.instrumentCardDecoration(context),
+                  child: const Text('Изменений подходов нет.'),
+                ),
+              for (final item in items) ...[
+                _MacroDiffGroupCard(
+                  item: item,
+                  names: names,
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (changes is Map && mesoResults.isEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: InstrumentTheme.instrumentCardDecoration(
+                    context,
+                    accentColor: instrument.successColor,
+                  ),
+                  child: Text(
+                    'Изменено экземпляров упражнений: ${changes['applied']}',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: instrument.successColor,
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              for (final result in mesoResults.whereType<Map>()) ...[
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: InstrumentTheme.instrumentCardDecoration(
+                    context,
+                    accentColor: result['applied'] == true
+                        ? instrument.successColor
+                        : instrument.peakEffortColor,
+                  ),
+                  child: Text(
+                    result['applied'] == true
+                        ? 'Мезоцикл добавлен'
+                        : 'Мезоцикл не добавлен: ${result['reason']}',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: result['applied'] == true
+                          ? instrument.successColor
+                          : instrument.peakEffortColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (preview?['preview_id'] != null) ...[
+                InstrumentActionButton(
+                  label: 'Подтвердить изменения подходов',
+                  icon: Icons.check_circle_outline_rounded,
+                  expanded: true,
+                  accentColor: instrument.executionAccent,
+                  onPressed: canApply && changes == null
+                      ? () => notifier.apply(id)
+                      : null,
+                ),
+                const SizedBox(height: 10),
+              ],
+              if (hasMesos)
+                InstrumentActionButton(
+                  label: 'Применить правила вставки мезоциклов отдельно',
+                  icon: Icons.layers_outlined,
+                  variant: InstrumentActionVariant.secondary,
+                  expanded: true,
+                  onPressed: canApply && mesoResults.isEmpty
+                      ? () => notifier.apply(id, mesocyclesOnly: true)
+                      : null,
+                ),
+              const SizedBox(height: 4),
+              if (changes != null)
+                Text(
+                  'Применено к активному плану #$id',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+            ],
           ),
-        ),
-      ),
-    );
+        );
       },
     );
   }
 }
 
-List<Widget> _buildGroupedPatches(List patches, String Function(int) wname, String Function(int?) ename) {
+class _MacroDiffGroupCard extends StatelessWidget {
+  final Map item;
+  final PreviewContextData? names;
 
-  final Map<int, Map<int?, List<Map<String, dynamic>>>> grouped = {};
-  for (final p in patches) {
-    final mp = (p as Map).cast<String, dynamic>();
-    final wid = (mp['workout_id'] as num).toInt();
-    final eid = (mp['exercise_id'] as num?)?.toInt();
-    grouped.putIfAbsent(wid, () => {});
-    grouped[wid]!.putIfAbsent(eid, () => []);
-    grouped[wid]![eid]!.add(mp);
-  }
-  final widgets = <Widget>[];
-  grouped.forEach((wid, byEx) {
-    widgets.add(Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Text('• ${wname(wid)}', style: const TextStyle(fontWeight: FontWeight.w600)),
-    ));
-    byEx.forEach((eid, items) {
-      widgets.add(Padding(
-        padding: const EdgeInsets.only(left: 12, bottom: 2),
-        child: Text('↳ ${ename(eid)} (${items.length} change${items.length == 1 ? '' : 's'})'),
-      ));
-      for (final mp in items) {
-        final sid = mp['set_id'];
-        final changes = (mp['changes'] as Map? ?? const {}).cast<String, dynamic>();
-        widgets.add(Padding(
-          padding: const EdgeInsets.only(left: 24, bottom: 4),
-          child: Text('Set ${sid ?? '-'} → ${changes.toString()}'),
-        ));
-      }
-    });
+  const _MacroDiffGroupCard({
+    required this.item,
+    required this.names,
   });
-  return widgets;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final patches = (item['patches'] as List? ?? []).whereType<Map>().toList();
+    final planChanges =
+        (item['plan_changes'] as List? ?? []).whereType<Map>().toList();
+
+    return Container(
+      decoration: InstrumentTheme.instrumentCardDecoration(
+        context,
+        accentColor: instrument.workingAura,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'DRY-RUN DIFF',
+                        style: InstrumentTheme.microLabel(
+                          context,
+                          color: instrument.workingAura,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        item['name'].toString(),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${patches.length + planChanges.length}',
+                  style: InstrumentTheme.microLabel(
+                    context,
+                    color: instrument.workingAura,
+                  ).copyWith(
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          for (final p in patches) ...[
+            Container(height: 1, color: instrument.hairlineBorder),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "${names?.workoutNames[p['workout_id']] ?? '#${p['workout_id']}'} · "
+                    "${names?.exerciseNames[p['exercise_id']] ?? '#${p['exercise_id']}'} · "
+                    "экземпляр ${p['instance_id']}, "
+                    "${(p['set_id'] as int? ?? 0) < 0 ? 'новый подход' : "подход ${p['set_id']}"}",
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  if (p['before'] is Map)
+                    Text(
+                      'Было: ${_values(p['before'])}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  for (final a
+                      in (p['alternatives'] as List? ?? []).whereType<Map>()) ...[
+                    Text(
+                      'Запрошено: ${_values(a['requested'])}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: instrument.moderateEffortColor,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    Text(
+                      'Ближайший вариант: ${_values(a['proposed'])}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: instrument.workingAura,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                  if (p['after'] is Map)
+                    Text(
+                      'Результат: ${_values(p['after'])}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: instrument.successColor,
+                        fontWeight: FontWeight.w600,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    )
+                  else
+                    Text(
+                      'Удаление подхода',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: instrument.peakEffortColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+          for (final ch in planChanges) ...[
+            Container(height: 1, color: instrument.hairlineBorder),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+              child: Text(
+                'Вставка мезоцикла: ${ch['params']}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: instrument.deloadAura,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }

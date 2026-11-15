@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/services/user_analytics_service.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
+import 'package:workout_app/widgets/primary_app_bar.dart';
+import 'package:workout_app/widgets/responsive_container.dart';
 
 class AmplitudeTestScreen extends StatefulWidget {
-  const AmplitudeTestScreen({Key? key}) : super(key: key);
+  const AmplitudeTestScreen({super.key});
 
   @override
   State<AmplitudeTestScreen> createState() => _AmplitudeTestScreenState();
@@ -11,75 +17,89 @@ class AmplitudeTestScreen extends StatefulWidget {
 class _AmplitudeTestScreenState extends State<AmplitudeTestScreen> {
   bool _isSending = false;
   String _lastStatus = '';
+  bool _lastSuccess = true;
 
   Future<void> _sendTestEvent() async {
     setState(() {
       _isSending = true;
+      _lastSuccess = true;
       _lastStatus = 'Sending test event...';
     });
 
     try {
       await UserAnalyticsService.instance.trackTestEvent();
       setState(() {
+        _lastSuccess = true;
         _lastStatus = '✅ Test event sent successfully!';
       });
     } catch (e) {
       setState(() {
+        _lastSuccess = false;
         _lastStatus = '❌ Failed to send test event: $e';
       });
     } finally {
-      setState(() {
-        _isSending = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+        });
+      }
     }
   }
 
   Future<void> _sendCustomEvent() async {
     setState(() {
       _isSending = true;
+      _lastSuccess = true;
       _lastStatus = 'Sending custom event...';
     });
 
     try {
-      await UserAnalyticsService.instance.trackUserAction('custom_test_event', properties: {
-        'button_clicked': 'custom_button',
-        'screen': 'amplitude_test_screen',
-        'user_action': 'testing_custom_event',
-        'timestamp': DateTime.now().toIso8601String(),
-      });
+      await UserAnalyticsService.instance.trackUserAction(
+        'custom_test_event',
+        properties: {
+          'button_clicked': 'custom_button',
+          'screen': 'amplitude_test_screen',
+          'user_action': 'testing_custom_event',
+          'timestamp': DateTime.now().toIso8601String(),
+        },
+      );
       setState(() {
+        _lastSuccess = true;
         _lastStatus = '✅ Custom event sent successfully!';
       });
     } catch (e) {
       setState(() {
+        _lastSuccess = false;
         _lastStatus = '❌ Failed to send custom event: $e';
       });
     } finally {
-      setState(() {
-        _isSending = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+        });
+      }
     }
   }
 
   Future<void> _testFunnelEvents() async {
     setState(() {
       _isSending = true;
+      _lastSuccess = true;
       _lastStatus = 'Testing funnel events...';
     });
 
     try {
-      // Test Step 1: Profile Published
-      await UserAnalyticsService.instance.trackTrainerProfilePublished(properties: {
-        'has_tagline': true,
-        'has_description': true,
-        'has_specializations': true,
-        'profile_completion_score': 0.8,
-      });
+      await UserAnalyticsService.instance.trackTrainerProfilePublished(
+        properties: {
+          'has_tagline': true,
+          'has_description': true,
+          'has_specializations': true,
+          'profile_completion_score': 0.8,
+        },
+      );
 
-      // Wait a bit between events
       await Future.delayed(const Duration(milliseconds: 500));
 
-      // Test Step 2: Inbound Request
       await UserAnalyticsService.instance.trackInboundRequestReceived(
         requestId: 'test_req_123',
         clientUserId: 'test_client_456',
@@ -91,7 +111,6 @@ class _AmplitudeTestScreenState extends State<AmplitudeTestScreen> {
 
       await Future.delayed(const Duration(milliseconds: 500));
 
-      // Test Step 3: Booking Accepted
       await UserAnalyticsService.instance.trackBookingAccepted(
         bookingId: 'test_booking_789',
         clientUserId: 'test_client_456',
@@ -103,7 +122,6 @@ class _AmplitudeTestScreenState extends State<AmplitudeTestScreen> {
 
       await Future.delayed(const Duration(milliseconds: 500));
 
-      // Test Step 4: Payout Received (First Dollar!)
       await UserAnalyticsService.instance.trackPayoutReceived(
         payoutId: 'test_payout_abc',
         amount: 99.99,
@@ -116,130 +134,161 @@ class _AmplitudeTestScreenState extends State<AmplitudeTestScreen> {
       );
 
       setState(() {
-        _lastStatus = '✅ Funnel events sent successfully!\n\n🎯 Time-to-First-Dollar funnel:\n1. Profile Published ✅\n2. Inbound Request ✅\n3. Booking Accepted ✅\n4. Payout Received ✅';
+        _lastSuccess = true;
+        _lastStatus =
+            '✅ Funnel events sent successfully!\n\n🎯 Time-to-First-Dollar funnel:\n1. Profile Published ✅\n2. Inbound Request ✅\n3. Booking Accepted ✅\n4. Payout Received ✅';
       });
     } catch (e) {
       setState(() {
+        _lastSuccess = false;
         _lastStatus = '❌ Failed to send funnel events: $e';
       });
     } finally {
-      setState(() {
-        _isSending = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Amplitude Test'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+
+    final topInset = AmbientScaffoldShell.topContentInset(context);
+    final bottomInset = AmbientScaffoldShell.bottomContentInset(context);
+    final statusColor = _lastSuccess
+        ? instrument.successColor
+        : instrument.peakEffortColor;
+
+    return AmbientScaffoldShell(
+      appBar: PrimaryAppBar.detail(title: 'Amplitude Test'),
+      body: ResponsiveContainer(
+        maxWidth: Breakpoints.maxContentWidthNarrow,
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            16,
+            topInset + 12,
+            16,
+            bottomInset + 24,
+          ),
           children: [
-            const Icon(
-              Icons.analytics,
-              size: 80,
-              color: Colors.blue,
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Amplitude Analytics Test',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: InstrumentTheme.instrumentCardDecoration(
+                context,
+                accentColor: instrument.workingAura,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Test your Amplitude integration by sending events to analytics.',
-              style: TextStyle(fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: _isSending ? null : _sendTestEvent,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.all(16),
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-              ),
-              child: _isSending
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text(
-                      'Send Test Event',
-                      style: TextStyle(fontSize: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.analytics_outlined,
+                        color: instrument.workingAura,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'TELEMETRY DIAGNOSTICS',
+                          style: InstrumentTheme.microLabel(
+                            context,
+                            color: instrument.workingAura,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Amplitude Analytics Test',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
                     ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _isSending ? null : _sendCustomEvent,
-              icon: const Icon(Icons.analytics_outlined),
-              label: const Text('Send Custom Event'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Test your Amplitude integration by sending events to analytics.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  InstrumentActionButton(
+                    label: 'Send Test Event',
+                    icon: Icons.bolt_rounded,
+                    loading: _isSending,
+                    expanded: true,
+                    onPressed: _isSending ? null : _sendTestEvent,
+                  ),
+                  const SizedBox(height: 10),
+                  InstrumentActionButton(
+                    label: 'Send Custom Event',
+                    icon: Icons.analytics_outlined,
+                    variant: InstrumentActionVariant.secondary,
+                    expanded: true,
+                    onPressed: _isSending ? null : _sendCustomEvent,
+                  ),
+                  const SizedBox(height: 10),
+                  InstrumentActionButton(
+                    label: 'Show Debug Info',
+                    icon: Icons.bug_report_outlined,
+                    variant: InstrumentActionVariant.secondary,
+                    expanded: true,
+                    onPressed: () {
+                      UserAnalyticsService.instance.debugInfo();
+                      setState(() {
+                        _lastSuccess = true;
+                        _lastStatus = '🔍 Debug info logged to console';
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  InstrumentActionButton(
+                    label: 'Test Time-to-First-Dollar Funnel',
+                    icon: Icons.trending_up_rounded,
+                    variant: InstrumentActionVariant.secondary,
+                    expanded: true,
+                    onPressed: _isSending ? null : _testFunnelEvents,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () {
-                UserAnalyticsService.instance.debugInfo();
-                setState(() {
-                  _lastStatus = '🔍 Debug info logged to console';
-                });
-              },
-              icon: const Icon(Icons.bug_report_outlined),
-              label: const Text('Show Debug Info'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _isSending ? null : _testFunnelEvents,
-              icon: const Icon(Icons.trending_up),
-              label: const Text('Test Time-to-First-Dollar Funnel'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              ),
-            ),
-            const SizedBox(height: 24),
-            if (_lastStatus.isNotEmpty)
+            if (_lastStatus.isNotEmpty) ...[
+              const SizedBox(height: 14),
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: _lastStatus.contains('✅') 
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.red.withOpacity(0.1),
-                  border: Border.all(
-                    color: _lastStatus.contains('✅') 
-                        ? Colors.green
-                        : Colors.red,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
+                decoration: InstrumentTheme.instrumentCardDecoration(
+                  context,
+                  accentColor: statusColor,
                 ),
-                child: Text(
-                  _lastStatus,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: _lastStatus.contains('✅') 
-                        ? Colors.green.shade700
-                        : Colors.red.shade700,
-                  ),
-                  textAlign: TextAlign.center,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _lastSuccess ? 'DISPATCH RESULT' : 'DISPATCH ERROR',
+                      style: InstrumentTheme.microLabel(
+                        context,
+                        color: statusColor,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _lastStatus,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: statusColor,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            ],
           ],
         ),
       ),

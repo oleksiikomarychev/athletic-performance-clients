@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
 
 class ReviewFormDialog extends StatefulWidget {
   final int linkId;
@@ -30,61 +31,78 @@ class _ReviewFormDialogState extends State<ReviewFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Review ${widget.coachName}'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Rating'),
-            const SizedBox(height: 8),
-            Row(
-              children: List.generate(5, (index) {
-                return IconButton(
+    final instrument = InstrumentTheme.of(context);
+    final scheme = Theme.of(context).colorScheme;
+
+    return InstrumentDialog(
+      eyebrow: 'COACH REVIEW',
+      title: 'Review ${widget.coachName}',
+      accentColor: instrument.stormAura,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('RATING', style: InstrumentTheme.microLabel(context)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 2,
+            runSpacing: 2,
+            children: List.generate(5, (index) {
+              final selected = index < _rating;
+              return ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                child: IconButton(
+                  tooltip: 'Rate ${index + 1} stars',
                   icon: Icon(
-                    index < _rating ? Icons.star : Icons.star_border,
-                    color: AppColors.star,
+                    selected ? Icons.star_rounded : Icons.star_border_rounded,
+                    color: selected
+                        ? instrument.stormAura
+                        : scheme.outlineVariant,
+                    size: 28,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _rating = index + 1;
-                    });
-                  },
-                );
-              }),
-            ),
-            const SizedBox(height: 16),
-            const Text('Comment (optional)'),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _commentController,
-              maxLines: 3,
-              maxLength: 5000,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Share your experience...',
+                  onPressed: _isSubmitting
+                      ? null
+                      : () {
+                          setState(() {
+                            _rating = index + 1;
+                          });
+                        },
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 16),
+          Text('COMMENT (OPTIONAL)', style: InstrumentTheme.microLabel(context)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _commentController,
+            enabled: !_isSubmitting,
+            maxLines: 3,
+            maxLength: 5000,
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              hintText: 'Share your experience...',
+              radius: 12,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       actions: [
-        TextButton(
+        InstrumentActionButton(
+          label: 'Cancel',
+          variant: InstrumentActionVariant.secondary,
           onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
         ),
-        ElevatedButton(
-          onPressed: _rating == 0 || _isSubmitting
-              ? null
-              : _handleSubmit,
-          child: _isSubmitting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Submit'),
+        InstrumentActionButton(
+          label: 'Submit',
+          variant: InstrumentActionVariant.primary,
+          accentColor: instrument.stormAura,
+          loading: _isSubmitting,
+          onPressed: _rating == 0 || _isSubmitting ? null : _handleSubmit,
         ),
       ],
     );

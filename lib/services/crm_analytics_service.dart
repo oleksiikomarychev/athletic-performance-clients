@@ -2,11 +2,8 @@ import 'package:workout_app/config/api_config.dart';
 import 'package:workout_app/models/crm_analytics.dart';
 import 'package:workout_app/services/api_client.dart';
 import 'package:workout_app/services/base_api_service.dart';
-import 'package:workout_app/services/logger_service.dart';
 
 class CrmAnalyticsService extends BaseApiService {
-  final LoggerService _logger = LoggerService('CrmAnalyticsService');
-
   CrmAnalyticsService(ApiClient apiClient) : super(apiClient);
 
   Future<CoachAthletesAnalyticsModel> getMyAthletesAnalytics({

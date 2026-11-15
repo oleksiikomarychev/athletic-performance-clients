@@ -1,0 +1,364 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/models/calendar_plan.dart';
+import 'package:workout_app/models/exercise_set_dto.dart';
+import 'package:workout_app/models/workout.dart';
+
+/// Physiological atmosphere states driven by real training load and session activity.
+enum TrainingEnvironmentState {
+  deload,
+  workingVolume,
+  cnsStorm,
+  liveExecution,
+}
+
+/// Immutable telemetry summary and reactive briefing payload for [AmbientScaffoldShell].
+@immutable
+class TrainingEnvironmentData {
+  final TrainingEnvironmentState state;
+  final double? peakRpe;
+  final double? avgRpe;
+  final double? peakIntensity;
+  final double? peakWeight;
+  final int? peakReps;
+  final int totalSets;
+  final double totalTonnage;
+  final String badgeLabel;
+  final String tacticalBriefing;
+  final String carrotSnarkBriefing;
+
+  const TrainingEnvironmentData({
+    required this.state,
+    this.peakRpe,
+    this.avgRpe,
+    this.peakIntensity,
+    this.peakWeight,
+    this.peakReps,
+    this.totalSets = 0,
+    this.totalTonnage = 0.0,
+    required this.badgeLabel,
+    required this.tacticalBriefing,
+    required this.carrotSnarkBriefing,
+  });
+
+  const TrainingEnvironmentData.idle()
+    : state = TrainingEnvironmentState.workingVolume,
+      peakRpe = null,
+      avgRpe = null,
+      peakIntensity = null,
+      peakWeight = null,
+      peakReps = null,
+      totalSets = 0,
+      totalTonnage = 0.0,
+      badgeLabel = 'WORK ZONE',
+      tacticalBriefing = 'Система готова. Выберите сессию или настройте сетку.',
+      carrotSnarkBriefing = 'Штанга сама себя не поднимет. Выбирай цель.';
+
+  Color accentColor(InstrumentTheme theme) {
+    switch (state) {
+      case TrainingEnvironmentState.deload:
+        return theme.deloadAura;
+      case TrainingEnvironmentState.workingVolume:
+        return theme.workingAura;
+      case TrainingEnvironmentState.cnsStorm:
+        return theme.stormAura;
+      case TrainingEnvironmentState.liveExecution:
+        return theme.executionAccent;
+    }
+  }
+
+  String briefing({bool snarky = false}) =>
+      snarky ? carrotSnarkBriefing : tacticalBriefing;
+
+  static TrainingEnvironmentData evaluate({
+    bool isLiveExecution = false,
+    double? peakRpe,
+    double? avgRpe,
+    double? peakIntensity,
+    double? peakWeight,
+    int? peakReps,
+    int totalSets = 0,
+    double totalTonnage = 0.0,
+    String? contextLabel,
+  }) {
+    final TrainingEnvironmentState resolvedState;
+    if (isLiveExecution) {
+      resolvedState = TrainingEnvironmentState.liveExecution;
+    } else if ((peakRpe != null && peakRpe >= 9.0) ||
+        (peakIntensity != null && peakIntensity >= 85.0)) {
+      resolvedState = TrainingEnvironmentState.cnsStorm;
+    } else if ((peakRpe != null && peakRpe > 0 && peakRpe <= 6.5) &&
+        (peakIntensity == null || peakIntensity < 70.0)) {
+      resolvedState = TrainingEnvironmentState.deload;
+    } else {
+      resolvedState = TrainingEnvironmentState.workingVolume;
+    }
+
+    final peakSetSnippet = _formatPeakSet(
+      peakWeight: peakWeight,
+      peakReps: peakReps,
+      peakRpe: peakRpe,
+      peakIntensity: peakIntensity,
+    );
+    final tonnageSnippet = totalTonnage > 0
+        ? '${totalTonnage.round()} кг'
+        : (totalSets > 0 ? '$totalSets подх.' : null);
+
+    late final String badgeLabel;
+    late final String tactical;
+    late final String snarky;
+
+    switch (resolvedState) {
+      case TrainingEnvironmentState.liveExecution:
+        badgeLabel = 'LIVE';
+        tactical = peakSetSnippet != null
+            ? 'Идёт сессия · Пик $peakSetSnippet'
+            : 'Идёт активная сессия · Режим фокуса';
+        snarky = peakSetSnippet != null
+            ? 'Таймер тикает. Покори $peakSetSnippet и не ной.'
+            : 'Секундомер пошёл. Меньше разговоров, больше повторов.';
+        break;
+      case TrainingEnvironmentState.cnsStorm:
+        badgeLabel = 'CNS STORM';
+        final detail = peakSetSnippet ??
+            (peakIntensity != null
+                ? '${peakIntensity.round()}% 1RM'
+                : 'RPE ${(peakRpe ?? 9.0).toStringAsFixed(1)}');
+        tactical = tonnageSnippet != null
+            ? 'Пик $detail · Объём $tonnageSnippet · Высокая нагрузка ЦНС'
+            : 'Пик $detail · Предельная нагрузка ЦНС';
+        snarky = 'Пик $detail. ЦНС просит пощады — сделай её погромче.';
+        break;
+      case TrainingEnvironmentState.deload:
+        badgeLabel = 'DELOAD';
+        final rpeLabel = peakRpe != null
+            ? 'RPE ${peakRpe.toStringAsFixed(1)}'
+            : 'лёгкая зона';
+        tactical = tonnageSnippet != null
+            ? 'Восстановление · $rpeLabel · Объём $tonnageSnippet'
+            : 'Разгрузочная фаза · $rpeLabel · Адаптация';
+        snarky = 'Режим курорта ($rpeLabel). Даже не думай добавлять блины.';
+        break;
+      case TrainingEnvironmentState.workingVolume:
+        badgeLabel = 'WORK ZONE';
+        if (peakSetSnippet != null && tonnageSnippet != null) {
+          tactical = 'Пик $peakSetSnippet · Рабочий объём $tonnageSnippet';
+          snarky = 'Рабочий коридор: $peakSetSnippet. Дисциплина важнее эго.';
+        } else if (totalSets > 0) {
+          tactical =
+              'Рабочая зона · $totalSets подх.${tonnageSnippet != null ? ' · $tonnageSnippet' : ''}';
+          snarky = '$totalSets рабочих подходов. Скучно? Это называется прогресс.';
+        } else {
+          final prefix = (contextLabel != null && contextLabel.trim().isNotEmpty)
+              ? '${contextLabel.trim()} · '
+              : '';
+          tactical = '${prefix}Рабочая зона · Готово к запуску';
+          snarky = '${prefix}Чистый лист. Нагрузи его нормально.';
+        }
+        break;
+    }
+
+    return TrainingEnvironmentData(
+      state: resolvedState,
+      peakRpe: peakRpe,
+      avgRpe: avgRpe,
+      peakIntensity: peakIntensity,
+      peakWeight: peakWeight,
+      peakReps: peakReps,
+      totalSets: totalSets,
+      totalTonnage: totalTonnage,
+      badgeLabel: badgeLabel,
+      tacticalBriefing: tactical,
+      carrotSnarkBriefing: snarky,
+    );
+  }
+
+  static String? _formatPeakSet({
+    double? peakWeight,
+    int? peakReps,
+    double? peakRpe,
+    double? peakIntensity,
+  }) {
+    final parts = <String>[];
+    if (peakWeight != null && peakWeight > 0) {
+      final wStr = peakWeight == peakWeight.roundToDouble()
+          ? peakWeight.round().toString()
+          : peakWeight.toStringAsFixed(1);
+      if (peakReps != null && peakReps > 0) {
+        parts.add('$wStr кг × $peakReps');
+      } else {
+        parts.add('$wStr кг');
+      }
+    } else if (peakIntensity != null && peakIntensity > 0) {
+      parts.add('${peakIntensity.round()}%');
+    }
+
+    if (peakRpe != null && peakRpe > 0) {
+      final rpeStr = peakRpe == peakRpe.roundToDouble()
+          ? peakRpe.toStringAsFixed(0)
+          : peakRpe.toStringAsFixed(1);
+      parts.add('@ RPE $rpeStr');
+    }
+
+    if (parts.isEmpty) return null;
+    return parts.join(' ');
+  }
+
+  static TrainingEnvironmentData fromSets(
+    Iterable<ExerciseSetDto> sets, {
+    bool isLiveExecution = false,
+    double? fallbackSessionRpe,
+    String? contextLabel,
+  }) {
+    final flattened = <ExerciseSetDto>[];
+    void collect(ExerciseSetDto s) {
+      if (s.subsets.isNotEmpty) {
+        for (final sub in s.subsets) {
+          collect(sub);
+        }
+      } else {
+        flattened.add(s);
+      }
+    }
+
+    for (final s in sets) {
+      collect(s);
+    }
+
+    double? peakRpe;
+    double rpeSum = 0;
+    int rpeCount = 0;
+    double? peakIntensity;
+    double? peakWeight;
+    int? peakReps;
+    double totalTonnage = 0;
+
+    double bestScore = -1;
+
+    for (final s in flattened) {
+      final rpe = (s.rpe != null && s.rpe! > 0)
+          ? s.rpe
+          : (s.effort > 0 ? s.effort : null);
+      if (rpe != null) {
+        rpeSum += rpe;
+        rpeCount++;
+        if (peakRpe == null || rpe > peakRpe) {
+          peakRpe = rpe;
+        }
+      }
+      if (s.intensity > 0) {
+        final intensityVal = s.intensity.toDouble();
+        if (peakIntensity == null || intensityVal > peakIntensity) {
+          peakIntensity = intensityVal;
+        }
+      }
+      if (s.weight > 0 && s.reps > 0) {
+        totalTonnage += s.weight * s.reps;
+      }
+
+      // Identify the "boss" / peak set by weight first, then RPE/intensity.
+      final score = (s.weight > 0 ? s.weight * 100 : 0.0) +
+          ((rpe ?? 0.0) * 10) +
+          s.intensity.toDouble();
+      if (score > bestScore && (s.weight > 0 || rpe != null || s.intensity > 0)) {
+        bestScore = score;
+        peakWeight = s.weight > 0 ? s.weight : null;
+        peakReps = s.reps > 0 ? s.reps : null;
+      }
+    }
+
+    if (peakRpe == null && fallbackSessionRpe != null && fallbackSessionRpe > 0) {
+      peakRpe = fallbackSessionRpe;
+    }
+
+    return evaluate(
+      isLiveExecution: isLiveExecution,
+      peakRpe: peakRpe,
+      avgRpe: rpeCount > 0 ? rpeSum / rpeCount : peakRpe,
+      peakIntensity: peakIntensity,
+      peakWeight: peakWeight,
+      peakReps: peakReps,
+      totalSets: flattened.length,
+      totalTonnage: totalTonnage,
+      contextLabel: contextLabel,
+    );
+  }
+
+  static TrainingEnvironmentData fromWorkout(
+    Workout? workout, {
+    bool isLiveExecution = false,
+  }) {
+    if (workout == null) {
+      return const TrainingEnvironmentData.idle();
+    }
+    final allSets = workout.exerciseInstances.expand((e) => e.sets);
+    return fromSets(
+      allSets,
+      isLiveExecution: isLiveExecution,
+      fallbackSessionRpe: workout.effortSession,
+      contextLabel: workout.name,
+    );
+  }
+
+  static TrainingEnvironmentData fromPlan(
+    CalendarPlan plan, {
+    bool isLiveExecution = false,
+  }) {
+    double? peakRpe;
+    double rpeSum = 0;
+    int rpeCount = 0;
+    double? peakIntensity;
+    int totalSets = 0;
+
+    for (final meso in plan.mesocycles) {
+      for (final micro in meso.microcycles) {
+        for (final dayItems in micro.schedule.values) {
+          for (final item in dayItems) {
+            for (final set in item.sets) {
+              totalSets++;
+              final eff = set.effort;
+              if (eff != null && eff > 0) {
+                rpeSum += eff;
+                rpeCount++;
+                if (peakRpe == null || eff > peakRpe) {
+                  peakRpe = eff;
+                }
+              }
+              final inten = set.intensity;
+              if (inten != null && inten > 0) {
+                if (peakIntensity == null || inten > peakIntensity) {
+                  peakIntensity = inten;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return evaluate(
+      isLiveExecution: isLiveExecution,
+      peakRpe: peakRpe,
+      avgRpe: rpeCount > 0 ? rpeSum / rpeCount : null,
+      peakIntensity: peakIntensity,
+      totalSets: totalSets,
+      contextLabel: plan.name,
+    );
+  }
+}
+
+/// Optional screen-level override for [activeTrainingEnvironmentProvider].
+final ambientEnvironmentOverrideProvider =
+    StateProvider<TrainingEnvironmentData?>((ref) => null);
+
+/// Resolves the active [TrainingEnvironmentData] for the current viewport.
+final activeTrainingEnvironmentProvider =
+    Provider.family<TrainingEnvironmentData, TrainingEnvironmentData?>((
+      ref,
+      explicit,
+    ) {
+      return explicit ??
+          ref.watch(ambientEnvironmentOverrideProvider) ??
+          const TrainingEnvironmentData.idle();
+    });

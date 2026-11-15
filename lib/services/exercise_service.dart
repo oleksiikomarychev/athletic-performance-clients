@@ -55,11 +55,9 @@ class ExerciseService extends BaseApiService {
           'Invalid response format for exercise definitions',
           Exception('Expected a list of exercise definitions'),
         );
-        return [];
       }
     } catch (e, stackTrace) {
       handleError('Failed to get exercise definitions', e, stackTrace);
-      rethrow;
     }
   }
 
@@ -80,11 +78,9 @@ class ExerciseService extends BaseApiService {
           'Invalid response format for exercise definitions',
           Exception('Expected a list of exercise definitions'),
         );
-        return [];
       }
     } catch (e, stackTrace) {
       handleError('Failed to get exercise definitions', e, stackTrace);
-      rethrow;
     }
   }
 
@@ -115,10 +111,8 @@ class ExerciseService extends BaseApiService {
         'Invalid response format when uploading exercise gif',
         Exception('Expected an exercise definition object'),
       );
-      throw Exception('Failed to upload exercise gif');
     } catch (e, stackTrace) {
       handleError('Failed to upload exercise gif', e, stackTrace);
-      rethrow;
     }
   }
 
@@ -136,10 +130,8 @@ class ExerciseService extends BaseApiService {
             .toList();
       }
       handleError('Invalid response format for muscles', Exception('Expected a list of muscles'));
-      return [];
     } catch (e, stackTrace) {
       handleError('Failed to get muscles', e, stackTrace);
-      rethrow;
     }
   }
 
@@ -164,11 +156,9 @@ class ExerciseService extends BaseApiService {
       } else {
         handleError('Invalid response format for exercise definitions',
             Exception('Expected a list of exercise definitions'));
-        return [];
       }
     } catch (e, stackTrace) {
       handleError('Failed to get exercise definitions by IDs', e, stackTrace);
-      rethrow;
     }
   }
 
@@ -187,11 +177,9 @@ class ExerciseService extends BaseApiService {
       } else {
         handleError('Invalid response format for exercise definition',
             Exception('Expected an exercise definition object'));
-        throw Exception('Failed to get exercise definition');
       }
     } catch (e, stackTrace) {
       handleError('Failed to get exercise definition', e, stackTrace);
-      rethrow;
     }
   }
 
@@ -212,11 +200,9 @@ class ExerciseService extends BaseApiService {
       } else {
         handleError('Invalid response format when creating exercise definition',
             Exception('Expected an exercise definition object'));
-        throw Exception('Failed to create exercise definition');
       }
     } catch (e, stackTrace) {
       handleError('Failed to create exercise definition', e, stackTrace);
-      rethrow;
     }
   }
 
@@ -241,11 +227,9 @@ class ExerciseService extends BaseApiService {
       } else {
         handleError('Invalid response format when updating exercise definition',
             Exception('Expected an exercise definition object'));
-        throw Exception('Failed to update exercise definition');
       }
     } catch (e, stackTrace) {
       handleError('Failed to update exercise definition', e, stackTrace);
-      rethrow;
     }
   }
 
@@ -261,7 +245,6 @@ class ExerciseService extends BaseApiService {
       return true;
     } catch (e, stackTrace) {
       handleError('Failed to delete exercise definition', e, stackTrace);
-      return false;
     }
   }
 
@@ -298,10 +281,8 @@ class ExerciseService extends BaseApiService {
         'Invalid response format when uploading exercise image',
         Exception('Expected an exercise definition object'),
       );
-      throw Exception('Failed to upload exercise image');
     } catch (e, stackTrace) {
       handleError('Failed to upload exercise image', e, stackTrace);
-      rethrow;
     }
   }
 
@@ -322,11 +303,9 @@ class ExerciseService extends BaseApiService {
       } else {
         handleError('Invalid response format for exercise instance',
             Exception('Expected an exercise instance object'));
-        throw Exception('Failed to get exercise instance');
       }
     } catch (e, stackTrace) {
       handleError('Failed to get exercise instance', e, stackTrace);
-      rethrow;
     }
   }
 
@@ -347,11 +326,9 @@ class ExerciseService extends BaseApiService {
       } else {
         handleError('Invalid response format when creating exercise instance',
             Exception('Expected an exercise instance object'));
-        throw Exception('Failed to create exercise instance');
       }
     } catch (e, stackTrace) {
       handleError('Failed to create exercise instance', e, stackTrace);
-      rethrow;
     }
   }
 
@@ -376,11 +353,9 @@ class ExerciseService extends BaseApiService {
       } else {
         handleError('Invalid response format when updating exercise instance',
             Exception('Expected an exercise instance object'));
-        throw Exception('Failed to update exercise instance');
       }
     } catch (e, stackTrace) {
       handleError('Failed to update exercise instance', e, stackTrace);
-      rethrow;
     }
   }
 
@@ -396,7 +371,6 @@ class ExerciseService extends BaseApiService {
       return true;
     } catch (e, stackTrace) {
       handleError('Failed to delete exercise instance', e, stackTrace);
-      return false;
     }
   }
 }

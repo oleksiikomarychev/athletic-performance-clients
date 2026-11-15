@@ -38,7 +38,6 @@ class AnalyticsService extends BaseApiService {
       };
     } catch (e, st) {
       handleError('Failed to fetch profile aggregates', e, st);
-      rethrow;
     }
   }
 
@@ -73,7 +72,6 @@ class AnalyticsService extends BaseApiService {
       };
     } catch (e, st) {
       handleError('Failed to fetch analytics metrics', e, st);
-      rethrow;
     }
   }
 
@@ -107,7 +105,6 @@ class AnalyticsService extends BaseApiService {
       return null;
     } catch (e, st) {
       handleError('Failed to fetch workout history analytics', e, st);
-      return null;
     }
   }
 }

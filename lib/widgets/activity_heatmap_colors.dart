@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 
 class ActivityHeatmapColors {
   static List<Color> palette(BuildContext context) {
+    final instrument = InstrumentTheme.of(context);
     if (Theme.of(context).brightness == Brightness.dark) {
       return [
-        Theme.of(context).colorScheme.surfaceContainerHighest,
-        const Color(0xFF1F4E32),
-        const Color(0xFF2F7245),
-        const Color(0xFF419A58),
-        const Color(0xFF70C984),
+        InstrumentPalette.obsidianSlotHigh,
+        Color.lerp(
+          InstrumentPalette.obsidianSlotHigh,
+          instrument.deloadAura,
+          0.30,
+        )!,
+        Color.lerp(
+          InstrumentPalette.obsidianSlotHigh,
+          instrument.deloadAura,
+          0.55,
+        )!,
+        instrument.deloadAura,
+        instrument.executionAccent,
       ];
     }
 

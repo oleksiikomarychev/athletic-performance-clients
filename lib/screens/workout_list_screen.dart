@@ -1,25 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:heroicons/heroicons.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:animations/animations.dart';
 import 'package:intl/intl.dart';
-import 'package:workout_app/widgets/primary_app_bar.dart';
-import 'package:workout_app/widgets/assistant_chat_host.dart';
-import 'package:workout_app/widgets/loading_indicator.dart';
-import 'package:workout_app/widgets/error_message.dart';
-import 'package:workout_app/widgets/empty_state.dart';
-
-import '../models/workout.dart';
-import '../models/progression_template.dart';
-import '../services/workout_service.dart';
-import '../services/progression_service.dart';
-import '../services/plan_service.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/services/api_client.dart';
 import 'package:workout_app/services/service_locator.dart';
-import 'package:workout_app/l10n/app_localizations.dart';
+import 'package:workout_app/src/widgets/snack_utils.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
+import 'package:workout_app/widgets/assistant_chat_host.dart';
+import 'package:workout_app/widgets/empty_state.dart';
+import 'package:workout_app/widgets/error_message.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
+import 'package:workout_app/widgets/loading_indicator.dart';
+import 'package:workout_app/widgets/primary_app_bar.dart';
+
+import '../models/workout.dart';
+import '../services/plan_service.dart';
 import 'workout_detail_screen.dart';
 
 class WorkoutListScreen extends ConsumerStatefulWidget {
@@ -124,77 +120,65 @@ class _WorkoutListScreenState extends ConsumerState<WorkoutListScreen> {
     await _loadData();
   }
 
-  void _showAddWorkoutDialog() {
+  Future<void> _showAddWorkoutDialog() async {
     _nameController.clear();
-
-    showDialog(
+    final created = await showInstrumentDialog<bool>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) {
-          return AlertDialog(
-            title: const Text('Добавить тренировку'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Название тренировки',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Отмена'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  if (_nameController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Введите название тренировки'),
-                      ),
-                    );
-                    return;
-                  }
-
-                  try {
-                    final workoutService = ref.read(workoutServiceProvider);
-                    final workout = Workout(
-                      name: _nameController.text,
-                      exerciseInstances: [],
-                      id: null,
-                    );
-
-                    await workoutService.createWorkout(workout);
-                    if (mounted) {
-                      Navigator.pop(context);
-                      _loadData();
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Ошибка при создании тренировки: $e'),
-                        ),
-                      );
-                    }
-                  }
-                },
-                child: const Text('Добавить'),
-              ),
-            ],
-          );
-        },
+      eyebrow: 'NEW WORKOUT',
+      title: 'Добавить тренировку',
+      content: TextField(
+        controller: _nameController,
+        autofocus: true,
+        decoration: InstrumentTheme.inputDecoration(
+          context,
+          labelText: 'Название тренировки',
+        ),
       ),
+      actions: [
+        InstrumentActionButton(
+          label: 'Отмена',
+          variant: InstrumentActionVariant.secondary,
+          onPressed: () => Navigator.pop(context, false),
+        ),
+        InstrumentActionButton(
+          label: 'Добавить',
+          icon: Icons.add_rounded,
+          onPressed: () {
+            if (_nameController.text.trim().isEmpty) {
+              showAppSnackBar(
+                context,
+                'Введите название тренировки',
+                isError: true,
+              );
+              return;
+            }
+            Navigator.pop(context, true);
+          },
+        ),
+      ],
     );
+
+    if (created != true || !mounted) return;
+    try {
+      final workoutService = ref.read(workoutServiceProvider);
+      final workout = Workout(
+        name: _nameController.text.trim(),
+        exerciseInstances: [],
+        id: null,
+      );
+      await workoutService.createWorkout(workout);
+      if (mounted) {
+        await _loadData();
+      }
+    } catch (e) {
+      if (mounted) {
+        showAppSnackBar(
+          context,
+          'Ошибка при создании тренировки: $e',
+          isError: true,
+        );
+      }
+    }
   }
 
   @override
@@ -211,34 +195,46 @@ class _WorkoutListScreenState extends ConsumerState<WorkoutListScreen> {
         'entities': {'progression_id': widget.progressionId},
       },
       builder: (context, openChat) {
-        return Scaffold(
+        return AmbientScaffoldShell(
           appBar: PrimaryAppBar(
             title: 'Тренировки',
             onTitleTap: openChat,
-            actions: const [SizedBox(width: 8)],
+            showBack: true,
+            actions: [
+              IconButton(
+                onPressed: _showAddWorkoutDialog,
+                icon: const Icon(Icons.add_rounded),
+                tooltip: 'Добавить тренировку',
+              ),
+            ],
           ),
           body: RefreshIndicator(
             onRefresh: _refreshWorkouts,
-            child: _buildBody(),
-          ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: _showAddWorkoutDialog,
-            child: const Icon(Icons.add),
+            child: _buildBody(context),
           ),
         );
       },
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(BuildContext context) {
+    final topInset = AmbientScaffoldShell.topContentInset(context);
+    final bottomInset = AmbientScaffoldShell.bottomContentInset(context);
+
     if (_isLoading) {
-      return const LoadingIndicator();
+      return Padding(
+        padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
+        child: const LoadingIndicator(),
+      );
     }
 
     if (_errorMessage != null) {
-      return ErrorMessage(
-        message: 'Ошибка загрузки тренировок: $_errorMessage',
-        onRetry: _loadData,
+      return Padding(
+        padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
+        child: ErrorMessage(
+          message: 'Ошибка загрузки тренировок: $_errorMessage',
+          onRetry: _loadData,
+        ),
       );
     }
 
@@ -246,31 +242,74 @@ class _WorkoutListScreenState extends ConsumerState<WorkoutListScreen> {
       future: _workoutsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const LoadingIndicator();
+          return Padding(
+            padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
+            child: const LoadingIndicator(),
+          );
         }
 
         if (snapshot.hasError) {
-          return ErrorMessage(
-            message: 'Ошибка загрузки тренировок: ${snapshot.error}',
-            onRetry: _loadData,
+          return Padding(
+            padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
+            child: ErrorMessage(
+              message: 'Ошибка загрузки тренировок: ${snapshot.error}',
+              onRetry: _loadData,
+            ),
           );
         }
 
         final workouts = snapshot.data ?? [];
 
         if (workouts.isEmpty) {
-          return const EmptyState(
-            icon: Icons.fitness_center,
-            title: 'Нет тренировок',
-            description: 'В этой прогрессии пока нет тренировок',
+          return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              topInset + 24,
+              16,
+              bottomInset + 24,
+            ),
+            children: [
+              EmptyState(
+                icon: Icons.fitness_center_rounded,
+                title: 'Нет тренировок',
+                description: 'В этой прогрессии пока нет тренировок',
+                action: InstrumentActionButton(
+                  label: 'Добавить тренировку',
+                  icon: Icons.add_rounded,
+                  onPressed: _showAddWorkoutDialog,
+                ),
+              ),
+            ],
           );
         }
 
         return ListView(
-          padding: EdgeInsets.symmetric(vertical: UiDimensions.of(context).rowGap),
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            topInset + 8,
+            16,
+            bottomInset + 24,
+          ),
           children: [
             _buildNextWorkoutCard(),
-            ...workouts.map((workout) => _buildWorkoutTile(workout)),
+            _WorkoutCatalogModule(
+              workouts: workouts,
+              onSelect: (workout) async {
+                if (workout.id == null) return;
+                final result = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        WorkoutDetailScreen(workoutId: workout.id!),
+                  ),
+                );
+                if (result == true && mounted) {
+                  await _refreshWorkouts();
+                }
+              },
+            ),
           ],
         );
       },
@@ -279,80 +318,213 @@ class _WorkoutListScreenState extends ConsumerState<WorkoutListScreen> {
 
   Widget _buildNextWorkoutCard() {
     final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding, vertical: 4),
-      child: FutureBuilder<Workout?>(
-        future: _nextWorkoutFuture,
-        builder: (context, snap) {
-          if (snap.connectionState == ConnectionState.waiting ||
-              snap.hasError ||
-              snap.data == null) {
-            return const SizedBox.shrink();
-          }
-          final nw = snap.data!;
-          final when = nw.scheduledFor != null
-              ? ' • ${DateFormat('yMMMd, HH:mm').format(nw.scheduledFor!.toLocal())}'
-              : '';
-          return Card(
-            child: ListTile(
-              leading: const Icon(Icons.upcoming),
-              title: Text(l10n.workoutListNextWorkout),
-              subtitle: Text('${nw.name}$when'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () async {
-                final result = await Navigator.push<bool>(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        WorkoutDetailScreen(workoutId: nw.id!),
-                  ),
-                );
-                if (result == true && mounted) {
-                  await _refreshWorkouts();
-                } else {
-                  await _loadNextWorkout();
-                  if (mounted) setState(() {});
-                }
-              },
-            ),
-          );
-        },
-      ),
-    );
-  }
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
 
-  Widget _buildWorkoutTile(Workout workout) {
-    final l10n = AppLocalizations.of(context);
-    return ListTile(
-      title: Text(workout.name),
-      subtitle: Text(
-        l10n.exerciseCount(workout.exerciseInstances.length),
-        style: const TextStyle(color: Colors.grey),
-      ),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () async {
-        final result = await Navigator.push<bool>(
-          context,
-          MaterialPageRoute(
-            builder: (context) => WorkoutDetailScreen(workoutId: workout.id!),
+    return FutureBuilder<Workout?>(
+      future: _nextWorkoutFuture,
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting ||
+            snap.hasError ||
+            snap.data == null) {
+          return const SizedBox.shrink();
+        }
+        final nw = snap.data!;
+        final when = nw.scheduledFor != null
+            ? DateFormat('yMMMd, HH:mm').format(nw.scheduledFor!.toLocal())
+            : null;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: Container(
+            decoration: InstrumentTheme.instrumentCardDecoration(
+              context,
+              accentColor: instrument.workingAura,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () async {
+                  if (nw.id == null) return;
+                  final result = await Navigator.push<bool>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          WorkoutDetailScreen(workoutId: nw.id!),
+                    ),
+                  );
+                  if (result == true && mounted) {
+                    await _refreshWorkouts();
+                  } else {
+                    await _loadNextWorkout();
+                    if (mounted) setState(() {});
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'NEXT IN PLAN',
+                              style: InstrumentTheme.microLabel(
+                                context,
+                                color: instrument.workingAura,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        nw.name,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(height: 1, color: instrument.hairlineBorder),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 4,
+                        alignment: WrapAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            l10n.workoutListNextWorkout,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                          if (when != null)
+                            Text(
+                              when,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: instrument.workingAura,
+                                fontWeight: FontWeight.w600,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         );
-
-        if (result == true && mounted) {
-          await _refreshWorkouts();
-        }
       },
     );
   }
+}
 
-  String _getExerciseCountText(int count) {
-    if (count % 10 == 1 && count % 100 != 11) {
-      return 'упражнение';
-    } else if ([2, 3, 4].contains(count % 10) &&
-        ![12, 13, 14].contains(count % 100)) {
-      return 'упражнения';
-    } else {
-      return 'упражнений';
-    }
+class _WorkoutCatalogModule extends StatelessWidget {
+  final List<Workout> workouts;
+  final ValueChanged<Workout> onSelect;
+
+  const _WorkoutCatalogModule({
+    required this.workouts,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+
+    return Container(
+      decoration: InstrumentTheme.instrumentCardDecoration(context),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'WORKOUT DIRECTORY · ${workouts.length}',
+                  style: InstrumentTheme.microLabel(context).copyWith(
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Список тренировок',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(height: 1, color: instrument.hairlineBorder),
+          for (int i = 0; i < workouts.length; i++) ...[
+            if (i > 0) Container(height: 1, color: instrument.hairlineBorder),
+            InkWell(
+              onTap: () => onSelect(workouts[i]),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 56),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              workouts[i].name,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              l10n.exerciseCount(
+                                workouts[i].exerciseInstances.length,
+                              ),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

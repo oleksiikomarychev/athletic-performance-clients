@@ -21,7 +21,6 @@ String roleToString(ChatRole role) {
     case ChatRole.system:
       return 'system';
     case ChatRole.user:
-    default:
       return 'user';
   }
 }

@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
 
 class ConditionBuilder extends StatefulWidget {
   final Map<String, dynamic> initial;
   final ValueChanged<Map<String, dynamic>> onChanged;
   final String? metric;
-  const ConditionBuilder({super.key, required this.initial, required this.onChanged, this.metric});
+  const ConditionBuilder({
+    super.key,
+    required this.initial,
+    required this.onChanged,
+    this.metric,
+  });
 
   @override
   State<ConditionBuilder> createState() => _ConditionBuilderState();
@@ -23,7 +29,6 @@ class _ConditionBuilderState extends State<ConditionBuilder> {
   String _direction = '';
   String _relation = '';
 
-
   List<String> _allowedOpKeysForMetric(String? metric) {
     final m = (metric ?? '').trim();
     switch (m) {
@@ -33,7 +38,16 @@ class _ConditionBuilderState extends State<ConditionBuilder> {
         return ['>', '<', '=', '!=', 'in_range', 'not_in_range'];
       case 'RPE_Delta_From_Plan':
       case 'Reps_Delta_From_Plan':
-        return ['>', '<', '=', '!=', 'in_range', 'not_in_range', 'holds_for', 'holds_for_sets'];
+        return [
+          '>',
+          '<',
+          '=',
+          '!=',
+          'in_range',
+          'not_in_range',
+          'holds_for',
+          'holds_for_sets',
+        ];
       case 'Total_Reps':
       case 'Readiness_Score':
       case 'RPE_Session':
@@ -70,9 +84,17 @@ class _ConditionBuilderState extends State<ConditionBuilder> {
     }
   }
 
-  List<DropdownMenuItem<String>> _opItems(List<String> keys, AppLocalizations l10n) {
+  List<DropdownMenuItem<String>> _opItems(
+    List<String> keys,
+    AppLocalizations l10n,
+  ) {
     return keys
-        .map((k) => DropdownMenuItem<String>(value: k, child: Text(_opLabel(k, l10n))))
+        .map(
+          (k) => DropdownMenuItem<String>(
+            value: k,
+            child: Text(_opLabel(k, l10n)),
+          ),
+        )
         .toList(growable: false);
   }
 
@@ -107,7 +129,7 @@ class _ConditionBuilderState extends State<ConditionBuilder> {
         return 'Тренд (стагнация): берутся последние n значений метрики и сравнивается ширина диапазона с epsilon_percent (%).\nФормат: n — целое (окна), epsilon_percent — число в процентах.\nПример: n=5, epsilon_percent=1.0 (изменение ≤ 1% за 5 окон).';
       }
       if (op == 'deviates_from_avg') {
-        return 'Тренд (отклонение): сравнивается последнее значение со средним за n окон. \nФормат: n — целое, value_percent — порог в %, direction — positive/negative (опционально).\nПример: n=5, value_percent=3, direction="negative" (падение ≥ 3%).';
+        return 'Тренд (отклонение): сравнивается последнее значение со средним за n окон.\nФормат: n — целое, value_percent — порог в %, direction — positive/negative (опционально).\nПример: n=5, value_percent=3, direction="negative" (падение ≥ 3%).';
       }
     }
     return '';
@@ -117,21 +139,35 @@ class _ConditionBuilderState extends State<ConditionBuilder> {
   void initState() {
     super.initState();
     _op = (widget.initial['op'] ?? '').toString();
-    if (widget.initial['value'] != null) _value = widget.initial['value'].toString();
-    if (widget.initial['range'] is List && (widget.initial['range'] as List).length >= 2) {
+    if (widget.initial['value'] != null) {
+      _value = widget.initial['value'].toString();
+    }
+    if (widget.initial['range'] is List &&
+        (widget.initial['range'] as List).length >= 2) {
       _rangeFrom = (widget.initial['range'][0]).toString();
       _rangeTo = (widget.initial['range'][1]).toString();
     }
-    if (widget.initial['values'] is List && (widget.initial['values'] as List).length >= 2) {
+    if (widget.initial['values'] is List &&
+        (widget.initial['values'] as List).length >= 2) {
       _rangeFrom = (widget.initial['values'][0]).toString();
       _rangeTo = (widget.initial['values'][1]).toString();
     }
     if (widget.initial['n'] != null) _n = widget.initial['n'].toString();
-    if (widget.initial['n_sets'] != null) _nSets = widget.initial['n_sets'].toString();
-    if (widget.initial['epsilon_percent'] != null) _epsilonPercent = widget.initial['epsilon_percent'].toString();
-    if (widget.initial['value_percent'] != null) _valuePercent = widget.initial['value_percent'].toString();
-    if (widget.initial['direction'] != null) _direction = widget.initial['direction'].toString();
-    if (widget.initial['relation'] != null) _relation = widget.initial['relation'].toString();
+    if (widget.initial['n_sets'] != null) {
+      _nSets = widget.initial['n_sets'].toString();
+    }
+    if (widget.initial['epsilon_percent'] != null) {
+      _epsilonPercent = widget.initial['epsilon_percent'].toString();
+    }
+    if (widget.initial['value_percent'] != null) {
+      _valuePercent = widget.initial['value_percent'].toString();
+    }
+    if (widget.initial['direction'] != null) {
+      _direction = widget.initial['direction'].toString();
+    }
+    if (widget.initial['relation'] != null) {
+      _relation = widget.initial['relation'].toString();
+    }
   }
 
   @override
@@ -168,7 +204,8 @@ class _ConditionBuilderState extends State<ConditionBuilder> {
       if (a != null && b != null) map['range'] = [a, b];
     } else if (_op == 'holds_for') {
       if (_relation.isNotEmpty) map['relation'] = _relation;
-      final isRangeRelation = _relation == 'in_range' || _relation == 'not_in_range';
+      final isRangeRelation =
+          _relation == 'in_range' || _relation == 'not_in_range';
       if (isRangeRelation) {
         final a = double.tryParse(_rangeFrom);
         final b = double.tryParse(_rangeTo);
@@ -193,28 +230,94 @@ class _ConditionBuilderState extends State<ConditionBuilder> {
     }
     if (_op.startsWith('stagnates_for')) {
       if (_n.isNotEmpty) map['n'] = int.tryParse(_n) ?? _n;
-      if (_epsilonPercent.isNotEmpty) map['epsilon_percent'] = double.tryParse(_epsilonPercent) ?? _epsilonPercent;
+      if (_epsilonPercent.isNotEmpty) {
+        map['epsilon_percent'] =
+            double.tryParse(_epsilonPercent) ?? _epsilonPercent;
+      }
     }
     if (_op.startsWith('deviates_from_avg')) {
       if (_n.isNotEmpty) map['n'] = int.tryParse(_n) ?? _n;
-      if (_valuePercent.isNotEmpty) map['value_percent'] = double.tryParse(_valuePercent) ?? _valuePercent;
+      if (_valuePercent.isNotEmpty) {
+        map['value_percent'] = double.tryParse(_valuePercent) ?? _valuePercent;
+      }
       if (_direction.isNotEmpty) map['direction'] = _direction;
     }
     widget.onChanged(map);
   }
 
+  Widget _buildRangeInputs(AppLocalizations l10n, TextStyle? tabularStyle) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final fromField = TextFormField(
+          initialValue: _rangeFrom,
+          style: tabularStyle,
+          decoration: InstrumentTheme.inputDecoration(
+            context,
+            labelText: l10n.macroConditionRangeFrom,
+            hintText: l10n.macroConditionNumberHint,
+          ),
+          keyboardType: TextInputType.number,
+          onChanged: (v) {
+            _rangeFrom = v;
+            _emit();
+          },
+        );
+        final toField = TextFormField(
+          initialValue: _rangeTo,
+          style: tabularStyle,
+          decoration: InstrumentTheme.inputDecoration(
+            context,
+            labelText: l10n.macroConditionRangeTo,
+            hintText: l10n.macroConditionNumberHint,
+          ),
+          keyboardType: TextInputType.number,
+          onChanged: (v) {
+            _rangeTo = v;
+            _emit();
+          },
+        );
+        if (constraints.maxWidth < 260) {
+          return Column(
+            children: [
+              fromField,
+              const SizedBox(height: 10),
+              toField,
+            ],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: fromField),
+            const SizedBox(width: 10),
+            Expanded(child: toField),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tabularStyle = theme.textTheme.bodyLarge?.copyWith(
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
     final allowedOps = _allowedOpKeysForMetric(widget.metric);
     final effectiveOp = allowedOps.contains(_op) ? _op : '';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         DropdownButtonFormField<String>(
-          value: effectiveOp.isEmpty ? null : effectiveOp,
+          initialValue: effectiveOp.isEmpty ? null : effectiveOp,
+          isExpanded: true,
           items: _opItems(allowedOps, l10n),
-          decoration: InputDecoration(labelText: l10n.macroConditionOperatorLabel, border: const OutlineInputBorder()),
+          decoration: InstrumentTheme.inputDecoration(
+            context,
+            labelText: l10n.macroConditionOperatorLabel,
+          ),
           onChanged: (v) {
             setState(() => _op = v ?? '');
             _emit();
@@ -222,86 +325,151 @@ class _ConditionBuilderState extends State<ConditionBuilder> {
           validator: (v) => (v == null || v.isEmpty) ? l10n.fieldRequired : null,
         ),
         if (effectiveOp.isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Text(_opHelp(effectiveOp), style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 8),
+          Text(
+            _opHelp(effectiveOp),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
           if (_metricOpHelp(effectiveOp).isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(_metricOpHelp(effectiveOp), style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              _metricOpHelp(effectiveOp),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ],
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         if (effectiveOp == 'in_range' || effectiveOp == 'not_in_range')
-          Row(children: [
-            Expanded(
-              child: TextFormField(
-                initialValue: _rangeFrom,
-                decoration: InputDecoration(labelText: l10n.macroConditionRangeFrom, hintText: l10n.macroConditionNumberHint, border: const OutlineInputBorder()),
-                keyboardType: TextInputType.number,
-                onChanged: (v) { _rangeFrom = v; _emit(); },
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextFormField(
-                initialValue: _rangeTo,
-                decoration: InputDecoration(labelText: l10n.macroConditionRangeTo, hintText: l10n.macroConditionNumberHint, border: const OutlineInputBorder()),
-                keyboardType: TextInputType.number,
-                onChanged: (v) { _rangeTo = v; _emit(); },
-              ),
-            ),
-          ])
+          _buildRangeInputs(l10n, tabularStyle)
         else if (effectiveOp == 'stagnates_for') ...[
           TextFormField(
             initialValue: _n,
-            decoration: InputDecoration(labelText: l10n.macroConditionWindowCount, hintText: l10n.macroConditionWindowCountHint, border: const OutlineInputBorder()),
+            style: tabularStyle,
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              labelText: l10n.macroConditionWindowCount,
+              hintText: l10n.macroConditionWindowCountHint,
+            ),
             keyboardType: TextInputType.number,
-            onChanged: (v) { _n = v; _emit(); },
+            onChanged: (v) {
+              _n = v;
+              _emit();
+            },
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           TextFormField(
             initialValue: _epsilonPercent,
-            decoration: InputDecoration(labelText: l10n.macroConditionEpsilonPercent, hintText: '1.0', border: const OutlineInputBorder()),
+            style: tabularStyle,
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              labelText: l10n.macroConditionEpsilonPercent,
+              hintText: '1.0',
+            ),
             keyboardType: TextInputType.number,
-            onChanged: (v) { _epsilonPercent = v; _emit(); },
+            onChanged: (v) {
+              _epsilonPercent = v;
+              _emit();
+            },
           ),
         ] else if (_op == 'deviates_from_avg') ...[
           TextFormField(
             initialValue: _n,
-            decoration: InputDecoration(labelText: l10n.macroConditionWindowCount, hintText: l10n.macroConditionNumberHint, border: const OutlineInputBorder()),
+            style: tabularStyle,
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              labelText: l10n.macroConditionWindowCount,
+              hintText: l10n.macroConditionNumberHint,
+            ),
             keyboardType: TextInputType.number,
-            onChanged: (v) { _n = v; _emit(); },
+            onChanged: (v) {
+              _n = v;
+              _emit();
+            },
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           TextFormField(
             initialValue: _valuePercent,
-            decoration: InputDecoration(labelText: l10n.macroConditionValuePercent, hintText: '3.0', border: const OutlineInputBorder()),
+            style: tabularStyle,
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              labelText: l10n.macroConditionValuePercent,
+              hintText: '3.0',
+            ),
             keyboardType: TextInputType.number,
-            onChanged: (v) { _valuePercent = v; _emit(); },
+            onChanged: (v) {
+              _valuePercent = v;
+              _emit();
+            },
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           DropdownButtonFormField<String>(
-            value: _direction.isEmpty ? null : _direction,
+            initialValue: _direction.isEmpty ? null : _direction,
+            isExpanded: true,
             items: [
-              DropdownMenuItem(value: 'positive', child: Text(l10n.macroConditionPositive)),
-              DropdownMenuItem(value: 'negative', child: Text(l10n.macroConditionNegative)),
+              DropdownMenuItem(
+                value: 'positive',
+                child: Text(l10n.macroConditionPositive),
+              ),
+              DropdownMenuItem(
+                value: 'negative',
+                child: Text(l10n.macroConditionNegative),
+              ),
             ],
-            decoration: InputDecoration(labelText: l10n.macroConditionDirection, border: const OutlineInputBorder()),
-            onChanged: (v) { setState(() => _direction = v ?? ''); _emit(); },
-          )
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              labelText: l10n.macroConditionDirection,
+            ),
+            onChanged: (v) {
+              setState(() => _direction = v ?? '');
+              _emit();
+            },
+          ),
         ] else if (_op == 'holds_for') ...[
           DropdownButtonFormField<String>(
-            value: _relation.isEmpty ? null : _relation,
+            initialValue: _relation.isEmpty ? null : _relation,
+            isExpanded: true,
             items: [
-              DropdownMenuItem(value: '>=', child: Text(l10n.macroConditionGreaterEqual)),
-              DropdownMenuItem(value: '<=', child: Text(l10n.macroConditionLessEqual)),
-              DropdownMenuItem(value: '==', child: Text(l10n.macroConditionEqual)),
-              DropdownMenuItem(value: '!=', child: Text(l10n.macroConditionNotEqual)),
-              DropdownMenuItem(value: '>', child: Text(l10n.macroConditionGreater)),
-              DropdownMenuItem(value: '<', child: Text(l10n.macroConditionLess)),
-              DropdownMenuItem(value: 'in_range', child: Text(l10n.macroConditionInRange)),
-              DropdownMenuItem(value: 'not_in_range', child: Text(l10n.macroConditionNotInRange)),
+              DropdownMenuItem(
+                value: '>=',
+                child: Text(l10n.macroConditionGreaterEqual),
+              ),
+              DropdownMenuItem(
+                value: '<=',
+                child: Text(l10n.macroConditionLessEqual),
+              ),
+              DropdownMenuItem(
+                value: '==',
+                child: Text(l10n.macroConditionEqual),
+              ),
+              DropdownMenuItem(
+                value: '!=',
+                child: Text(l10n.macroConditionNotEqual),
+              ),
+              DropdownMenuItem(
+                value: '>',
+                child: Text(l10n.macroConditionGreater),
+              ),
+              DropdownMenuItem(
+                value: '<',
+                child: Text(l10n.macroConditionLess),
+              ),
+              DropdownMenuItem(
+                value: 'in_range',
+                child: Text(l10n.macroConditionInRange),
+              ),
+              DropdownMenuItem(
+                value: 'not_in_range',
+                child: Text(l10n.macroConditionNotInRange),
+              ),
             ],
-            decoration: InputDecoration(labelText: l10n.macroConditionRelationLabel, border: const OutlineInputBorder()),
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              labelText: l10n.macroConditionRelationLabel,
+            ),
             onChanged: (v) {
               setState(() {
                 _relation = v ?? '';
@@ -312,75 +480,122 @@ class _ConditionBuilderState extends State<ConditionBuilder> {
               _emit();
             },
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           if (_relation == 'in_range' || _relation == 'not_in_range')
-            Row(children: [
-              Expanded(
-                child: TextFormField(
-                  initialValue: _rangeFrom,
-                  decoration: InputDecoration(labelText: l10n.macroConditionRangeFrom, hintText: l10n.macroConditionNumberHint, border: const OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
-                  onChanged: (v) { _rangeFrom = v; _emit(); },
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextFormField(
-                  initialValue: _rangeTo,
-                  decoration: InputDecoration(labelText: l10n.macroConditionRangeTo, hintText: l10n.macroConditionNumberHint, border: const OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
-                  onChanged: (v) { _rangeTo = v; _emit(); },
-                ),
-              ),
-            ])
+            _buildRangeInputs(l10n, tabularStyle)
           else
             TextFormField(
               initialValue: _value,
-              decoration: InputDecoration(labelText: l10n.macroConditionValueLabel, hintText: '-2', border: const OutlineInputBorder()),
+              style: tabularStyle,
+              decoration: InstrumentTheme.inputDecoration(
+                context,
+                labelText: l10n.macroConditionValueLabel,
+                hintText: '-2',
+              ),
               keyboardType: TextInputType.number,
-              onChanged: (v) { _value = v; _emit(); },
+              onChanged: (v) {
+                _value = v;
+                _emit();
+              },
             ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           TextFormField(
             initialValue: _n,
-            decoration: InputDecoration(labelText: l10n.macroConditionWorkoutCount, hintText: l10n.macroConditionWorkoutCountHint, border: const OutlineInputBorder()),
+            style: tabularStyle,
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              labelText: l10n.macroConditionWorkoutCount,
+              hintText: l10n.macroConditionWorkoutCountHint,
+            ),
             keyboardType: TextInputType.number,
-            onChanged: (v) { _n = v; _emit(); },
+            onChanged: (v) {
+              _n = v;
+              _emit();
+            },
           ),
         ] else if (_op == 'holds_for_sets') ...[
           DropdownButtonFormField<String>(
-            value: _relation.isEmpty ? null : _relation,
+            initialValue: _relation.isEmpty ? null : _relation,
+            isExpanded: true,
             items: [
-              DropdownMenuItem(value: '>=', child: Text(l10n.macroConditionGreaterEqual)),
-              DropdownMenuItem(value: '<=', child: Text(l10n.macroConditionLessEqual)),
-              DropdownMenuItem(value: '==', child: Text(l10n.macroConditionEqual)),
-              DropdownMenuItem(value: '!=', child: Text(l10n.macroConditionNotEqual)),
-              DropdownMenuItem(value: '>', child: Text(l10n.macroConditionGreater)),
-              DropdownMenuItem(value: '<', child: Text(l10n.macroConditionLess)),
+              DropdownMenuItem(
+                value: '>=',
+                child: Text(l10n.macroConditionGreaterEqual),
+              ),
+              DropdownMenuItem(
+                value: '<=',
+                child: Text(l10n.macroConditionLessEqual),
+              ),
+              DropdownMenuItem(
+                value: '==',
+                child: Text(l10n.macroConditionEqual),
+              ),
+              DropdownMenuItem(
+                value: '!=',
+                child: Text(l10n.macroConditionNotEqual),
+              ),
+              DropdownMenuItem(
+                value: '>',
+                child: Text(l10n.macroConditionGreater),
+              ),
+              DropdownMenuItem(
+                value: '<',
+                child: Text(l10n.macroConditionLess),
+              ),
             ],
-            decoration: InputDecoration(labelText: l10n.macroConditionRelationLabel, border: const OutlineInputBorder()),
-            onChanged: (v) { setState(() => _relation = v ?? ''); _emit(); },
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              labelText: l10n.macroConditionRelationLabel,
+            ),
+            onChanged: (v) {
+              setState(() => _relation = v ?? '');
+              _emit();
+            },
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           TextFormField(
             initialValue: _value,
-            decoration: InputDecoration(labelText: l10n.macroConditionValueLabel, hintText: l10n.macroConditionDeltaHint, border: const OutlineInputBorder()),
+            style: tabularStyle,
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              labelText: l10n.macroConditionValueLabel,
+              hintText: l10n.macroConditionDeltaHint,
+            ),
             keyboardType: TextInputType.number,
-            onChanged: (v) { _value = v; _emit(); },
+            onChanged: (v) {
+              _value = v;
+              _emit();
+            },
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           TextFormField(
             initialValue: _nSets,
-            decoration: InputDecoration(labelText: l10n.macroConditionSetCount, hintText: l10n.macroConditionSetCountHint, border: const OutlineInputBorder()),
+            style: tabularStyle,
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              labelText: l10n.macroConditionSetCount,
+              hintText: l10n.macroConditionSetCountHint,
+            ),
             keyboardType: TextInputType.number,
-            onChanged: (v) { _nSets = v; _emit(); },
+            onChanged: (v) {
+              _nSets = v;
+              _emit();
+            },
           ),
         ] else ...[
           TextFormField(
             initialValue: _value,
-            decoration: InputDecoration(labelText: l10n.macroConditionValueLabel, hintText: l10n.macroConditionNumberHint, border: const OutlineInputBorder()),
+            style: tabularStyle,
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              labelText: l10n.macroConditionValueLabel,
+              hintText: l10n.macroConditionNumberHint,
+            ),
             keyboardType: TextInputType.number,
-            onChanged: (v) { _value = v; _emit(); },
+            onChanged: (v) {
+              _value = v;
+              _emit();
+            },
           ),
         ],
       ],

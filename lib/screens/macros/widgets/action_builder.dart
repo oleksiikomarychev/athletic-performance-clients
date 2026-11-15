@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
-import 'package:workout_app/providers/target_data_providers.dart';
 import 'package:workout_app/providers/plan_providers.dart';
-import 'package:workout_app/screens/macros/widgets/target_selector.dart';
+import 'package:workout_app/providers/target_data_providers.dart';
 import 'package:workout_app/providers/template_providers.dart';
+import 'package:workout_app/screens/macros/widgets/target_selector.dart';
 import 'package:workout_app/screens/macros/widgets/workout_picker.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
 
 class ActionBuilder extends ConsumerStatefulWidget {
   final Map<String, dynamic> initial;
   final ValueChanged<Map<String, dynamic>> onChanged;
-  const ActionBuilder({super.key, required this.initial, required this.onChanged});
+  const ActionBuilder({
+    super.key,
+    required this.initial,
+    required this.onChanged,
+  });
 
   @override
   ConsumerState<ActionBuilder> createState() => _ActionBuilderState();
@@ -48,17 +54,27 @@ class _ActionBuilderState extends ConsumerState<ActionBuilder> {
     if (params['value'] != null) _value = params['value'].toString();
     _target = (widget.initial['target'] as Map?)?.cast<String, dynamic>();
     _mesoMode = (params['mode'] ?? '').toString();
-    if (params['template_id'] != null) _templateId = params['template_id'].toString();
-    if (params['source_mesocycle_id'] != null) _sourceMesocycleId = params['source_mesocycle_id'].toString();
-    if (params['duration_weeks'] != null) _weeks = params['duration_weeks'].toString();
-    if (params['days_in_microcycle'] != null) _daysInMicro = params['days_in_microcycle'].toString();
+    if (params['template_id'] != null) {
+      _templateId = params['template_id'].toString();
+    }
+    if (params['source_mesocycle_id'] != null) {
+      _sourceMesocycleId = params['source_mesocycle_id'].toString();
+    }
+    if (params['duration_weeks'] != null) {
+      _weeks = params['duration_weeks'].toString();
+    }
+    if (params['days_in_microcycle'] != null) {
+      _daysInMicro = params['days_in_microcycle'].toString();
+    }
     if (params['rest_days'] is List) {
       for (final e in (params['rest_days'] as List)) {
         final n = int.tryParse(e.toString());
         if (n != null) _restDays.add(n);
       }
     }
-    final focus = (params['default_focus_tags'] as Map?)?.cast<String, dynamic>() ?? const {};
+    final focus =
+        (params['default_focus_tags'] as Map?)?.cast<String, dynamic>() ??
+            const {};
     void fill(Set<String> s, dynamic v) {
       if (v is String && v.isNotEmpty) s.add(v.toLowerCase());
       if (v is List) {
@@ -68,11 +84,13 @@ class _ActionBuilderState extends ConsumerState<ActionBuilder> {
         }
       }
     }
+
     fill(_mt, focus['movement_type']);
     fill(_rg, focus['region']);
     fill(_mg, focus['muscle_group']);
     fill(_eq, focus['equipment']);
-    final placement = (params['placement'] as Map?)?.cast<String, dynamic>() ?? const {};
+    final placement =
+        (params['placement'] as Map?)?.cast<String, dynamic>() ?? const {};
     _placement = (placement['mode'] ?? _placement).toString();
     if (placement['plan_order_index'] != null) {
       try {
@@ -103,9 +121,16 @@ class _ActionBuilderState extends ConsumerState<ActionBuilder> {
           map['params']['source_mesocycle_id'] = id ?? _sourceMesocycleId;
         }
       } else if (_mesoMode == 'Create_Inline') {
-        if (_weeks.isNotEmpty) map['params']['duration_weeks'] = int.tryParse(_weeks) ?? _weeks;
-        if (_daysInMicro.isNotEmpty) map['params']['days_in_microcycle'] = int.tryParse(_daysInMicro) ?? _daysInMicro;
-        if (_restDays.isNotEmpty) map['params']['rest_days'] = _restDays.toList()..sort();
+        if (_weeks.isNotEmpty) {
+          map['params']['duration_weeks'] = int.tryParse(_weeks) ?? _weeks;
+        }
+        if (_daysInMicro.isNotEmpty) {
+          map['params']['days_in_microcycle'] =
+              int.tryParse(_daysInMicro) ?? _daysInMicro;
+        }
+        if (_restDays.isNotEmpty) {
+          map['params']['rest_days'] = _restDays.toList()..sort();
+        }
         final focus = <String, dynamic>{};
         if (_mt.isNotEmpty) focus['movement_type'] = _mt.toList();
         if (_rg.isNotEmpty) focus['region'] = _rg.toList();
@@ -118,7 +143,9 @@ class _ActionBuilderState extends ConsumerState<ActionBuilder> {
       final zeroIdx = (uiIdx - 1).clamp(0, 1000000);
       map['params']['placement'] = {
         'mode': _placement,
-        if (_placement == 'Insert_After_Workout' && _anchorPlanOrderIndex != null) 'plan_order_index': _anchorPlanOrderIndex,
+        if (_placement == 'Insert_After_Workout' &&
+            _anchorPlanOrderIndex != null)
+          'plan_order_index': _anchorPlanOrderIndex,
         if (_placement == 'Insert_After_Mesocycle') 'mesocycle_index': zeroIdx,
       };
       if (_placement != 'Append_To_End') {
@@ -127,7 +154,7 @@ class _ActionBuilderState extends ConsumerState<ActionBuilder> {
     } else {
       if (_mode.isNotEmpty) map['params']['mode'] = _mode;
       if (_value.isNotEmpty) {
-        final numVal = double.tryParse(_value);
+        final numVal = double.tryParse(_value.trim().replaceAll(',', '.'));
         map['params']['value'] = numVal ?? _value;
       }
       if (_target != null) map['target'] = _target;
@@ -135,27 +162,54 @@ class _ActionBuilderState extends ConsumerState<ActionBuilder> {
     widget.onChanged(map);
   }
 
-  List<DropdownMenuItem<String>> _modeItemsFor(String type, AppLocalizations l10n) {
+  List<DropdownMenuItem<String>> _modeItemsFor(
+    String type,
+    AppLocalizations l10n,
+  ) {
     switch (type) {
       case 'Adjust_Load':
         return [
-          DropdownMenuItem(value: 'by_Percent', child: Text(l10n.macroActionByPercent)),
-          DropdownMenuItem(value: 'to_Target', child: Text(l10n.macroActionToTarget)),
+          DropdownMenuItem(
+            value: 'by_Percent',
+            child: Text(l10n.macroActionByPercent),
+          ),
+          DropdownMenuItem(
+            value: 'to_Target',
+            child: Text(l10n.macroActionToTarget),
+          ),
         ];
       case 'Adjust_Reps':
         return [
-          DropdownMenuItem(value: 'by_Value', child: Text(l10n.macroActionByValue)),
-          DropdownMenuItem(value: 'to_Target', child: Text(l10n.macroActionToTarget)),
+          DropdownMenuItem(
+            value: 'by_Value',
+            child: Text(l10n.macroActionByValue),
+          ),
+          DropdownMenuItem(
+            value: 'to_Target',
+            child: Text(l10n.macroActionToTarget),
+          ),
         ];
       case 'Adjust_Sets':
         return [
-          DropdownMenuItem(value: 'by_Value', child: Text(l10n.macroActionByValue)),
+          DropdownMenuItem(
+            value: 'by_Value',
+            child: Text(l10n.macroActionByValue),
+          ),
         ];
       case 'Inject_Mesocycle':
         return [
-          DropdownMenuItem(value: 'by_Template', child: Text(l10n.macroActionByTemplate)),
-          DropdownMenuItem(value: 'by_Existing', child: Text(l10n.macroActionByExisting)),
-          DropdownMenuItem(value: 'Create_Inline', child: Text(l10n.macroActionCreateManual)),
+          DropdownMenuItem(
+            value: 'by_Template',
+            child: Text(l10n.macroActionByTemplate),
+          ),
+          DropdownMenuItem(
+            value: 'by_Existing',
+            child: Text(l10n.macroActionByExisting),
+          ),
+          DropdownMenuItem(
+            value: 'Create_Inline',
+            child: Text(l10n.macroActionCreateManual),
+          ),
         ];
       default:
         return const [];
@@ -163,10 +217,19 @@ class _ActionBuilderState extends ConsumerState<ActionBuilder> {
   }
 
   String _valueHint(AppLocalizations l10n) {
-    if (_type == 'Adjust_Load' && _mode == 'by_Percent') return l10n.macroActionHintPercent;
-    if (_type == 'Adjust_Reps' && _mode == 'by_Value') return l10n.macroActionHintReps;
-    if ((_type == 'Adjust_Load' || _type == 'Adjust_Reps') && _mode == 'to_Target') return l10n.macroActionHintTargetRpe;
-    if (_type == 'Adjust_Sets' && _mode == 'by_Value') return l10n.macroActionHintSets;
+    if (_type == 'Adjust_Load' && _mode == 'by_Percent') {
+      return l10n.macroActionHintPercent;
+    }
+    if (_type == 'Adjust_Reps' && _mode == 'by_Value') {
+      return l10n.macroActionHintReps;
+    }
+    if ((_type == 'Adjust_Load' || _type == 'Adjust_Reps') &&
+        _mode == 'to_Target') {
+      return l10n.macroActionHintTargetRpe;
+    }
+    if (_type == 'Adjust_Sets' && _mode == 'by_Value') {
+      return l10n.macroActionHintSets;
+    }
     return l10n.macroActionHintGeneric;
   }
 
@@ -201,18 +264,41 @@ class _ActionBuilderState extends ConsumerState<ActionBuilder> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final tabularStyle = theme.textTheme.bodyLarge?.copyWith(
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         DropdownButtonFormField<String>(
-          value: _type.isEmpty ? null : _type,
+          initialValue: _type.isEmpty ? null : _type,
+          isExpanded: true,
           items: [
-            DropdownMenuItem(value: 'Adjust_Load', child: Text(l10n.macroActionAdjustLoad)),
-            DropdownMenuItem(value: 'Adjust_Reps', child: Text(l10n.macroActionAdjustReps)),
-            DropdownMenuItem(value: 'Adjust_Sets', child: Text(l10n.macroActionAdjustSets)),
-            DropdownMenuItem(value: 'Inject_Mesocycle', child: Text(l10n.macroActionInjectMesocycle)),
+            DropdownMenuItem(
+              value: 'Adjust_Load',
+              child: Text(l10n.macroActionAdjustLoad),
+            ),
+            DropdownMenuItem(
+              value: 'Adjust_Reps',
+              child: Text(l10n.macroActionAdjustReps),
+            ),
+            DropdownMenuItem(
+              value: 'Adjust_Sets',
+              child: Text(l10n.macroActionAdjustSets),
+            ),
+            DropdownMenuItem(
+              value: 'Inject_Mesocycle',
+              child: Text(l10n.macroActionInjectMesocycle),
+            ),
           ],
-          decoration: InputDecoration(labelText: l10n.macroActionTypeLabel, border: const OutlineInputBorder()),
+          decoration: InstrumentTheme.inputDecoration(
+            context,
+            labelText: l10n.macroActionTypeLabel,
+          ),
           onChanged: (v) {
             setState(() {
               _type = v ?? '';
@@ -224,12 +310,18 @@ class _ActionBuilderState extends ConsumerState<ActionBuilder> {
           },
           validator: (v) => (v == null || v.isEmpty) ? l10n.fieldRequired : null,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         if (_type.isNotEmpty) ...[
           DropdownButtonFormField<String>(
-            value: (_type == 'Inject_Mesocycle' ? (_mesoMode.isEmpty ? null : _mesoMode) : (_mode.isEmpty ? null : _mode)),
+            initialValue: _type == 'Inject_Mesocycle'
+                ? (_mesoMode.isEmpty ? null : _mesoMode)
+                : (_mode.isEmpty ? null : _mode),
+            isExpanded: true,
             items: _modeItemsFor(_type, l10n),
-            decoration: InputDecoration(labelText: l10n.macroActionModeLabel, border: const OutlineInputBorder()),
+            decoration: InstrumentTheme.inputDecoration(
+              context,
+              labelText: l10n.macroActionModeLabel,
+            ),
             onChanged: (v) {
               setState(() {
                 if (_type == 'Inject_Mesocycle') {
@@ -241,206 +333,427 @@ class _ActionBuilderState extends ConsumerState<ActionBuilder> {
               });
               _emit();
             },
-            validator: (v) => (v == null || v.isEmpty) ? l10n.fieldRequired : null,
+            validator: (v) =>
+                (v == null || v.isEmpty) ? l10n.fieldRequired : null,
           ),
           if (_mode.isNotEmpty || _mesoMode.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text(_modeHelp(), style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: 8),
+            Text(
+              _modeHelp(),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
           ],
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           if (_type != 'Inject_Mesocycle' && _mode.isNotEmpty)
             TextFormField(
               initialValue: _value,
-              decoration: InputDecoration(labelText: l10n.macroActionValueLabel, hintText: _valueHint(l10n), border: const OutlineInputBorder()),
-              keyboardType: TextInputType.number,
+              style: tabularStyle,
+              decoration: InstrumentTheme.inputDecoration(
+                context,
+                labelText: l10n.macroActionValueLabel,
+                hintText: _valueHint(l10n),
+              ),
+              keyboardType: const TextInputType.numberWithOptions(
+                signed: true,
+                decimal: true,
+              ),
               onChanged: (v) {
                 _value = v;
                 _emit();
               },
-              validator: (v) => (v == null || v.trim().isEmpty) ? l10n.fieldRequired : null,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return l10n.fieldRequired;
+                final n = double.tryParse(v.trim().replaceAll(',', '.'));
+                if (n == null || !n.isFinite) return l10n.macroActionEnterNumber;
+                if (_mode == 'by_Percent' && n <= -100) {
+                  return 'Изменение должно быть больше −100%.';
+                }
+                if (_mode == 'to_Target' && (n < 1 || n > 10)) {
+                  return 'Укажите RPE от 1 до 10.';
+                }
+                if (_mode == 'by_Value' && n != n.truncateToDouble()) {
+                  return 'Укажите целое число.';
+                }
+                return null;
+              },
             ),
-          if (_type == 'Inject_Mesocycle' && _mesoMode == 'by_Template') ...[
-            Builder(builder: (context) {
-              final asyncTpls = ref.watch(mesocycleTemplatesProvider);
-              return asyncTpls.when(
-                data: (items) {
-                  if (items.isEmpty) {
-                    return Text(l10n.macroActionNoTemplates);
-                  }
-                  final selected = int.tryParse(_templateId);
-                  return DropdownButtonFormField<int>(
-                    value: selected,
-                    items: items.map((e) => DropdownMenuItem(value: e.id, child: Text(e.name))).toList(),
-                    decoration: InputDecoration(labelText: l10n.macroActionTemplateLabel, border: const OutlineInputBorder()),
+          if (_type == 'Inject_Mesocycle' && _mesoMode == 'by_Template')
+            Builder(
+              builder: (context) {
+                final asyncTpls = ref.watch(mesocycleTemplatesProvider);
+                return asyncTpls.when(
+                  data: (items) {
+                    if (items.isEmpty) {
+                      return Text(
+                        l10n.macroActionNoTemplates,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      );
+                    }
+                    final selected = int.tryParse(_templateId);
+                    return DropdownButtonFormField<int>(
+                      initialValue: selected,
+                      isExpanded: true,
+                      items: items
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e.id,
+                              child: Text(e.name),
+                            ),
+                          )
+                          .toList(),
+                      decoration: InstrumentTheme.inputDecoration(
+                        context,
+                        labelText: l10n.macroActionTemplateLabel,
+                      ),
+                      onChanged: (v) {
+                        setState(() => _templateId = (v?.toString() ?? ''));
+                        _emit();
+                      },
+                      validator: (v) => (v == null) ? l10n.fieldRequired : null,
+                    );
+                  },
+                  loading: () => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: instrument.workingAura,
+                      ),
+                    ),
+                  ),
+                  error: (e, st) => Text(
+                    l10n.macroActionLoadTemplatesError(e.toString()),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: instrument.peakEffortColor,
+                    ),
+                  ),
+                );
+              },
+            )
+          else if (_type == 'Inject_Mesocycle' && _mesoMode == 'by_Existing')
+            Builder(
+              builder: (context) {
+                final activePlan = ref.watch(activeAppliedPlanProvider);
+                return activePlan.maybeWhen(
+                  data: (plan) {
+                    final meso = plan?.calendarPlan.mesocycles ?? const [];
+                    final items = <DropdownMenuItem<String>>[];
+                    for (int i = 0; i < meso.length; i++) {
+                      final m = meso[i];
+                      final label = m.name.isNotEmpty
+                          ? m.name
+                          : l10n.macroActionMesoLabel((i + 1).toString());
+                      items.add(
+                        DropdownMenuItem(
+                          value: m.id.toString(),
+                          child: Text('$label (ID ${m.id})'),
+                        ),
+                      );
+                    }
+                    items.add(
+                      DropdownMenuItem(
+                        value: 'manual',
+                        child: Text(l10n.macroActionOtherId),
+                      ),
+                    );
+                    final current = _sourceMesocycleId.isEmpty
+                        ? null
+                        : _sourceMesocycleId;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        DropdownButtonFormField<String>(
+                          initialValue: current == null
+                              ? null
+                              : (items.any((e) => e.value == current)
+                                    ? current
+                                    : 'manual'),
+                          isExpanded: true,
+                          items: items,
+                          decoration: InstrumentTheme.inputDecoration(
+                            context,
+                            labelText: l10n.macroActionChooseMeso,
+                          ),
+                          onChanged: (v) {
+                            setState(() {
+                              if (v != 'manual') {
+                                _sourceMesocycleId = (v ?? '').trim();
+                              }
+                            });
+                            _emit();
+                          },
+                          validator: (v) => (v == null || v.isEmpty)
+                              ? l10n.fieldRequired
+                              : null,
+                        ),
+                        const SizedBox(height: 10),
+                        if (_sourceMesocycleId.isEmpty ||
+                            _sourceMesocycleId == 'manual')
+                          TextFormField(
+                            initialValue: _sourceMesocycleId == 'manual'
+                                ? ''
+                                : _sourceMesocycleId,
+                            style: tabularStyle,
+                            decoration: InstrumentTheme.inputDecoration(
+                              context,
+                              labelText: l10n.macroActionExistingIdLabel,
+                            ),
+                            keyboardType: TextInputType.number,
+                            onChanged: (v) {
+                              setState(() => _sourceMesocycleId = v);
+                              _emit();
+                            },
+                            validator: (v) =>
+                                (v == null ||
+                                        v.trim().isEmpty ||
+                                        int.tryParse(v) == null)
+                                    ? l10n.macroActionEnterNumber
+                                    : null,
+                          ),
+                      ],
+                    );
+                  },
+                  orElse: () => TextFormField(
+                    initialValue: _sourceMesocycleId,
+                    style: tabularStyle,
+                    decoration: InstrumentTheme.inputDecoration(
+                      context,
+                      labelText: l10n.macroActionExistingIdLabel,
+                    ),
+                    keyboardType: TextInputType.number,
                     onChanged: (v) {
-                      setState(() => _templateId = (v?.toString() ?? ''));
+                      setState(() => _sourceMesocycleId = v);
                       _emit();
                     },
-                    validator: (v) => (v == null) ? l10n.fieldRequired : null,
+                    validator: (v) =>
+                        (v == null ||
+                                v.trim().isEmpty ||
+                                int.tryParse(v) == null)
+                            ? l10n.macroActionEnterNumber
+                            : null,
+                  ),
+                );
+              },
+            )
+          else if (_type == 'Inject_Mesocycle' &&
+              _mesoMode == 'Create_Inline') ...[
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final weeksField = TextFormField(
+                  initialValue: _weeks,
+                  style: tabularStyle,
+                  decoration: InstrumentTheme.inputDecoration(
+                    context,
+                    labelText: l10n.macroActionDurationWeeks,
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (v) {
+                    setState(() => _weeks = v);
+                    _emit();
+                  },
+                  validator: (v) =>
+                      (v == null || (int.tryParse(v) ?? 0) < 1) ? '>=1' : null,
+                );
+                final daysField = TextFormField(
+                  initialValue: _daysInMicro,
+                  style: tabularStyle,
+                  decoration: InstrumentTheme.inputDecoration(
+                    context,
+                    labelText: l10n.macroActionDaysInMicro,
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (v) {
+                    setState(() => _daysInMicro = v);
+                    _emit();
+                  },
+                  validator: (v) =>
+                      (v == null || (int.tryParse(v) ?? 0) < 1) ? '>=1' : null,
+                );
+                if (constraints.maxWidth < 260) {
+                  return Column(
+                    children: [
+                      weeksField,
+                      const SizedBox(height: 10),
+                      daysField,
+                    ],
                   );
-                },
-                loading: () => const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator(strokeWidth: 2))),
-                error: (e, st) => Text(l10n.macroActionLoadTemplatesError(e.toString())),
-              );
-            }),
-          ] else if (_type == 'Inject_Mesocycle' && _mesoMode == 'by_Existing') ...[
-            Builder(builder: (context) {
-              final activePlan = ref.watch(activeAppliedPlanProvider);
-              return activePlan.maybeWhen(
-                data: (plan) {
-                  final meso = plan?.calendarPlan.mesocycles ?? const [];
-                  final items = <DropdownMenuItem<String>>[];
-                  for (int i = 0; i < meso.length; i++) {
-                    final m = meso[i];
-                    final label = m.name.isNotEmpty ? m.name : l10n.macroActionMesoLabel((i + 1).toString());
-                    items.add(DropdownMenuItem(value: m.id.toString(), child: Text('$label (ID ${m.id})')));
-                  }
-
-                  items.add(DropdownMenuItem(value: 'manual', child: Text(l10n.macroActionOtherId)));
-                  final current = _sourceMesocycleId.isEmpty ? null : _sourceMesocycleId;
+                }
+                return Row(
+                  children: [
+                    Expanded(child: weeksField),
+                    const SizedBox(width: 10),
+                    Expanded(child: daysField),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 10),
+            Builder(
+              builder: (context) {
+                final n = int.tryParse(_daysInMicro);
+                if (n == null || n < 1) return const SizedBox.shrink();
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: List.generate(n, (i) {
+                    final idx = i + 1;
+                    final isRest = _restDays.contains(idx);
+                    return InstrumentSelectablePill(
+                      label: l10n.macroActionDayLabel(
+                        idx.toString(),
+                        isRest ? l10n.macroActionRest : l10n.macroActionWork,
+                      ),
+                      selected: isRest,
+                      bordered: false,
+                      accentColor: instrument.moderateEffortColor,
+                      onTap: () {
+                        setState(() {
+                          if (isRest) {
+                            _restDays.remove(idx);
+                          } else {
+                            _restDays.add(idx);
+                          }
+                        });
+                        _emit();
+                      },
+                    );
+                  }),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l10n.macroActionFocusTags.toUpperCase(),
+              style: InstrumentTheme.microLabel(context),
+            ),
+            const SizedBox(height: 8),
+            Builder(
+              builder: (context) {
+                final tags = ref.watch(tagCatalogProvider);
+                Widget group(
+                  String title,
+                  Set<String> values,
+                  Set<String> selected,
+                  void Function(Set<String>) onChanged,
+                ) {
+                  if (values.isEmpty) return const SizedBox.shrink();
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      DropdownButtonFormField<String>(
-                        value: current == null ? null : (items.any((e) => e.value == current) ? current : 'manual'),
-                        items: items,
-                        decoration: InputDecoration(labelText: l10n.macroActionChooseMeso, border: const OutlineInputBorder()),
-                        onChanged: (v) {
-                          setState(() {
-                            if (v == 'manual') {
-
-                            } else {
-                              _sourceMesocycleId = (v ?? '').trim();
-                            }
-                          });
-                          _emit();
-                        },
-                        validator: (v) => (v == null || v.isEmpty) ? l10n.fieldRequired : null,
+                      Text(
+                        title.toUpperCase(),
+                        style: InstrumentTheme.microLabel(context),
                       ),
-                      const SizedBox(height: 8),
-                      if (_sourceMesocycleId.isEmpty || _sourceMesocycleId == 'manual')
-                        TextFormField(
-                          initialValue: _sourceMesocycleId == 'manual' ? '' : _sourceMesocycleId,
-                          decoration: InputDecoration(labelText: l10n.macroActionExistingIdLabel, border: const OutlineInputBorder()),
-                          keyboardType: TextInputType.number,
-                          onChanged: (v) {
-                            setState(() => _sourceMesocycleId = v);
-                            _emit();
-                          },
-                          validator: (v) => (v == null || v.trim().isEmpty || int.tryParse(v) == null) ? l10n.macroActionEnterNumber : null,
-                        ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: values.map((v) {
+                          final sel = selected.contains(v);
+                          return InstrumentSelectablePill(
+                            label: v,
+                            selected: sel,
+                            bordered: false,
+                            onTap: () {
+                              final next = Set<String>.from(selected);
+                              if (sel) {
+                                next.remove(v);
+                              } else {
+                                next.add(v);
+                              }
+                              onChanged(next);
+                              _emit();
+                            },
+                          );
+                        }).toList(),
+                      ),
                     ],
                   );
-                },
-                orElse: () => TextFormField(
-                  initialValue: _sourceMesocycleId,
-                  decoration: InputDecoration(labelText: l10n.macroActionExistingIdLabel, border: const OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
-                  onChanged: (v) { setState(() => _sourceMesocycleId = v); _emit(); },
-                  validator: (v) => (v == null || v.trim().isEmpty || int.tryParse(v) == null) ? l10n.macroActionEnterNumber : null,
-                ),
-              );
-            }),
-          ] else if (_type == 'Inject_Mesocycle' && _mesoMode == 'Create_Inline') ...[
-            Row(children: [
-              Expanded(
-                child: TextFormField(
-                  initialValue: _weeks,
-                  decoration: InputDecoration(labelText: l10n.macroActionDurationWeeks, border: const OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
-                  onChanged: (v) { setState(() => _weeks = v); _emit(); },
-                  validator: (v) => (v == null || (int.tryParse(v) ?? 0) < 1) ? '>=1' : null,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextFormField(
-                  initialValue: _daysInMicro,
-                  decoration: InputDecoration(labelText: l10n.macroActionDaysInMicro, border: const OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
-                  onChanged: (v) { setState(() => _daysInMicro = v); _emit(); },
-                  validator: (v) => (v == null || (int.tryParse(v) ?? 0) < 1) ? '>=1' : null,
-                ),
-              ),
-            ]),
-            const SizedBox(height: 8),
-            Builder(builder: (context) {
-              final n = int.tryParse(_daysInMicro);
-              if (n == null || n < 1) return const SizedBox.shrink();
-              return Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: List.generate(n, (i) {
-                  final idx = i + 1;
-                  final isRest = _restDays.contains(idx);
-                  return FilterChip(
-                    selected: isRest,
-                    label: Text(l10n.macroActionDayLabel(idx.toString(), isRest ? l10n.macroActionRest : l10n.macroActionWork)),
-                    onSelected: (sel) {
-                      setState(() {
-                        if (sel) _restDays.add(idx); else _restDays.remove(idx);
-                      });
-                      _emit();
-                    },
-                  );
-                }),
-              );
-            }),
-            const SizedBox(height: 8),
-            Text(l10n.macroActionFocusTags, style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 6),
-            Builder(builder: (context) {
-              final tags = ref.watch(tagCatalogProvider);
-              Widget group(String title, Set<String> values, Set<String> selected, void Function(Set<String>) onChanged) {
+                }
+
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: Theme.of(context).textTheme.bodySmall),
-                    Wrap(
-                      spacing: 8,
-                      children: values.map((v) {
-                        final sel = selected.contains(v);
-                        return FilterChip(
-                          selected: sel,
-                          label: Text(v),
-                          onSelected: (s) {
-                            final next = Set<String>.from(selected);
-                            if (s) next.add(v); else next.remove(v);
-                            onChanged(next);
-                            _emit();
-                          },
-                        );
-                      }).toList(),
+                    group(
+                      'movement_type',
+                      tags.movementTypes,
+                      _mt,
+                      (s) => setState(() {
+                        _mt
+                          ..clear()
+                          ..addAll(s);
+                      }),
+                    ),
+                    const SizedBox(height: 8),
+                    group(
+                      'region',
+                      tags.regions,
+                      _rg,
+                      (s) => setState(() {
+                        _rg
+                          ..clear()
+                          ..addAll(s);
+                      }),
+                    ),
+                    const SizedBox(height: 8),
+                    group(
+                      'muscle_group',
+                      tags.muscleGroups,
+                      _mg,
+                      (s) => setState(() {
+                        _mg
+                          ..clear()
+                          ..addAll(s);
+                      }),
+                    ),
+                    const SizedBox(height: 8),
+                    group(
+                      'equipment',
+                      tags.equipment,
+                      _eq,
+                      (s) => setState(() {
+                        _eq
+                          ..clear()
+                          ..addAll(s);
+                      }),
                     ),
                   ],
                 );
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  group('movement_type', tags.movementTypes, _mt, (s) => setState(() { _mt..clear()..addAll(s); })),
-                  const SizedBox(height: 6),
-                  group('region', tags.regions, _rg, (s) => setState(() { _rg..clear()..addAll(s); })),
-                  const SizedBox(height: 6),
-                  group('muscle_group', tags.muscleGroups, _mg, (s) => setState(() { _mg..clear()..addAll(s); })),
-                  const SizedBox(height: 6),
-                  group('equipment', tags.equipment, _eq, (s) => setState(() { _eq..clear()..addAll(s); })),
-                ],
-              );
-            }),
+              },
+            ),
           ],
-          if (_type == 'Inject_Mesocycle' && (_mesoMode == 'by_Template' || _mesoMode == 'Create_Inline' || _mesoMode == 'by_Existing')) ...[
-            const SizedBox(height: 12),
-            Text(l10n.macroActionPlacement, style: Theme.of(context).textTheme.labelLarge),
+          if (_type == 'Inject_Mesocycle' &&
+              (_mesoMode == 'by_Template' ||
+                  _mesoMode == 'Create_Inline' ||
+                  _mesoMode == 'by_Existing')) ...[
+            const SizedBox(height: 14),
+            Text(
+              l10n.macroActionPlacement.toUpperCase(),
+              style: InstrumentTheme.microLabel(context),
+            ),
             const SizedBox(height: 6),
             DropdownButtonFormField<String>(
-              value: _placement,
+              initialValue: _placement,
+              isExpanded: true,
               items: [
-                DropdownMenuItem(value: 'Append_To_End', child: Text(l10n.macroActionAppendEnd)),
-                DropdownMenuItem(value: 'Insert_After_Workout', child: Text(l10n.macroActionInsertAfterWorkout)),
-                DropdownMenuItem(value: 'Insert_After_Mesocycle', child: Text(l10n.macroActionInsertAfterMeso)),
+                DropdownMenuItem(
+                  value: 'Append_To_End',
+                  child: Text(l10n.macroActionAppendEnd),
+                ),
+                DropdownMenuItem(
+                  value: 'Insert_After_Workout',
+                  child: Text(l10n.macroActionInsertAfterWorkout),
+                ),
+                DropdownMenuItem(
+                  value: 'Insert_After_Mesocycle',
+                  child: Text(l10n.macroActionInsertAfterMeso),
+                ),
               ],
-              decoration: const InputDecoration(border: OutlineInputBorder()),
+              decoration: InstrumentTheme.inputDecoration(context),
               onChanged: (v) {
                 setState(() {
                   _placement = v ?? 'Append_To_End';
@@ -454,100 +767,154 @@ class _ActionBuilderState extends ConsumerState<ActionBuilder> {
               },
               validator: (v) {
                 final mode = v ?? _placement;
-                if (mode == 'Insert_After_Workout' && _anchorPlanOrderIndex == null) {
+                if (mode == 'Insert_After_Workout' &&
+                    _anchorPlanOrderIndex == null) {
                   return l10n.macroActionSelectAnchorWorkout;
                 }
                 return null;
               },
             ),
-            const SizedBox(height: 8),
-            if (_placement == 'Insert_After_Workout') Row(
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () async {
-                    final picked = await showWorkoutPickerBottomSheet(context, ref);
-                    if (picked != null) {
-                      setState(() {
-                        _anchorWorkoutId = picked.id;
-                        _anchorWorkoutName = picked.name;
-                        _anchorPlanOrderIndex = picked.planOrderIndex;
-                      });
-                      _emit();
-                    }
-                  },
-                  icon: const Icon(Icons.event),
-                  label: Text(l10n.macroActionPickWorkout),
-                ),
-                const SizedBox(width: 8),
-                Expanded(child: Text(_anchorWorkoutId == null ? l10n.macroActionNotSelected : l10n.macroActionAfterAnchor(_anchorWorkoutName ?? '#'+_anchorWorkoutId.toString()))),
-              ],
-            ),
-            if (_placement == 'Insert_After_Mesocycle') Builder(
-              builder: (context) {
-                final activePlan = ref.watch(activeAppliedPlanProvider);
-                return activePlan.maybeWhen(
-                  data: (plan) {
-                    final meso = plan?.calendarPlan.mesocycles ?? const [];
-                    if (meso.isEmpty) {
-                      return Text(l10n.macroActionNoMesoInPlan);
-                    }
-                    final items = <DropdownMenuItem<String>>[];
-                    for (int i = 0; i < meso.length; i++) {
-                      final idx = (i + 1).toString();
-                      final label = meso[i].name.isNotEmpty ? '$idx. ${meso[i].name}' : l10n.macroActionMesoLabel(idx);
-                      items.add(DropdownMenuItem(value: idx, child: Text(label)));
-                    }
-
-                    final currentIdx = int.tryParse(_mesocycleIndex) ?? 1;
-                    final normalized = currentIdx.clamp(1, items.length).toString();
-                    if (normalized != _mesocycleIndex) {
-
-                      _mesocycleIndex = normalized;
-                    }
-                    return Row(
-                      children: [
-                        Text(l10n.macroActionMesoIndexLabel),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: _mesocycleIndex,
-                            items: items,
-                            decoration: const InputDecoration(border: OutlineInputBorder()),
-                            onChanged: (v) {
-                              setState(() { _mesocycleIndex = v ?? '1'; });
-                              _emit();
-                            },
+            const SizedBox(height: 10),
+            if (_placement == 'Insert_After_Workout')
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  InstrumentActionButton(
+                    label: l10n.macroActionPickWorkout,
+                    icon: Icons.event_rounded,
+                    variant: InstrumentActionVariant.secondary,
+                    onPressed: () async {
+                      final picked =
+                          await showWorkoutPickerBottomSheet(context, ref);
+                      if (picked != null) {
+                        setState(() {
+                          _anchorWorkoutId = picked.id;
+                          _anchorWorkoutName = picked.name;
+                          _anchorPlanOrderIndex = picked.planOrderIndex;
+                        });
+                        _emit();
+                      }
+                    },
+                  ),
+                  Text(
+                    _anchorWorkoutId == null
+                        ? l10n.macroActionNotSelected
+                        : l10n.macroActionAfterAnchor(
+                            _anchorWorkoutName ?? '#$_anchorWorkoutId',
                           ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ],
+              ),
+            if (_placement == 'Insert_After_Mesocycle')
+              Builder(
+                builder: (context) {
+                  final activePlan = ref.watch(activeAppliedPlanProvider);
+                  return activePlan.maybeWhen(
+                    data: (plan) {
+                      final meso = plan?.calendarPlan.mesocycles ?? const [];
+                      if (meso.isEmpty) {
+                        return Text(
+                          l10n.macroActionNoMesoInPlan,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        );
+                      }
+                      final items = <DropdownMenuItem<String>>[];
+                      for (int i = 0; i < meso.length; i++) {
+                        final idx = (i + 1).toString();
+                        final label = meso[i].name.isNotEmpty
+                            ? '$idx. ${meso[i].name}'
+                            : l10n.macroActionMesoLabel(idx);
+                        items.add(
+                          DropdownMenuItem(value: idx, child: Text(label)),
+                        );
+                      }
+
+                      final currentIdx = int.tryParse(_mesocycleIndex) ?? 1;
+                      final normalized =
+                          currentIdx.clamp(1, items.length).toString();
+                      if (normalized != _mesocycleIndex) {
+                        _mesocycleIndex = normalized;
+                      }
+                      return DropdownButtonFormField<String>(
+                        initialValue: _mesocycleIndex,
+                        isExpanded: true,
+                        items: items,
+                        decoration: InstrumentTheme.inputDecoration(
+                          context,
+                          labelText: l10n.macroActionMesoIndexLabel,
                         ),
-                      ],
-                    );
-                  },
-                  orElse: () => const SizedBox(height: 40, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
-                );
-              },
-            ),
+                        onChanged: (v) {
+                          setState(() => _mesocycleIndex = v ?? '1');
+                          _emit();
+                        },
+                      );
+                    },
+                    orElse: () => SizedBox(
+                      height: 40,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: instrument.workingAura,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             const SizedBox(height: 12),
             if (_placement != 'Append_To_End') ...[
-              Text(l10n.macroActionConflicts, style: Theme.of(context).textTheme.labelLarge),
+              Text(
+                l10n.macroActionConflicts.toUpperCase(),
+                style: InstrumentTheme.microLabel(context),
+              ),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
-                value: _conflict,
+                initialValue: _conflict,
+                isExpanded: true,
                 items: [
-                  DropdownMenuItem(value: 'Replace_Planned', child: Text(l10n.macroActionReplacePlanned)),
-                  DropdownMenuItem(value: 'Shift_Forward', child: Text(l10n.macroActionShiftForward)),
-                  DropdownMenuItem(value: 'Skip_On_Conflict', child: Text(l10n.macroActionSkipConflict)),
+                  DropdownMenuItem(
+                    value: 'Replace_Planned',
+                    child: Text(l10n.macroActionReplacePlanned),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Shift_Forward',
+                    child: Text(l10n.macroActionShiftForward),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Skip_On_Conflict',
+                    child: Text(l10n.macroActionSkipConflict),
+                  ),
                 ],
-                decoration: const InputDecoration(border: OutlineInputBorder()),
-                onChanged: (v) { setState(() => _conflict = v ?? 'Shift_Forward'); _emit(); },
+                decoration: InstrumentTheme.inputDecoration(context),
+                onChanged: (v) {
+                  setState(() => _conflict = v ?? 'Shift_Forward');
+                  _emit();
+                },
               ),
             ],
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           if (_type != 'Inject_Mesocycle') ...[
-            Text(l10n.macroActionTarget, style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 6),
-            Text(l10n.macroActionTargetHelp, style: Theme.of(context).textTheme.bodySmall),
-            const SizedBox(height: 8),
+            Text(
+              l10n.macroActionTarget.toUpperCase(),
+              style: InstrumentTheme.microLabel(context),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.macroActionTargetHelp,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 10),
             TargetSelector(
               initial: _target,
               onChanged: (v) {
@@ -555,8 +922,8 @@ class _ActionBuilderState extends ConsumerState<ActionBuilder> {
                 _emit();
               },
             ),
-          ]
-        ]
+          ],
+        ],
       ],
     );
   }

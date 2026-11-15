@@ -7,39 +7,87 @@ class MacroPreviewState {
   final Map<String, dynamic>? preview;
   final Map<String, dynamic>? applyResult;
   final String? error;
-  const MacroPreviewState({this.loading = false, this.preview, this.applyResult, this.error});
-  MacroPreviewState copyWith({bool? loading, Map<String, dynamic>? preview, Map<String, dynamic>? applyResult, String? error}) =>
-      MacroPreviewState(loading: loading ?? this.loading, preview: preview ?? this.preview, applyResult: applyResult ?? this.applyResult, error: error);
+  const MacroPreviewState({
+    this.loading = false,
+    this.preview,
+    this.applyResult,
+    this.error,
+  });
 }
 
-final macroPreviewServiceProvider = Provider<MacroService>((ref) => MacroService(apiClient: ApiClient()));
+final macroPreviewServiceProvider = Provider<MacroService>(
+  (ref) => MacroService(apiClient: ApiClient()),
+);
 
 class MacroPreviewNotifier extends StateNotifier<MacroPreviewState> {
   final MacroService service;
   MacroPreviewNotifier(this.service) : super(const MacroPreviewState());
 
-  Future<void> runPreview(int appliedPlanId) async {
-    state = state.copyWith(loading: true, error: null, applyResult: null);
+  void show(Map<String, dynamic> preview) {
+    state = MacroPreviewState(preview: preview);
+  }
+
+  Future<void> runPreview(
+    int appliedPlanId, {
+    int? observationWorkoutId,
+    Map<String, dynamic>? legacyWeights,
+  }) async {
+    state = const MacroPreviewState(loading: true);
     try {
-      final res = await service.runPreview(appliedPlanId: appliedPlanId);
-      state = state.copyWith(loading: false, preview: res);
+      final result = await service.runPreview(
+        appliedPlanId: appliedPlanId,
+        observationWorkoutId: observationWorkoutId,
+        legacyWeights: legacyWeights,
+      );
+      if (mounted) show(result);
     } catch (e) {
-      state = state.copyWith(loading: false, error: e.toString());
+      if (mounted) state = MacroPreviewState(error: e.toString());
     }
   }
 
-  Future<void> apply(int appliedPlanId) async {
-    state = state.copyWith(loading: true, error: null);
+  Future<void> apply(int appliedPlanId, {bool mesocyclesOnly = false}) async {
+    final preview = state.preview;
+    if (state.loading ||
+        preview == null ||
+        preview['applied_plan_id'] != appliedPlanId ||
+        preview['contract_version'] != 2)
+      return;
+    final id = preview['preview_id'] as String?;
+    if (!mesocyclesOnly && id == null) return;
+    final previous = state.applyResult;
+    state = MacroPreviewState(
+      loading: true,
+      preview: preview,
+      applyResult: previous,
+    );
     try {
-      final res = await service.applyMacros(appliedPlanId: appliedPlanId);
-      state = state.copyWith(loading: false, applyResult: res);
+      final result = await service.applyMacros(
+        appliedPlanId: appliedPlanId,
+        previewId: mesocyclesOnly ? null : id,
+        mesocyclesOnly: mesocyclesOnly,
+      );
+      final combined = <String, dynamic>{...?previous};
+      if (mesocyclesOnly) {
+        combined['plan_changes'] = result['plan_changes'];
+      } else {
+        combined['apply_result'] = result['apply_result'];
+      }
+      if (mounted) {
+        state = MacroPreviewState(preview: preview, applyResult: combined);
+      }
     } catch (e) {
-      state = state.copyWith(loading: false, error: e.toString());
+      if (mounted)
+        state = MacroPreviewState(
+          preview: preview,
+          applyResult: previous,
+          error: e.toString(),
+        );
     }
   }
 }
 
-final macroPreviewNotifierProvider = StateNotifierProvider<MacroPreviewNotifier, MacroPreviewState>((ref) {
-  final svc = ref.watch(macroPreviewServiceProvider);
-  return MacroPreviewNotifier(svc);
-});
+final macroPreviewNotifierProvider = StateNotifierProvider.autoDispose
+    .family<MacroPreviewNotifier, MacroPreviewState, int>((ref, planId) {
+      final svc = ref.watch(macroPreviewServiceProvider);
+      return MacroPreviewNotifier(svc);
+    });

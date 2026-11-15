@@ -1,22 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/providers/chat_provider.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
 
 import 'mass_edit_tool_widget.dart';
 
-
-
-
-
-
-
-
 class ScheduleShiftToolWidget extends ConsumerWidget {
-  const ScheduleShiftToolWidget({
-    super.key,
-    required this.payload,
-  });
+  const ScheduleShiftToolWidget({super.key, required this.payload});
 
   final Map<String, dynamic> payload;
 
@@ -31,40 +23,42 @@ class ScheduleShiftToolWidget extends ConsumerWidget {
         ? summaryRaw
         : const <String, dynamic>{};
 
-    final workoutsShifted = summary['workouts_shifted'] ?? summary['affected_count'];
+    final workoutsShifted =
+        summary['workouts_shifted'] ?? summary['affected_count'];
     final days = payload['days'] ?? summary['days'];
-    final actionType = (payload['action_type'] ?? summary['action_type'] ?? 'shift').toString();
+    final actionType =
+        (payload['action_type'] ?? summary['action_type'] ?? 'shift')
+            .toString();
     final fromDate = payload['from_date']?.toString();
-
-
     final toDate = payload['to_date']?.toString();
     final onlyFuture = payload['only_future'] == true;
     final statusIn = payload['status_in'];
 
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final accent = isPreview
+        ? instrument.workingAura
+        : instrument.executionAccent;
 
-
-    final headerChips = <Widget>[];
+    final headerPills = <Widget>[];
     if (workoutsShifted != null) {
-      headerChips.add(
-        Chip(
-          label: Text(l10n.workoutsShifted(workoutsShifted.toString())),
-          visualDensity: VisualDensity.compact,
+      headerPills.add(
+        InstrumentStatusPill(
+          label: l10n.workoutsShifted(workoutsShifted.toString()),
+          color: accent,
         ),
       );
     }
     if (days != null) {
       final numDays = days is num ? days.toInt() : int.tryParse(days.toString());
       final sign = (numDays ?? 0) > 0 ? '+' : '';
-      headerChips.add(
-        Chip(
-          label: Text(l10n.shiftDays(sign, (numDays ?? days).toString())),
-          visualDensity: VisualDensity.compact,
+      headerPills.add(
+        InstrumentStatusPill(
+          label: l10n.shiftDays(sign, (numDays ?? days).toString()),
+          color: instrument.moderateEffortColor,
         ),
       );
     }
-
 
     final filterLines = <String>[];
     if (fromDate != null && fromDate.isNotEmpty) {
@@ -73,13 +67,11 @@ class ScheduleShiftToolWidget extends ConsumerWidget {
     if (toDate != null && toDate.isNotEmpty) {
       filterLines.add(l10n.upToDate(toDate));
     }
-
     if (actionType == 'set_rest') {
       filterLines.add(l10n.modeChangeIntervals);
     } else {
       filterLines.add(l10n.modeScheduleShift);
     }
-
     if (onlyFuture) {
       filterLines.add(l10n.onlyFutureWorkouts);
     }
@@ -90,34 +82,32 @@ class ScheduleShiftToolWidget extends ConsumerWidget {
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (headerChips.isNotEmpty)
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: headerChips,
-          ),
+        if (headerPills.isNotEmpty)
+          Wrap(spacing: 8, runSpacing: 6, children: headerPills),
         if (filterLines.isNotEmpty) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
-            l10n.shiftParameters,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
+            l10n.shiftParameters.toUpperCase(),
+            style: InstrumentTheme.microLabel(context, color: accent),
           ),
           const SizedBox(height: 4),
           ...filterLines.map(
-            (line) => Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('• '),
-                Expanded(
-                  child: Text(
-                    line,
-                    style: theme.textTheme.bodySmall,
+            (line) => Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('• ', style: theme.textTheme.bodySmall),
+                  Expanded(
+                    child: Text(
+                      line,
+                      style: InstrumentTheme.tabular(
+                        theme.textTheme.bodySmall ?? const TextStyle(),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -128,18 +118,16 @@ class ScheduleShiftToolWidget extends ConsumerWidget {
     final command = payload['schedule_shift_command'];
     if (isPreview && command is Map<String, dynamic>) {
       actions.add(
-        ElevatedButton.icon(
+        InstrumentActionButton(
+          label: l10n.apply,
+          icon: Icons.check_rounded,
+          variant: InstrumentActionVariant.primary,
+          accentColor: instrument.workingAura,
           onPressed: () {
             ref
                 .read(chatControllerProvider.notifier)
                 .applyScheduleShiftFromPreview(payload);
           },
-          icon: const Icon(Icons.check_rounded),
-          label: Text(l10n.apply),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-          ),
         ),
       );
     }

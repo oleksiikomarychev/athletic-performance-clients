@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
-import 'package:workout_app/config/theme/ui_dimensions.dart';
 
 import '../models/chat_message.dart';
 import '../providers/chat_provider.dart';
@@ -152,8 +153,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 : BoxDecoration(
                     color: Theme.of(context)
                         .colorScheme
-                        .surfaceVariant
-                        .withOpacity(0.4),
+                        .surfaceContainerHighest
+                        .withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(12),
                   ),
             child: _buildMessageList(chatState.messages),
@@ -244,32 +245,28 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         ? Theme.of(context)
                             .colorScheme
                             .primary
-                            .withOpacity(0.9)
+                            .withValues(alpha: 0.92)
                         : Theme.of(context).colorScheme.primary)
                     : (transparent
-                        ? Theme.of(context).colorScheme.surfaceContainerLow.withValues(alpha: 0.96)
-                        : Theme.of(context).colorScheme.surface),
-                borderRadius: BorderRadius.circular(22).copyWith(
+                        ? Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerLow
+                            .withValues(alpha: 0.96)
+                        : Theme.of(context).colorScheme.surfaceContainerLow),
+                border: isUser
+                    ? null
+                    : Border.all(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .outlineVariant
+                            .withValues(alpha: 0.45),
+                      ),
+                borderRadius: BorderRadius.circular(20).copyWith(
                   bottomLeft: const Radius.circular(10),
                   bottomRight: const Radius.circular(10),
-                  topLeft: Radius.circular(isUser ? 22 : 10),
-                  topRight: Radius.circular(isUser ? 10 : 22),
+                  topLeft: Radius.circular(isUser ? 20 : 10),
+                  topRight: Radius.circular(isUser ? 10 : 20),
                 ),
-                boxShadow: transparent
-                    ? [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.10),
-                          blurRadius: 18,
-                          offset: const Offset(0, 8),
-                        ),
-                      ]
-                    : [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -288,12 +285,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     const SizedBox(height: 4),
                     Text(
                       _formatTimestamp(message.timestamp),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: (isUser
-                                    ? Theme.of(context).colorScheme.onPrimary
-                                    : Theme.of(context).colorScheme.onSurface)
-                                .withOpacity(0.7),
-                          ),
+                      style: InstrumentTheme.tabular(
+                        (Theme.of(context).textTheme.labelSmall ??
+                                const TextStyle(fontSize: 11))
+                            .copyWith(
+                          color: (isUser
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Theme.of(context).colorScheme.onSurface)
+                              .withValues(alpha: 0.72),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -310,6 +311,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final transparent = widget.transparentBackground;
     final suggestions = _buildCommandSuggestions();
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     final inputRow = Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -317,31 +319,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         Expanded(
           child: transparent
               ? Container(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerLow.withValues(alpha: 0.96),
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.12),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                  decoration: InstrumentTheme.cardDecoration(
+                    context,
+                    color: colors.surfaceContainerLow.withValues(alpha: 0.96),
+                    radius: 22,
                   ),
                   child: TextField(
                     controller: _inputController,
                     focusNode: _inputFocusNode,
-                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurface,
+                    ),
                     minLines: 1,
                     maxLines: 4,
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _handleSend(),
                     decoration: InputDecoration(
                       hintText: 'Введите сообщение...',
-                      hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                      hintStyle: TextStyle(color: colors.onSurfaceVariant),
                       filled: false,
                       border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                     ),
                   ),
                 )
@@ -352,11 +353,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   maxLines: 5,
                   textInputAction: TextInputAction.send,
                   onSubmitted: (_) => _handleSend(),
-                  decoration: InputDecoration(
+                  decoration: InstrumentTheme.inputDecoration(
+                    context,
                     hintText: 'Введите сообщение...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                    radius: 16,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
@@ -364,24 +364,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                 ),
         ),
-        SizedBox(width: transparent ? 12 : 8),
-        transparent
-            ? Material(
-                color: Theme.of(context).colorScheme.primary,
-                shape: const CircleBorder(),
-                elevation: 6,
-                child: IconButton(
-                  icon: const Icon(Icons.send_rounded, color: Colors.white),
+        SizedBox(width: transparent ? 10 : 8),
+        SizedBox(
+          width: 48,
+          height: 48,
+          child: transparent
+              ? IconButton.filled(
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    tapTargetSize: MaterialTapTargetSize.padded,
+                  ),
+                  icon: const Icon(Icons.send_rounded),
                   onPressed: canSend ? _handleSend : null,
                   tooltip: canSend ? 'Отправить' : 'Нет соединения',
+                )
+              : IconButton(
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    tapTargetSize: MaterialTapTargetSize.padded,
+                  ),
+                  icon: const Icon(Icons.send_rounded),
+                  onPressed: canSend ? _handleSend : null,
+                  color: colors.primary,
+                  tooltip: canSend ? 'Отправить' : 'Нет соединения',
                 ),
-              )
-            : IconButton(
-                icon: const Icon(Icons.send_rounded),
-                onPressed: canSend ? _handleSend : null,
-                color: Theme.of(context).colorScheme.primary,
-                tooltip: canSend ? 'Отправить' : 'Нет соединения',
-              ),
+        ),
       ],
     );
 
@@ -444,7 +451,6 @@ void _scrollToBottom() {
       case ChatConnectionState.error:
         return 'Ошибка соединения';
       case ChatConnectionState.disconnected:
-      default:
         return 'Отключено';
     }
   }
@@ -511,13 +517,18 @@ void _scrollToBottom() {
     }
 
     final theme = Theme.of(context);
-    final dividerColor = theme.dividerColor.withOpacity(0.2);
+    final dividerColor = theme.dividerColor.withValues(alpha: 0.2);
 
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 200),
       child: Material(
-        elevation: widget.transparentBackground ? 12 : 4,
-        borderRadius: BorderRadius.circular(16),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.55),
+          ),
+        ),
         color: theme.colorScheme.surface,
         child: ListView.separated(
           shrinkWrap: true,
@@ -692,12 +703,12 @@ class _ConnectionBanner extends StatelessWidget {
     Color foreground;
     switch (state) {
       case ChatConnectionState.connected:
-        background = colorScheme.primary.withOpacity(0.15);
+        background = colorScheme.primary.withValues(alpha: 0.15);
         foreground = colorScheme.primary;
         break;
       case ChatConnectionState.connecting:
       case ChatConnectionState.reconnecting:
-        background = colorScheme.secondary.withOpacity(0.15);
+        background = colorScheme.secondary.withValues(alpha: 0.15);
         foreground = colorScheme.secondary;
         break;
       case ChatConnectionState.error:
@@ -705,8 +716,7 @@ class _ConnectionBanner extends StatelessWidget {
         foreground = theme.colorScheme.onErrorContainer;
         break;
       case ChatConnectionState.disconnected:
-      default:
-        background = colorScheme.surfaceVariant;
+        background = colorScheme.surfaceContainerHighest;
         foreground = colorScheme.onSurfaceVariant;
         break;
     }
@@ -736,7 +746,7 @@ class _ConnectionBanner extends StatelessWidget {
                   Text(
                     'Сессия: $sessionId',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: foreground.withOpacity(0.8),
+                      color: foreground.withValues(alpha: 0.8),
                     ),
                   ),
               ],
@@ -779,7 +789,6 @@ class _ConnectionBanner extends StatelessWidget {
       case ChatConnectionState.error:
         return Icons.error_outline_rounded;
       case ChatConnectionState.disconnected:
-      default:
         return Icons.offline_bolt_outlined;
     }
   }

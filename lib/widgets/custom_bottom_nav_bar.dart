@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 
 class BottomNavBarItem {
@@ -48,6 +49,7 @@ class CustomBottomNavBar extends StatelessWidget {
     final dimensions = UiDimensions.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final instrument = InstrumentTheme.of(context);
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
     final scaledLabelHeight =
         MediaQuery.textScalerOf(context).scale(
@@ -61,6 +63,14 @@ class CustomBottomNavBar extends StatelessWidget {
         : iconSize + 4 + scaledLabelHeight * 2 + 20;
     final outerHorizontalPadding = dimensions.navigationInset;
     final islandOffset = dimensions.navigationInset;
+
+    final dockFill = backgroundColor ??
+        (isDark
+            ? instrument.dockBackground.withValues(alpha: 0.80)
+            : const Color(0xFF0E3A6B).withValues(alpha: 0.84));
+    final dockBorder = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.white.withValues(alpha: 0.28);
 
     return Material(
       color: Colors.transparent,
@@ -79,31 +89,28 @@ class CustomBottomNavBar extends StatelessWidget {
             child: Align(
               alignment: Alignment.bottomCenter,
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(isDark ? 16 : 999),
+                borderRadius: BorderRadius.circular(999),
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(
-                    sigmaX: isDark ? 0 : 20,
-                    sigmaY: isDark ? 0 : 20,
-                  ),
+                  filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
                   child: Container(
                     constraints: const BoxConstraints(maxWidth: 600),
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
                     decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkChrome : null,
-                      gradient: isDark ? null : AppGradients.blue,
-                      border: isDark ? null : Border.all(
-                        color: Colors.white.withOpacity(0.30),
-                        width: 1.0,
-                      ),
-                      boxShadow: isDark ? null : [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(isDark ? 0.35 : 0.18),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
+                      color: isDark || backgroundColor != null ? dockFill : null,
+                      gradient: isDark || backgroundColor != null
+                          ? null
+                          : LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: AppGradients.blue.colors
+                                  .map((c) => c.withValues(alpha: 0.86))
+                                  .toList(growable: false),
+                            ),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: dockBorder, width: 1.0),
                     ),
                     child: SizedBox(
-                      height: barHeight,
+                      height: barHeight - 6,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: List.generate(
@@ -137,44 +144,41 @@ class CustomBottomNavBar extends StatelessWidget {
   }) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
+    final instrument = InstrumentTheme.of(context);
     final label = isSelected ? (item.activeLabel ?? item.label) : item.label;
     final isDark = theme.brightness == Brightness.dark;
-    final Color iconColor = isDark
-        ? (isSelected ? const Color(0xFF8ED4C6) : const Color(0xFFB8C1C2))
-        : Colors.white;
-    final Color textColor = iconColor;
+    final reducedMotion = MediaQuery.disableAnimationsOf(context);
 
-    final borderRadius = BorderRadius.circular(isDark ? 12 : 999);
+    final activeAccent = isDark ? instrument.workingAura : Colors.white;
+    final Color iconColor = isDark
+        ? (isSelected ? activeAccent : const Color(0xFF94A3B8))
+        : (isSelected ? Colors.white : Colors.white.withValues(alpha: 0.78));
+    final Color textColor = iconColor;
+    final Color pillFill = isSelected
+        ? activeAccent.withValues(alpha: isDark ? 0.16 : 0.22)
+        : Colors.transparent;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: borderRadius,
+        borderRadius: BorderRadius.circular(999),
         child: AnimatedContainer(
-          duration: animationDuration,
+          duration: reducedMotion ? Duration.zero : animationDuration,
           curve: animationCurve,
-          padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 4.0),
+          padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
           decoration: BoxDecoration(
-            borderRadius: borderRadius,
-            color: isDark
-                ? (isSelected ? const Color(0xFF2D393B) : Colors.transparent)
-                : (isSelected
-                    ? Colors.white.withOpacity(0.18)
-                    : Colors.white.withOpacity(0.08)),
-            border: isDark ? null : Border.all(
-              color: Colors.white.withOpacity(isSelected ? 0.85 : 0.35),
-              width: 1.0,
-            ),
+            borderRadius: BorderRadius.circular(999),
+            color: pillFill,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(item.icon, size: iconSize, color: iconColor),
-              const SizedBox(height: 4.0),
+              const SizedBox(height: 3.0),
               AnimatedDefaultTextStyle(
-                duration: animationDuration,
+                duration: reducedMotion ? Duration.zero : animationDuration,
                 curve: animationCurve,
                 style: textTheme.labelSmall!.copyWith(
                   fontSize: isSelected ? selectedFontSize : unselectedFontSize,

@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:workout_app/config/constants/legal_constants.dart';
 import 'package:workout_app/config/constants/route_names.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
+import 'package:workout_app/widgets/interface_maker_sheet.dart';
+import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/responsive_container.dart';
 
 class SettingsLegalScreen extends StatefulWidget {
@@ -35,7 +40,9 @@ class _SettingsLegalScreenState extends State<SettingsLegalScreen>
       length: LegalDocumentType.values.length,
       vsync: this,
       initialIndex: initialIndex,
-    );
+    )..addListener(() {
+        if (mounted) setState(() {});
+      });
   }
 
   @override
@@ -172,10 +179,17 @@ class _SettingsLegalScreenState extends State<SettingsLegalScreen>
     final docs = LegalDocumentsRepository.getAllDocuments(lang);
     final dims = UiDimensions.of(context);
     final theme = Theme.of(context);
+    final instrument = InstrumentTheme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_screenTitle(lang)),
+    final tabIcons = const [
+      Icons.shield_outlined,
+      Icons.description_outlined,
+      Icons.health_and_safety_outlined,
+    ];
+
+    return AmbientScaffoldShell(
+      appBar: PrimaryAppBar.detail(
+        title: _screenTitle(lang),
         actions: [
           PopupMenuButton<String>(
             tooltip: 'Language / Мова / Язык',
@@ -186,39 +200,22 @@ class _SettingsLegalScreenState extends State<SettingsLegalScreen>
               });
             },
             itemBuilder: (context) => const [
-              PopupMenuItem(
-                value: 'ru',
-                child: Text('Русский (RU)'),
-              ),
-              PopupMenuItem(
-                value: 'uk',
-                child: Text('Українська (UK)'),
-              ),
-              PopupMenuItem(
-                value: 'en',
-                child: Text('English (EN)'),
-              ),
+              PopupMenuItem(value: 'ru', child: Text('Русский (RU)')),
+              PopupMenuItem(value: 'uk', child: Text('Українська (UK)')),
+              PopupMenuItem(value: 'en', child: Text('English (EN)')),
             ],
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.translate, size: 16),
-                    const SizedBox(width: 6),
-                    Text(
-                      lang.toUpperCase(),
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: Center(
+                child: Text(
+                  lang.toUpperCase(),
+                  style: InstrumentTheme.tabular(
+                    (theme.textTheme.labelMedium ?? const TextStyle()).copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -239,39 +236,43 @@ class _SettingsLegalScreenState extends State<SettingsLegalScreen>
             },
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabAlignment: TabAlignment.center,
-          tabs: [
-            Tab(
-              icon: const Icon(Icons.shield_outlined, size: 18),
-              text: docs[0].shortTitle,
-            ),
-            Tab(
-              icon: const Icon(Icons.description_outlined, size: 18),
-              text: docs[1].shortTitle,
-            ),
-            Tab(
-              icon: const Icon(Icons.health_and_safety_outlined, size: 18),
-              text: docs[2].shortTitle,
-            ),
-          ],
-        ),
       ),
       body: ResponsiveContainer(
         maxWidth: Breakpoints.maxContentWidthNarrow,
-        child: TabBarView(
-          controller: _tabController,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final doc in docs)
-              _LegalDocumentBody(
-                document: doc,
-                languageCode: lang,
-                placeholderBannerText: _placeholderBannerText(lang),
-                dims: dims,
-                theme: theme,
+            SizedBox(height: AmbientScaffoldShell.topContentInset(context)),
+            CanvasPillStrip(
+              items: [
+                for (int i = 0; i < docs.length; i++)
+                  CanvasPillItem(
+                    label: docs[i].shortTitle,
+                    icon: tabIcons[i],
+                    selected: _tabController.index == i,
+                    accentColor: i == 2
+                        ? instrument.stormAura
+                        : instrument.workingAura,
+                    onTap: () => _tabController.animateTo(i),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  for (final doc in docs)
+                    _LegalDocumentBody(
+                      document: doc,
+                      languageCode: lang,
+                      placeholderBannerText: _placeholderBannerText(lang),
+                      dims: dims,
+                      theme: theme,
+                    ),
+                ],
               ),
+            ),
           ],
         ),
       ),
@@ -308,69 +309,120 @@ class _LegalDocumentBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final hairline =
+        (isDark ? instrument.hairlineBorder : colorScheme.outlineVariant)
+            .withValues(alpha: isDark ? 0.85 : 0.55);
 
     return ListView(
-      padding: EdgeInsets.all(dims.pagePadding),
+      padding: EdgeInsets.fromLTRB(
+        dims.pagePadding,
+        8,
+        dims.pagePadding,
+        MediaQuery.paddingOf(context).bottom + 28,
+      ),
       children: [
-        // Document title & metadata card
-        Card(
-          elevation: 0,
-          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-          child: Padding(
-            padding: EdgeInsets.all(dims.cardPadding + 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+        // Single-contour document title & TL;DR overview
+        Container(
+          decoration: InstrumentTheme.instrumentCardDecoration(
+            context,
+            accentColor: instrument.workingAura,
+            radius: 22,
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.all(dims.cardPadding + 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
+                    InstrumentStatusPill(
+                      label:
+                          'v${LegalConfig.policyVersion} · ${LegalConfig.lastUpdatedDate}',
+                      color: instrument.workingAura,
+                    ),
+                    SizedBox(height: dims.rowGap),
+                    Text(
+                      document.title,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        'v${LegalConfig.policyVersion} · ${LegalConfig.lastUpdatedDate}',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      document.subtitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: dims.rowGap),
-                Text(
-                  document.title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              ),
+              Container(height: 1, color: hairline),
+              Padding(
+                padding: EdgeInsets.all(dims.cardPadding + 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.bolt_outlined,
+                          size: 18,
+                          color: instrument.workingAura,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            document.tldrTitle,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: instrument.workingAura,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: dims.rowGap),
+                    for (final point in document.tldrPoints)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.check_circle_outline,
+                              size: 16,
+                              color: instrument.workingAura,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: SelectableText(
+                                point,
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  document.subtitle,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
 
         if (LegalConfig.hasPlaceholders) ...[
-          SizedBox(height: dims.rowGap),
+          SizedBox(height: dims.rowGap + 2),
           Container(
             padding: EdgeInsets.all(dims.cardPadding),
-            decoration: BoxDecoration(
-              color: colorScheme.tertiaryContainer.withValues(alpha: 0.45),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: colorScheme.tertiary.withValues(alpha: 0.35),
-              ),
+            decoration: InstrumentTheme.instrumentCardDecoration(
+              context,
+              accentColor: instrument.moderateEffortColor,
+              radius: 18,
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,14 +430,14 @@ class _LegalDocumentBody extends StatelessWidget {
                 Icon(
                   Icons.info_outline,
                   size: 18,
-                  color: colorScheme.tertiary,
+                  color: instrument.moderateEffortColor,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     placeholderBannerText,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -396,85 +448,18 @@ class _LegalDocumentBody extends StatelessWidget {
 
         SizedBox(height: dims.sectionGap),
 
-        // TL;DR Layered Summary Card
-        Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: colorScheme.primary.withValues(alpha: 0.3),
-            ),
-          ),
-          color: colorScheme.primaryContainer.withValues(alpha: 0.22),
-          child: Padding(
-            padding: EdgeInsets.all(dims.cardPadding + 2),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.bolt_outlined,
-                      size: 18,
-                      color: colorScheme.primary,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        document.tldrTitle,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: dims.rowGap),
-                for (final point in document.tldrPoints)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.check_circle_outline,
-                          size: 16,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: SelectableText(
-                            point,
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-
-        SizedBox(height: dims.sectionGap),
-
-        // Numbered sections
         for (final section in document.sections) ...[
-          _LegalSectionCard(
-            section: section,
-            dims: dims,
-            theme: theme,
-          ),
+          _LegalSectionModule(section: section, dims: dims, theme: theme),
           SizedBox(height: dims.rowGap + 2),
         ],
 
-        // Quick jump to Settings -> General for privacy/account deletion
         if (document.type == LegalDocumentType.privacy) ...[
           SizedBox(height: dims.rowGap),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.manage_accounts_outlined, size: 18),
-            label: Text(_privacySettingsButtonLabel()),
+          InstrumentActionButton(
+            icon: Icons.manage_accounts_outlined,
+            label: _privacySettingsButtonLabel(),
+            variant: InstrumentActionVariant.secondary,
+            expanded: true,
             onPressed: () {
               Navigator.of(context).pushNamed(RouteNames.settingsGeneral);
             },
@@ -482,7 +467,6 @@ class _LegalDocumentBody extends StatelessWidget {
           SizedBox(height: dims.sectionGap),
         ],
 
-        // Footer metadata
         Padding(
           padding: EdgeInsets.symmetric(vertical: dims.rowGap),
           child: SelectableText(
@@ -498,12 +482,12 @@ class _LegalDocumentBody extends StatelessWidget {
   }
 }
 
-class _LegalSectionCard extends StatelessWidget {
+class _LegalSectionModule extends StatelessWidget {
   final LegalSectionData section;
   final UiDimensions dims;
   final ThemeData theme;
 
-  const _LegalSectionCard({
+  const _LegalSectionModule({
     required this.section,
     required this.dims,
     required this.theme,
@@ -511,114 +495,91 @@ class _LegalSectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
     final isWarning = section.isHighlightedWarning;
+    final sectionAccent = isWarning
+        ? instrument.peakEffortColor
+        : instrument.workingAura;
 
-    return Card(
-      elevation: 0,
-      color: isWarning
-          ? colorScheme.errorContainer.withValues(alpha: 0.25)
-          : colorScheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isWarning
-              ? colorScheme.error.withValues(alpha: 0.4)
-              : colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
+    return Container(
+      decoration: InstrumentTheme.instrumentCardDecoration(
+        context,
+        accentColor: isWarning ? instrument.peakEffortColor : null,
+        radius: 20,
       ),
-      child: Padding(
-        padding: EdgeInsets.all(dims.cardPadding + 2),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  width: 24,
-                  height: 24,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: isWarning
-                        ? colorScheme.error
-                        : colorScheme.secondaryContainer,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    section.number,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: isWarning
-                          ? colorScheme.onError
-                          : colorScheme.onSecondaryContainer,
-                    ),
+      padding: EdgeInsets.all(dims.cardPadding + 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              InstrumentStatusPill(
+                label: section.number,
+                color: sectionAccent,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  section.title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    section.title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (section.paragraphs.isNotEmpty) ...[
-              SizedBox(height: dims.rowGap),
-              for (int i = 0; i < section.paragraphs.length; i++) ...[
-                SelectableText(
-                  section.paragraphs[i],
-                  style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
-                ),
-                if (i < section.paragraphs.length - 1)
-                  const SizedBox(height: 8),
-              ],
-            ],
-            if (section.tableHeaders != null && section.tableRows != null) ...[
-              SizedBox(height: dims.rowGap + 2),
-              _LegalStructuredTable(
-                headers: section.tableHeaders!,
-                rows: section.tableRows!,
-                theme: theme,
               ),
             ],
-            if (section.bullets.isNotEmpty) ...[
-              SizedBox(height: dims.rowGap),
-              for (final bullet in section.bullets)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Container(
-                          width: 5,
-                          height: 5,
-                          decoration: BoxDecoration(
-                            color: colorScheme.primary,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: SelectableText(
-                          bullet,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+          ),
+          if (section.paragraphs.isNotEmpty) ...[
+            SizedBox(height: dims.rowGap),
+            for (int i = 0; i < section.paragraphs.length; i++) ...[
+              SelectableText(
+                section.paragraphs[i],
+                style: theme.textTheme.bodyMedium?.copyWith(height: 1.45),
+              ),
+              if (i < section.paragraphs.length - 1) const SizedBox(height: 8),
             ],
           ],
-        ),
+          if (section.tableHeaders != null && section.tableRows != null) ...[
+            SizedBox(height: dims.rowGap + 2),
+            _LegalStructuredTable(
+              headers: section.tableHeaders!,
+              rows: section.tableRows!,
+              theme: theme,
+            ),
+          ],
+          if (section.bullets.isNotEmpty) ...[
+            SizedBox(height: dims.rowGap),
+            for (final bullet in section.bullets)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Container(
+                        width: 5,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: sectionAccent,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: SelectableText(
+                        bullet,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ],
       ),
     );
   }
@@ -638,33 +599,31 @@ class _LegalStructuredTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final hairline =
+        (isDark ? instrument.hairlineBorder : colorScheme.outlineVariant)
+            .withValues(alpha: isDark ? 0.85 : 0.55);
 
     return Column(
       children: [
-        for (final row in rows)
-          Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.6),
-              ),
-            ),
+        for (int i = 0; i < rows.length; i++) ...[
+          Container(height: 1, color: hairline),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  row.col1,
+                  rows[i].col1,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: colorScheme.primary,
+                    color: instrument.workingAura,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  row.col2,
+                  rows[i].col2,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurface,
                     height: 1.35,
@@ -681,7 +640,7 @@ class _LegalStructuredTable extends StatelessWidget {
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        '${headers.length > 2 ? "${headers[2]}: " : ""}${row.col3}',
+                        '${headers.length > 2 ? "${headers[2]}: " : ""}${rows[i].col3}',
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -692,6 +651,7 @@ class _LegalStructuredTable extends StatelessWidget {
               ],
             ),
           ),
+        ],
       ],
     );
   }

@@ -5,18 +5,17 @@ import 'dart:math' as math;
 import 'package:intl/intl.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/models/plan_analytics.dart';
-import 'package:workout_app/models/workout.dart';
 import 'package:workout_app/models/workout_session.dart';
 import 'package:workout_app/models/user_profile.dart';
 import 'package:workout_app/providers/providers.dart';
 import 'package:workout_app/services/service_locator.dart' as sl;
-import 'package:workout_app/services/workout_service.dart';
-import 'package:workout_app/services/avatar_service.dart';
 import 'package:workout_app/screens/session_log_screen.dart';
 import 'package:workout_app/config/constants/route_names.dart';
 import 'dart:typed_data';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
 import 'package:workout_app/widgets/floating_header_bar.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/widgets/plan_analytics_chart.dart';
@@ -143,157 +142,6 @@ Future<Map<String, dynamic>> _buildProfileChatContext() async {
   };
 }
 
-Future<UserStats> _calculateStats(
-  WorkoutService workoutService,
-  List<WorkoutSession> sessions,
-) async {
-  final completedSessions = sessions
-      .where(
-        (s) => s.status.toLowerCase() == 'completed' || s.finishedAt != null,
-      )
-      .toList();
-
-  if (completedSessions.isEmpty) {
-    return UserStats.empty();
-  }
-
-  completedSessions.sort((a, b) => b.startedAt.compareTo(a.startedAt));
-
-  final todayLocal = DateTime.now();
-  final gridEnd = DateTime(todayLocal.year, todayLocal.month, todayLocal.day);
-  final gridStart = gridEnd.subtract(Duration(days: kActivityWeeks * 7 - 1));
-  final uniqueActiveDays = <DateTime>{};
-  final recentSessions = <WorkoutSession>[];
-
-  for (final session in completedSessions) {
-    final startedLocal = session.startedAt.toLocal();
-    final day = DateTime(
-      startedLocal.year,
-      startedLocal.month,
-      startedLocal.day,
-    );
-    uniqueActiveDays.add(day);
-    if (!startedLocal.isBefore(gridStart) && !startedLocal.isAfter(gridEnd)) {
-      recentSessions.add(session);
-    }
-  }
-
-  final workoutCache = <int, Workout?>{};
-  final setVolumeCache = <int, Map<int, double>>{};
-  final uniqueWorkoutIds = recentSessions
-      .map((s) => s.workoutId)
-      .toSet()
-      .toList();
-
-  await Future.wait(
-    uniqueWorkoutIds.map((id) async {
-      try {
-        final workout = await workoutService.getWorkoutWithDetails(id);
-        workoutCache[id] = workout;
-        setVolumeCache[id] = _buildSetVolumeLookup(workout);
-      } catch (_) {
-        workoutCache[id] = null;
-        setVolumeCache[id] = <int, double>{};
-      }
-    }),
-  );
-
-  final dayVolumes = <DateTime, double>{};
-  final dayCounts = <DateTime, int>{};
-  double totalVolume = 0;
-
-  for (final session in recentSessions) {
-    final startedLocal = session.startedAt.toLocal();
-    final day = DateTime(
-      startedLocal.year,
-      startedLocal.month,
-      startedLocal.day,
-    );
-    final completedSetIds = _extractCompletedSetIds(session.progress);
-    double sessionVolume = 0;
-
-    final workout = workoutCache[session.workoutId];
-    if (workout != null) {
-      final setLookup =
-          setVolumeCache[session.workoutId] ?? const <int, double>{};
-      if (completedSetIds.isEmpty) {
-        sessionVolume = workout.totalVolume;
-      } else {
-        for (final setId in completedSetIds) {
-          final volume = setLookup[setId];
-          if (volume != null) {
-            sessionVolume += volume;
-          }
-        }
-        if (sessionVolume == 0 && workout.totalVolume > 0) {
-          sessionVolume = workout.totalVolume;
-        }
-      }
-    }
-
-    dayVolumes[day] = (dayVolumes[day] ?? 0) + sessionVolume;
-    dayCounts[day] = (dayCounts[day] ?? 0) + 1;
-    totalVolume += sessionVolume;
-  }
-
-  final activityMap = <DateTime, DayActivity>{
-    for (final entry in dayVolumes.entries)
-      entry.key: DayActivity(
-        sessionCount: dayCounts[entry.key] ?? 0,
-        volume: entry.value,
-      ),
-  };
-
-  double maxDayVolume = 0;
-  for (final entry in activityMap.entries) {
-    final d = entry.key;
-    if (!d.isBefore(gridStart) && !d.isAfter(gridEnd)) {
-      if (entry.value.volume > maxDayVolume) maxDayVolume = entry.value.volume;
-    }
-  }
-
-  return UserStats(
-    totalWorkouts: completedSessions.length,
-    totalVolume: totalVolume,
-    activeDays: uniqueActiveDays.length,
-    activityMap: activityMap,
-    completedSessions: completedSessions.take(20).toList(),
-    maxDayVolume: maxDayVolume,
-  );
-}
-
-Set<int> _extractCompletedSetIds(Map<String, dynamic> progress) {
-  final completedField = progress['completed'];
-  if (completedField is Map) {
-    final ids = <int>{};
-    for (final value in completedField.values) {
-      if (value is List) {
-        for (final raw in value) {
-          final id = raw is int ? raw : int.tryParse(raw.toString());
-          if (id != null) {
-            ids.add(id);
-          }
-        }
-      }
-    }
-    return ids;
-  }
-  return <int>{};
-}
-
-Map<int, double> _buildSetVolumeLookup(Workout workout) {
-  final map = <int, double>{};
-  for (final instance in workout.exerciseInstances) {
-    for (final set in instance.sets) {
-      final setId = set.id;
-      if (setId != null) {
-        map[setId] = set.computedVolume.toDouble();
-      }
-    }
-  }
-  return map;
-}
-
 class UserProfileScreen extends ConsumerWidget {
   const UserProfileScreen({super.key});
 
@@ -306,82 +154,60 @@ class UserProfileScreen extends ConsumerWidget {
     return AssistantChatHost(
       contextBuilder: _buildProfileChatContext,
       builder: (hostContext, openChat) {
-        return Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          body: Stack(
-            children: [
-              SafeArea(
-                bottom: false,
-                child: Stack(
-                  children: [
-                    RefreshIndicator(
-                      onRefresh: () async {
-                        try {
-                          _invalidateAllProfileProviders(ref);
-                          await Future.wait([
-                            ref.read(userProfileProvider.future),
-                            ref.read(profileAggregatesProvider.future),
-                            ref.read(completedSessionsProvider.future),
-                            ref.read(
-                              profileWorkoutHistoryAnalyticsProvider.future,
-                            ),
-                          ]);
-                        } catch (e) {
-                          // RefreshIndicator will handle the error display
-                          rethrow;
-                        }
-                      },
-                      child: profileAsync.when(
-                        loading: () =>
-                            const Center(child: CircularProgressIndicator()),
-                        error: (error, _) => _buildErrorState(ref, error),
-                        data: (profile) {
-                          return ref
-                              .watch(profileAggregatesProvider)
-                              .when(
-                                loading: () => const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                                error: (error, _) =>
-                                    _buildErrorState(ref, error),
-                                data: (stats) => _buildContent(
-                                  hostContext,
-                                  ref,
-                                  stats,
-                                  user,
-                                  profile,
-                                ),
-                              );
-                        },
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.topCenter,
-                      child: FloatingHeaderBar(
-                        title: l10n.accountTitle,
-                        leading: IconButton(
-                          icon: Icon(
-                            Icons.arrow_back,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          onPressed: () => Navigator.of(hostContext).maybePop(),
-                        ),
-                        actions: [
-                          IconButton(
-                            icon: Icon(Icons.settings),
-                            onPressed: () => Navigator.of(
-                              hostContext,
-                            ).pushNamed(RouteNames.settings),
-                          ),
-                        ],
-                        onTitleTap: openChat,
-                        onProfileTap: null,
-                      ),
-                    ),
-                  ],
-                ),
+        return AmbientScaffoldShell(
+          extendBody: false,
+          appBar: FloatingHeaderBar(
+            title: l10n.accountTitle,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => Navigator.of(hostContext).maybePop(),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: () =>
+                    Navigator.of(hostContext).pushNamed(RouteNames.settings),
               ),
             ],
+            onTitleTap: openChat,
+            onProfileTap: null,
+          ),
+          body: RefreshIndicator(
+            edgeOffset: AmbientScaffoldShell.topContentInset(hostContext),
+            onRefresh: () async {
+              try {
+                _invalidateAllProfileProviders(ref);
+                await Future.wait([
+                  ref.read(userProfileProvider.future),
+                  ref.read(profileAggregatesProvider.future),
+                  ref.read(completedSessionsProvider.future),
+                  ref.read(profileWorkoutHistoryAnalyticsProvider.future),
+                ]);
+              } catch (e) {
+                // RefreshIndicator will handle the error display
+                rethrow;
+              }
+            },
+            child: profileAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => _buildErrorState(ref, error),
+              data: (profile) {
+                return ref
+                    .watch(profileAggregatesProvider)
+                    .when(
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (error, _) => _buildErrorState(ref, error),
+                      data: (stats) => _buildContent(
+                        hostContext,
+                        ref,
+                        stats,
+                        user,
+                        profile,
+                      ),
+                    );
+              },
+            ),
           ),
         );
       },
@@ -537,7 +363,7 @@ class UserProfileScreen extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: sex,
+                            initialValue: sex,
                             decoration: const InputDecoration(labelText: 'Sex'),
                             items: const [
                               DropdownMenuItem(
@@ -557,7 +383,7 @@ class UserProfileScreen extends ConsumerWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: experienceLevel,
+                            initialValue: experienceLevel,
                             decoration: const InputDecoration(
                               labelText: 'Experience level',
                             ),
@@ -584,7 +410,7 @@ class UserProfileScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      value: primaryGoal,
+                      initialValue: primaryGoal,
                       decoration: const InputDecoration(
                         labelText: 'Primary goal',
                       ),
@@ -612,7 +438,7 @@ class UserProfileScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      value: trainingEnvironment,
+                      initialValue: trainingEnvironment,
                       decoration: const InputDecoration(
                         labelText: 'Training environment',
                       ),
@@ -760,7 +586,7 @@ class UserProfileScreen extends ConsumerWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
         children: [
-          SizedBox(height: kToolbarHeight + dimensions.sectionGap),
+          SizedBox(height: AmbientScaffoldShell.topContentInset(context, extra: 16)),
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 720),
@@ -836,6 +662,7 @@ class UserProfileScreen extends ConsumerWidget {
             ),
             SizedBox(height: dimensions.sectionGap),
           ],
+          SizedBox(height: MediaQuery.paddingOf(context).bottom + 24),
         ],
       ),
     );
@@ -999,30 +826,33 @@ class UserProfileScreen extends ConsumerWidget {
   }
 
   Widget _buildStatCard(BuildContext context, String value, String label, Color color) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      decoration: BoxDecoration(
+      decoration: InstrumentTheme.cardDecoration(
+        context,
         color: color,
-        borderRadius: BorderRadius.circular(12),
+        radius: 12,
       ),
       child: Column(
         children: [
           Text(
             value,
-            style: TextStyle(
-              fontSize: UiDimensions.of(context).statValueFontSize,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
+            style: InstrumentTheme.tabular(
+              TextStyle(
+                fontSize: UiDimensions.of(context).statValueFontSize,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+                color: colors.onSurface,
+              ),
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            label,
+            label.toUpperCase(),
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            style: InstrumentTheme.microLabel(context),
           ),
         ],
       ),
@@ -1030,6 +860,7 @@ class UserProfileScreen extends ConsumerWidget {
   }
 
   Widget _buildActivitySection(BuildContext context, UserStats stats) {
+    final colors = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1037,7 +868,7 @@ class UserProfileScreen extends ConsumerWidget {
           'Activity',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface,
+            color: colors.onSurface,
           ),
         ),
         const SizedBox(height: 8),
@@ -1046,17 +877,21 @@ class UserProfileScreen extends ConsumerWidget {
           children: [
             Text(
               'Last $kActivityWeeks weeks',
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              style: InstrumentTheme.tabular(
+                TextStyle(
+                  fontSize: 14,
+                  color: colors.onSurfaceVariant,
+                ),
               ),
             ),
             Text(
               'Max: ${stats.maxDayVolume.toStringAsFixed(0)} kg/day',
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
+              style: InstrumentTheme.tabular(
+                TextStyle(
+                  fontSize: 12,
+                  color: colors.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -1252,13 +1087,15 @@ class UserProfileScreen extends ConsumerWidget {
   Widget _buildWorkoutCard(BuildContext context, WorkoutSession session) {
     final dateFormat = DateFormat('MMM dd');
     final workoutCode = 'WO${session.workoutId}';
+    final colors = Theme.of(context).colorScheme;
+    final instrument = InstrumentTheme.of(context);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: AppShadows.sm,
+      decoration: InstrumentTheme.cardDecoration(
+        context,
+        color: colors.surfaceContainerLow,
+        radius: 12,
       ),
       child: Material(
         color: Colors.transparent,
@@ -1278,35 +1115,40 @@ class UserProfileScreen extends ConsumerWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                    horizontal: 10,
+                    vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.tertiaryContainer,
-                    borderRadius: BorderRadius.circular(20),
+                    color: colors.tertiaryContainer,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     workoutCode,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onTertiaryContainer,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                    style: InstrumentTheme.tabular(
+                      TextStyle(
+                        color: colors.onTertiaryContainer,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 14),
                 Text(
                   dateFormat.format(session.startedAt),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  style: InstrumentTheme.tabular(
+                    TextStyle(
+                      fontSize: 14,
+                      color: colors.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const Spacer(),
                 Icon(
                   Icons.check_circle,
-                  color: AppColors.success,
-                  size: 24,
+                  color: instrument.successColor,
+                  size: 22,
                 ),
               ],
             ),
@@ -1693,7 +1535,7 @@ class _UserHistoryAnalyticsSectionState
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: metric,
+                      initialValue: metric,
                       decoration: const InputDecoration(labelText: 'Ось Y'),
                       items: _metrics
                           .map(
@@ -1793,13 +1635,15 @@ class _UserHistoryAnalyticsSectionState
             : null;
         final analytics = _mapAnalyticsResponse(resp);
 
+        final colors = Theme.of(context).colorScheme;
+        final instrument = InstrumentTheme.of(context);
         final palette = <Color>[
-          Colors.blue.shade400,
-          Colors.green.shade400,
-          Colors.orange.shade400,
-          Colors.purple.shade400,
-          Colors.teal.shade400,
-          Colors.redAccent,
+          colors.primary,
+          instrument.successColor,
+          instrument.moderateEffortColor,
+          instrument.lightEffortColor,
+          colors.tertiary,
+          instrument.peakEffortColor,
         ];
 
         final series = <PlanAnalyticsLineSeries>[];
@@ -1832,11 +1676,8 @@ class _UserHistoryAnalyticsSectionState
         }
 
         final title = Text(
-          'Workout analytics',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            fontSize: 15,
-          ),
+          'WORKOUT ANALYTICS',
+          style: InstrumentTheme.microLabel(context),
         );
 
         final metricX = _seriesConfigs.isNotEmpty
@@ -1845,11 +1686,11 @@ class _UserHistoryAnalyticsSectionState
 
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: AppShadows.sm,
+          padding: const EdgeInsets.all(12),
+          decoration: InstrumentTheme.cardDecoration(
+            context,
+            color: colors.surfaceContainerLow,
+            radius: 16,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1857,25 +1698,37 @@ class _UserHistoryAnalyticsSectionState
               Row(
                 children: [
                   Expanded(child: title),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    tooltip: 'Add series',
-                    onPressed: () => _openSeriesEditor(resp),
-                    icon: Icon(Icons.add),
+                  SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: IconButton(
+                      style: IconButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                        tapTargetSize: MaterialTapTargetSize.padded,
+                      ),
+                      tooltip: 'Add series',
+                      onPressed: () => _openSeriesEditor(resp),
+                      icon: const Icon(Icons.add),
+                    ),
                   ),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    tooltip: 'Clear',
-                    onPressed: () {
-                      setState(() {
-                        _seriesConfigs.clear();
-                        _ensureDefaultSeries();
-                      });
-                      _syncAnalyticsLayers();
-                    },
-                    icon: Icon(Icons.delete_outline),
+                  SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: IconButton(
+                      style: IconButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                        tapTargetSize: MaterialTapTargetSize.padded,
+                      ),
+                      tooltip: 'Clear',
+                      onPressed: () {
+                        setState(() {
+                          _seriesConfigs.clear();
+                          _ensureDefaultSeries();
+                        });
+                        _syncAnalyticsLayers();
+                      },
+                      icon: const Icon(Icons.delete_outline),
+                    ),
                   ),
                 ],
               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
@@ -6,7 +7,6 @@ import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/widgets/loading_indicator.dart';
 import 'package:workout_app/widgets/error_message.dart';
 import 'package:workout_app/widgets/empty_state.dart';
-import 'package:workout_app/l10n/app_localizations.dart';
 
 import '../config/api_config.dart';
 import '../models/user_max.dart';
@@ -271,32 +271,90 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
   }
 
   Widget _buildAttemptRow(UserMax max, {required bool highlight}) {
-    final textStyle = highlight
-        ? Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)
-        : Theme.of(context).textTheme.bodyMedium;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+    return Container(
+      margin: const EdgeInsets.only(top: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: InstrumentTheme.cardDecoration(
+        context,
+        color: highlight
+            ? Color.alphaBlend(
+                instrument.successColor.withValues(alpha: 0.10),
+                colors.surfaceContainerHighest,
+              )
+            : colors.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderColor: highlight
+            ? instrument.successColor.withValues(alpha: 0.5)
+            : null,
+        radius: 10,
+      ),
       child: Row(
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${max.maxWeight} кг', style: textStyle),
+                Row(
+                  children: [
+                    Text(
+                      '${max.maxWeight} кг',
+                      style: InstrumentTheme.tabular(
+                        (theme.textTheme.bodyMedium ?? const TextStyle())
+                            .copyWith(
+                          fontWeight:
+                              highlight ? FontWeight.w800 : FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (highlight) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: instrument.successColor.withValues(
+                            alpha: 0.16,
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'TOP',
+                          style: InstrumentTheme.microLabel(
+                            context,
+                            color: instrument.successColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
                 Text(
                   'Повторения: ${max.repMax}',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: InstrumentTheme.tabular(
+                    theme.textTheme.bodySmall ?? const TextStyle(fontSize: 12),
+                  ),
                 ),
               ],
             ),
           ),
-          IconButton(
-            tooltip: 'Удалить максимум',
-            icon: const Icon(Icons.delete_outline),
-            onPressed: () => _deleteUserMax(max),
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: IconButton(
+              tooltip: 'Удалить максимум',
+              style: IconButton.styleFrom(
+                minimumSize: const Size(48, 48),
+                tapTargetSize: MaterialTapTargetSize.padded,
+              ),
+              icon: Icon(Icons.delete_outline, color: colors.error, size: 20),
+              onPressed: () => _deleteUserMax(max),
+            ),
           ),
         ],
       ),
@@ -304,6 +362,9 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
   }
 
   Widget _buildGroupedList(List<UserMax> data) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final dimensions = UiDimensions.of(context);
     final Map<int, List<UserMax>> grouped = {};
     for (final max in data) {
       grouped.putIfAbsent(max.exerciseId, () => []).add(max);
@@ -318,54 +379,65 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
 
     return ListView.separated(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
+      padding: EdgeInsets.all(dimensions.pagePadding),
       itemCount: entries.length,
-      separatorBuilder: (_, __) => SizedBox(height: UiDimensions.of(context).rowGap),
+      separatorBuilder: (_, __) => SizedBox(height: dimensions.rowGap),
       itemBuilder: (context, index) {
         final entry = entries[index];
         final items = [...entry.value]
           ..sort((a, b) => b.maxWeight.compareTo(a.maxWeight));
         final top = items.first;
 
-        return Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+        return Container(
+          padding: EdgeInsets.all(dimensions.cardPadding),
+          decoration: InstrumentTheme.cardDecoration(
+            context,
+            color: colors.surfaceContainerLow,
+            radius: 16,
           ),
-          child: Padding(
-            padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _exerciseTitle(top),
-                        style: Theme.of(context).textTheme.titleMedium,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      _exerciseTitle(top),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '${top.maxWeight} кг',
-                          style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${top.maxWeight} кг',
+                        style: InstrumentTheme.tabular(
+                          (theme.textTheme.titleMedium ?? const TextStyle())
+                              .copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: colors.primary,
+                          ),
                         ),
-                        Text(
-                          'Лучший: ${top.repMax} повторений',
-                          style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      Text(
+                        'BEST · ${top.repMax} REPS',
+                        style: InstrumentTheme.tabular(
+                          InstrumentTheme.microLabel(context),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                ...items.map(
-                  (max) => _buildAttemptRow(max, highlight: max.id == top.id),
-                ),
-              ],
-            ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              ...items.map(
+                (max) => _buildAttemptRow(max, highlight: max.id == top.id),
+              ),
+            ],
           ),
         );
       },
@@ -374,7 +446,6 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     return AssistantChatHost(
       contextBuilder: _buildChatContext,
       builder: (context, openChat) {
@@ -383,10 +454,18 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
             title: 'User Maxes',
             onTitleTap: openChat,
             actions: [
-              IconButton(
-                tooltip: 'Анализ слабых мышц',
-                icon: const Icon(Icons.analytics_outlined),
-                onPressed: _showWeakMuscleAnalysis,
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: IconButton(
+                  tooltip: 'Анализ слабых мышц',
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    tapTargetSize: MaterialTapTargetSize.padded,
+                  ),
+                  icon: const Icon(Icons.analytics_outlined),
+                  onPressed: _showWeakMuscleAnalysis,
+                ),
               ),
             ],
           ),
@@ -421,16 +500,7 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: () async {
-              final created = await showModalBottomSheet<bool>(
-                context: context,
-                isScrollControlled: true,
-                builder: (context) => Padding(
-                  padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom,
-                  ),
-                  child: const UserMaxWidget(),
-                ),
-              );
+              final created = await UserMaxWidget.showAsBottomSheet(context);
               if (created == true) {
                 await _refresh();
               }

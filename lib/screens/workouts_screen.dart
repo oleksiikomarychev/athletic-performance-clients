@@ -1,26 +1,28 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:flutter/gestures.dart' show PointerDeviceKind;
+
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'package:workout_app/services/logger_service.dart';
-import 'package:workout_app/services/workout_service.dart';
-import 'package:workout_app/models/workout.dart';
-import 'package:workout_app/services/service_locator.dart';
-import 'package:workout_app/screens/workout_detail_screen.dart';
-import 'package:workout_app/screens/user_profile_screen.dart';
-import 'package:workout_app/services/base_api_service.dart';
 import 'package:workout_app/config/api_config.dart';
-import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/models/workout.dart';
+import 'package:workout_app/providers/ambient_environment_provider.dart';
+import 'package:workout_app/providers/interface_maker_provider.dart';
+import 'package:workout_app/screens/user_profile_screen.dart';
+import 'package:workout_app/screens/workout_detail_screen.dart';
+import 'package:workout_app/services/base_api_service.dart';
+import 'package:workout_app/services/logger_service.dart';
+import 'package:workout_app/services/service_locator.dart';
+import 'package:workout_app/services/user_analytics_service.dart';
+import 'package:workout_app/services/workout_service.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
+import 'package:workout_app/widgets/assistant_chat_host.dart';
+import 'package:workout_app/widgets/interface_maker_sheet.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/responsive_container.dart';
-import 'package:workout_app/widgets/assistant_chat_host.dart';
-import 'package:workout_app/services/user_analytics_service.dart';
+import 'package:workout_app/widgets/workout_instrument_cards.dart';
 import 'active_plan_screen.dart';
-
-import 'dart:async';
 
 final manualWorkoutsNotifierProvider =
     StateNotifierProvider<ManualWorkoutsNotifier, AsyncValue<List<Workout>>>((
@@ -261,8 +263,6 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
   final LoggerService _logger = LoggerService('WorkoutsScreen');
   final TextEditingController _nameController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final PageController _bannerController = PageController();
-  int _bannerIndex = 0;
 
   @override
   void initState() {
@@ -288,8 +288,24 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
   void dispose() {
     _scrollController.dispose();
     _nameController.dispose();
-    _bannerController.dispose();
     super.dispose();
+  }
+
+  Future<Map<String, dynamic>> _buildChatContext() async {
+    final nextWorkout = ref.read(nextWorkoutProvider).valueOrNull;
+    final manualCount = ref.read(manualWorkoutsNotifierProvider).valueOrNull?.length ?? 0;
+    return <String, dynamic>{
+      'v': 1,
+      'app': 'WorkoutApp',
+      'screen': 'workouts',
+      'timestamp': DateTime.now().toUtc().toIso8601String(),
+      'entities': <String, dynamic>{
+        'next_workout': nextWorkout != null
+            ? {'id': nextWorkout.id, 'name': nextWorkout.name}
+            : null,
+        'manual_workouts_count': manualCount,
+      },
+    };
   }
 
   Future<void> _showCreateWorkoutDialog() async {
@@ -414,17 +430,247 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
     );
   }
 
+  void _openActivePlan() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ActivePlanScreen()),
+    );
+  }
+
+  Future<void> _openManualWorkout(int workoutId) async {
+    await UserAnalyticsService.instance.trackWorkoutAction('open', workoutId);
+
+    try {
+      // ignore: unawaited_futures
+      ref.read(workoutServiceProvider).getWorkoutWithDetailsSWR(workoutId).first;
+    } catch (_) {}
+
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => WorkoutDetailScreen(workoutId: workoutId),
+      ),
+    );
+    if (!mounted) return;
+    try {
+      await ref.read(apiClientProvider).invalidateCacheGroups(const [
+        'workouts:list',
+        'workouts:detail',
+      ]);
+    } catch (_) {}
+    if (!mounted) return;
+    // ignore: unawaited_futures
+    ref.read(manualWorkoutsNotifierProvider.notifier).loadInitial();
+  }
+
+  Future<void> _deleteManualWorkout(Workout workout) async {
+    final workoutId = workout.id;
+    if (workoutId == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Удалить тренировку?'),
+        content: const Text(
+          'Вы уверены, что хотите удалить эту ручную тренировку?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      await ref
+          .read(manualWorkoutsNotifierProvider.notifier)
+          .deleteWorkout(workoutId);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final dimensions = UiDimensions.of(context);
+    final instrument = InstrumentTheme.of(context);
+
+    final nextWorkoutAsync = ref.watch(nextWorkoutProvider);
+    final manualWorkoutsState = ref.watch(manualWorkoutsNotifierProvider);
+    final interfaceConfig = ref.watch(interfaceMakerProvider);
+
+    final Workout? envWorkout = nextWorkoutAsync.valueOrNull ??
+        ((manualWorkoutsState.valueOrNull?.isNotEmpty ?? false)
+            ? manualWorkoutsState.valueOrNull!.first
+            : null);
+    final env = TrainingEnvironmentData.fromWorkout(envWorkout);
+    final accent = env.accentColor(instrument);
+
     return AssistantChatHost(
+      contextBuilder: _buildChatContext,
       builder: (context, openChat) {
-        return Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surface,
+        final showBriefing = interfaceConfig.isModuleVisible(
+          LayoutModule.commandBriefing,
+        );
+
+        Widget buildModule(LayoutModule module) {
+          switch (module) {
+            case LayoutModule.variantOrHorizonStrip:
+              return Padding(
+                padding: EdgeInsets.only(bottom: dimensions.sectionGap),
+                child: CanvasPillStrip(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: dimensions.pagePadding,
+                  ),
+                  items: [
+                    CanvasPillItem(
+                      label: InterfacePreset.powerlifter.label,
+                      selected:
+                          interfaceConfig.preset == InterfacePreset.powerlifter,
+                      accentColor: accent,
+                      onTap: () => ref
+                          .read(interfaceMakerProvider.notifier)
+                          .applyPreset(InterfacePreset.powerlifter),
+                    ),
+                    CanvasPillItem(
+                      label: InterfacePreset.volume.label,
+                      selected:
+                          interfaceConfig.preset == InterfacePreset.volume,
+                      accentColor: accent,
+                      onTap: () => ref
+                          .read(interfaceMakerProvider.notifier)
+                          .applyPreset(InterfacePreset.volume),
+                    ),
+                    CanvasPillItem(
+                      label: InterfacePreset.minimalist.label,
+                      selected:
+                          interfaceConfig.preset == InterfacePreset.minimalist,
+                      accentColor: accent,
+                      onTap: () => ref
+                          .read(interfaceMakerProvider.notifier)
+                          .applyPreset(InterfacePreset.minimalist),
+                    ),
+                    CanvasPillItem(
+                      label: 'Сетка',
+                      icon: Icons.grid_view_rounded,
+                      onTap: () => InterfaceMakerSheet.show(context),
+                    ),
+                    CanvasPillItem(
+                      label: 'План',
+                      icon: Icons.calendar_today_outlined,
+                      onTap: _openActivePlan,
+                    ),
+                  ],
+                ),
+              );
+            case LayoutModule.commandBriefing:
+              // Rendered cleanly inside WorkoutHeroInstrumentCard header.
+              return const SizedBox.shrink();
+            case LayoutModule.primaryTelemetry:
+              return Padding(
+                padding: EdgeInsets.fromLTRB(
+                  dimensions.pagePadding,
+                  0,
+                  dimensions.pagePadding,
+                  dimensions.sectionGap,
+                ),
+                child: nextWorkoutAsync.when(
+                  loading: () => Container(
+                    padding: EdgeInsets.all(dimensions.cardPadding + 8),
+                    decoration: InstrumentTheme.instrumentCardDecoration(
+                      context,
+                      accentColor: accent,
+                      radius: 22,
+                    ),
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (err, _) => Container(
+                    padding: EdgeInsets.all(dimensions.cardPadding + 2),
+                    decoration: InstrumentTheme.instrumentCardDecoration(
+                      context,
+                      accentColor: scheme.error,
+                      radius: 22,
+                    ),
+                    child: Text(
+                      'Ошибка загрузки плана: $err',
+                      style: TextStyle(color: scheme.error),
+                    ),
+                  ),
+                  data: (nextWorkout) => WorkoutHeroInstrumentCard(
+                    workout: nextWorkout,
+                    environment: env,
+                    slots: interfaceConfig.slots,
+                    showChart: interfaceConfig.showChart,
+                    showBriefing: showBriefing,
+                    snarkyVoice: interfaceConfig.snarkyVoice,
+                    onOpenPlan: _openActivePlan,
+                    onOpenWorkout:
+                        (nextWorkout != null && nextWorkout.id != null)
+                            ? () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => WorkoutDetailScreen(
+                                      workoutId: nextWorkout.id!,
+                                    ),
+                                  ),
+                                );
+                                if (!mounted) return;
+                                ref.invalidate(nextWorkoutProvider);
+                              }
+                            : null,
+                  ),
+                ),
+              );
+            case LayoutModule.scheduleOrLibrary:
+              final notifier =
+                  ref.read(manualWorkoutsNotifierProvider.notifier);
+              final workouts = manualWorkoutsState.valueOrNull ?? const [];
+              if (manualWorkoutsState.hasError) {
+                _logger.e(
+                  'Error loading workouts: ${manualWorkoutsState.error}\n${manualWorkoutsState.stackTrace}',
+                );
+              }
+              return Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: dimensions.pagePadding,
+                ),
+                child: WorkoutLibraryInstrumentModule(
+                  workouts: workouts,
+                  isLoading: manualWorkoutsState.isLoading,
+                  error: manualWorkoutsState.hasError
+                      ? manualWorkoutsState.error
+                      : null,
+                  isLoadingMore: notifier.isLoadingMore,
+                  hasMore: notifier.hasMore,
+                  onRetry: notifier.loadInitial,
+                  onCreateWorkout: _showCreateWorkoutDialog,
+                  onOpenWorkout: (workout) {
+                    final id = workout.id;
+                    if (id == null) return;
+                    _openManualWorkout(id);
+                  },
+                  onDeleteWorkout: _deleteManualWorkout,
+                ),
+              );
+          }
+        }
+
+        final moduleChildren = <Widget>[
+          for (final module in interfaceConfig.visibleModules)
+            buildModule(module),
+        ];
+
+        return AmbientScaffoldShell(
+          environment: env,
           appBar: PrimaryAppBar.main(
-            title: 'Workouts',
+            title: 'Тренировки',
             onTitleTap: openChat,
             actions: [
               IconButton(
+                tooltip: 'Профиль',
                 icon: const Icon(Icons.account_circle_outlined),
                 onPressed: () async {
                   await Navigator.of(context).push(
@@ -436,761 +682,37 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
               ),
             ],
           ),
-          body: SafeArea(
-            bottom: false,
-            child: Consumer(
-              builder: (context, ref, child) {
-                final manualWorkoutsState = ref.watch(
-                  manualWorkoutsNotifierProvider,
-                );
-
-                Widget buildError(
-                  String title,
-                  Object error,
-                  StackTrace? stackTrace,
-                  VoidCallback retry,
-                ) {
-                  _logger.e('$title: $error\n$stackTrace');
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          color: Colors.red,
-                          size: 48,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          title,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          error.toString(),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: retry,
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Retry'),
-                        ),
-                      ],
+          body: RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(nextWorkoutProvider);
+              await Future.wait([
+                ref
+                    .read(manualWorkoutsNotifierProvider.notifier)
+                    .loadInitial(),
+                ref.read(nextWorkoutProvider.future),
+              ]);
+            },
+            child: ResponsiveContainer(
+              maxWidth: Breakpoints.maxContentWidthWide,
+              child: CustomScrollView(
+                controller: _scrollController,
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+                slivers: [
+                  SliverPadding(
+                    padding: EdgeInsets.only(
+                      top: AmbientScaffoldShell.topContentInset(context),
+                      bottom: AmbientScaffoldShell.bottomContentInset(context),
                     ),
-                  );
-                }
-
-                return Container(
-                  color: Theme.of(context).colorScheme.surface,
-                  child: ResponsiveContainer(
-                    maxWidth: Breakpoints.maxContentWidthWide,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _HeroCarousel(
-                        controller: _bannerController,
-                        currentIndex: _bannerIndex,
-                        onPageChanged: (i) => setState(() => _bannerIndex = i),
-                      ),
-                      SizedBox(height: UiDimensions.of(context).sectionGap),
-                      Expanded(
-                        child: RefreshIndicator(
-                          onRefresh: () async {
-                            ref.invalidate(nextWorkoutProvider);
-                            await Future.wait([
-                              ref
-                                  .read(manualWorkoutsNotifierProvider.notifier)
-                                  .loadInitial(),
-                              ref.read(nextWorkoutProvider.future),
-                            ]);
-                          },
-                          child: ListView(
-                            controller: _scrollController,
-                            physics: const BouncingScrollPhysics(
-                              parent: AlwaysScrollableScrollPhysics(),
-                            ),
-                            padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding),
-                            children: [
-                              _PlansSection(
-                                nextWorkoutAsync: ref.watch(
-                                  nextWorkoutProvider,
-                                ),
-                              ),
-                              SizedBox(height: UiDimensions.of(context).sectionGap),
-                              _LibrarySection(
-                                manualWorkoutsState: manualWorkoutsState,
-                                onRetry: () => ref
-                                    .read(
-                                      manualWorkoutsNotifierProvider.notifier,
-                                    )
-                                    .loadInitial(),
-                                onOpenWorkout: (workoutId) async {
-                                  // Track workout opening
-                                  await UserAnalyticsService.instance
-                                      .trackWorkoutAction('open', workoutId);
-
-                                  // Warm detail cache in background to reduce perceived latency on first open.
-                                  // Do not await: navigation should stay responsive.
-                                  try {
-                                    // ignore: unawaited_futures
-                                    ref
-                                        .read(workoutServiceProvider)
-                                        .getWorkoutWithDetailsSWR(workoutId)
-                                        .first;
-                                  } catch (_) {}
-
-                                  await Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => WorkoutDetailScreen(
-                                        workoutId: workoutId,
-                                      ),
-                                    ),
-                                  );
-                                  if (!mounted) return;
-                                  try {
-                                    await ref
-                                        .read(apiClientProvider)
-                                        .invalidateCacheGroups(const [
-                                          'workouts:list',
-                                          'workouts:detail',
-                                        ]);
-                                  } catch (_) {}
-                                  // Refresh list without blocking the UI thread.
-                                  // ignore: unawaited_futures
-                                  ref
-                                      .read(
-                                        manualWorkoutsNotifierProvider.notifier,
-                                      )
-                                      .loadInitial();
-                                },
-                                readNotifier: () => ref.read(
-                                  manualWorkoutsNotifierProvider.notifier,
-                                ),
-                                buildError: buildError,
-                                onCreateWorkout: _showCreateWorkoutDialog,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+                    sliver: SliverList.list(children: moduleChildren),
                   ),
-                  ),
-                );
-              },
+                ],
+              ),
             ),
           ),
         );
       },
-    );
-  }
-}
-
-class _HeroCarousel extends StatelessWidget {
-  final PageController controller;
-  final int currentIndex;
-  final ValueChanged<int> onPageChanged;
-
-  const _HeroCarousel({
-    required this.controller,
-    required this.currentIndex,
-    required this.onPageChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    const items = ['assets/images/image.png', 'assets/images/image1.png'];
-    final gradients = const [
-      LinearGradient(
-        colors: [Color(0xFFFFC37F), Color(0xFFFF9472)],
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-      ),
-      LinearGradient(
-        colors: [Color(0xFFFFC37F), Color(0xFFFF9472)],
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-      ),
-    ];
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).pagePadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: AppShadows.lg,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: Responsive.isWide(context)
-                  ? SizedBox(
-                      height: 220,
-                      child: _buildCarouselPageView(context, items, gradients),
-                    )
-                  : AspectRatio(
-                      aspectRatio: UiDimensions.of(context).heroAspectRatio,
-                      child: _buildCarouselPageView(context, items, gradients),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(items.length, (i) {
-              final active = i == currentIndex;
-              return AnimatedContainer(
-                duration: AppDurations.medium,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                width: active ? 14 : 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: active
-                      ? (Theme.of(context).brightness == Brightness.dark
-                          ? const Color(0xFFB8C1C2)
-                          : AppColors.primary)
-                      : AppColors.textDisabled.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              );
-            }),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCarouselPageView(
-    BuildContext context,
-    List<String> items,
-    List<LinearGradient> gradients,
-  ) {
-    return ScrollConfiguration(
-      behavior: ScrollConfiguration.of(context).copyWith(
-        dragDevices: const {
-          PointerDeviceKind.touch,
-          PointerDeviceKind.mouse,
-          PointerDeviceKind.trackpad,
-        },
-      ),
-      child: PageView.builder(
-        controller: controller,
-        onPageChanged: onPageChanged,
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          return Image.asset(
-            items[index],
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: gradients[index % gradients.length],
-                ),
-              );
-            },
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _PlansSection extends StatelessWidget {
-  final AsyncValue<Workout?> nextWorkoutAsync;
-
-  const _PlansSection({required this.nextWorkoutAsync});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dimensions = UiDimensions.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const _SectionTitle(
-              icon: Icons.calendar_today,
-              title: 'Plans Workouts',
-            ),
-            IconButton(
-              tooltip: 'Open Calendar',
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const ActivePlanScreen()),
-                );
-              },
-              icon: Icon(
-                Icons.calendar_today_outlined,
-                color: isDark ? Theme.of(context).colorScheme.onSurfaceVariant : AppColors.primary,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: dimensions.rowGap),
-        nextWorkoutAsync.when(
-          loading: () => Container(
-            padding: EdgeInsets.all(dimensions.cardPadding),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: AppShadows.md,
-            ),
-            child: const Center(child: CircularProgressIndicator()),
-          ),
-          error: (err, stack) => Container(
-            padding: EdgeInsets.all(dimensions.cardPadding),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: AppShadows.md,
-            ),
-            child: Text('Error: $err'),
-          ),
-          data: (nextWorkout) {
-            final isCompleted = nextWorkout == null;
-            final status = (nextWorkout?.status ?? '').toLowerCase();
-            final isCancelled =
-                status == 'cancelled' ||
-                status == 'canceled' ||
-                status == 'dropped';
-            final statusLabel = isCompleted
-                ? 'Completed'
-                : (isCancelled ? 'Cancelled' : 'In Progress');
-            final statusBackground = isDark
-                ? const Color(0xFF30383C)
-                : Colors.white.withOpacity(isCompleted ? 0.16 : 0.24);
-            final statusTextColor = isCompleted
-                ? (isDark ? const Color(0xFF9CD0B0) : const Color(0xFFB2FF59))
-                : (isDark ? const Color(0xFFD8E2E0) : Colors.white);
-            final subtitle = nextWorkout?.name ?? 'No upcoming workouts';
-            final scheduleText = isCompleted
-                ? 'All workouts completed or no active plan'
-                : (() {
-                    final w = nextWorkout;
-                    final date = w.scheduledFor?.toLocal();
-                    return 'Scheduled for ${date != null ? DateFormat('MMM d, yyyy').format(date) : 'today'}';
-                  })();
-
-            final card = Container(
-              padding: EdgeInsets.symmetric(horizontal: dimensions.cardPadding, vertical: dimensions.cardPadding),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF20262B) : null,
-                gradient: isDark ? null : AppGradients.blue,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: isDark ? null : AppShadows.sm,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        height: 44,
-                        width: 44,
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF30383C) : Colors.white.withOpacity(0.16),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.auto_graph,
-                          color: isDark ? const Color(0xFF9CB7B1) : Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              isCompleted ? 'Nice work!' : 'Current Workout',
-                              style: AppTextStyles.titleLarge.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              subtitle,
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: statusBackground,
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              statusLabel,
-                              style: AppTextStyles.titleSmall.copyWith(
-                                color: statusTextColor,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (!isCompleted) ...[
-                        const SizedBox(width: 6),
-                        if (isDark)
-                          const Icon(Icons.chevron_right, size: 20, color: Color(0xFFB8C1C2))
-                        else Container(
-                          height: 28,
-                          width: 28,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.18),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.chevron_right,
-                            size: 18,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    scheduleText,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: isDark ? Theme.of(context).colorScheme.onSurfaceVariant : Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            );
-
-            if (nextWorkout != null && nextWorkout.id != null) {
-              return Consumer(
-                builder: (context, ref, _) => GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            WorkoutDetailScreen(workoutId: nextWorkout.id!),
-                      ),
-                    );
-
-                    ref.invalidate(nextWorkoutProvider);
-                  },
-                  child: card,
-                ),
-              );
-            }
-            return card;
-          },
-        ),
-      ],
-    );
-  }
-}
-
-class _LibrarySection extends StatelessWidget {
-  final AsyncValue<List<Workout>> manualWorkoutsState;
-  final VoidCallback onRetry;
-  final Future<void> Function(int workoutId) onOpenWorkout;
-  final ManualWorkoutsNotifier Function() readNotifier;
-  final Widget Function(String, Object, StackTrace?, VoidCallback) buildError;
-  final VoidCallback onCreateWorkout;
-
-  const _LibrarySection({
-    required this.manualWorkoutsState,
-    required this.onRetry,
-    required this.onOpenWorkout,
-    required this.readNotifier,
-    required this.buildError,
-    required this.onCreateWorkout,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const _SectionTitle(
-              icon: Icons.sports_gymnastics,
-              title: 'Workout Library',
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: onCreateWorkout,
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text('Start Workout'),
-                  style: Theme.of(context).brightness == Brightness.dark
-                      ? ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2A3237),
-                          foregroundColor: Colors.white,
-                        )
-                      : null,
-                ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        manualWorkoutsState.when(
-          loading: () => const Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 32),
-              child: CircularProgressIndicator(),
-            ),
-          ),
-          error: (werr, wst) =>
-              buildError('Error loading workouts', werr, wst, onRetry),
-          data: (workouts) {
-            if (workouts.isEmpty) {
-              final scheme = Theme.of(context).colorScheme;
-              return Container(
-                padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
-                decoration: BoxDecoration(
-                  color: scheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.fitness_center_outlined, size: 28, color: scheme.onSurfaceVariant),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('No Manual Workouts', style: Theme.of(context).textTheme.titleMedium),
-                          const SizedBox(height: 4),
-                          Text('Create a manual workout', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            final notifier = readNotifier();
-            final isWide = Responsive.isWide(context);
-
-            Widget buildCard(Workout workout) => _WorkoutCard(
-              workout: workout,
-              onTap: () => onOpenWorkout(workout.id!),
-              onDelete: () async {
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('Delete workout?'),
-                    content: const Text(
-                      'Are you sure you want to delete this manual workout?',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(ctx).pop(false),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(ctx).pop(true),
-                        child: const Text('Delete'),
-                      ),
-                    ],
-                  ),
-                );
-                if (confirmed == true) {
-                  await notifier.deleteWorkout(workout.id!);
-                }
-              },
-            );
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (isWide)
-                  for (var i = 0; i < workouts.length; i += 2) ...[
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: buildCard(workouts[i])),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: i + 1 < workouts.length
-                              ? buildCard(workouts[i + 1])
-                              : const SizedBox.shrink(),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                  ]
-                else
-                  for (final workout in workouts) ...[
-                    buildCard(workout),
-                    const SizedBox(height: 16),
-                  ],
-                if (notifier.isLoadingMore)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: CircularProgressIndicator(),
-                    ),
-                  ),
-                if (!notifier.hasMore && workouts.isNotEmpty)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Text('No more workouts'),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
-      ],
-    );
-  }
-}
-
-class _WorkoutCard extends StatelessWidget {
-  final Workout workout;
-  final VoidCallback onTap;
-  final Future<void> Function() onDelete;
-
-  const _WorkoutCard({
-    required this.workout,
-    required this.onTap,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: AppShadows.sm,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.fitness_center,
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  workout.name,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _buildSubtitle(workout),
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-            onPressed: () async {
-              await onDelete();
-            },
-          ),
-          IconButton(
-            onPressed: onTap,
-            icon: const Icon(Icons.chevron_right),
-            color: AppColors.primary,
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _buildSubtitle(Workout workout) {
-    if (workout.exerciseInstances.isNotEmpty) {
-      return '${workout.exerciseInstances.length} exercises';
-    }
-    if (workout.durationSeconds != null) {
-      final minutes = (workout.durationSeconds! / 60).round();
-      return '$minutes min session';
-    }
-    if (workout.scheduledFor != null) {
-      return 'Scheduled ${DateFormat('MMM d').format(workout.scheduledFor!.toLocal())}';
-    }
-    return 'Manual session';
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  final IconData icon;
-  final String title;
-
-  const _SectionTitle({required this.icon, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Row(
-      children: [
-        if (isDark)
-          Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant, size: 22)
-        else Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE8ECFF),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: AppColors.primary, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-        ),
-      ],
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 import 'package:workout_app/screens/user_profile_screen.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
@@ -9,6 +10,7 @@ import 'package:workout_app/widgets/loading_indicator.dart';
 import 'package:workout_app/widgets/error_message.dart';
 import 'package:workout_app/widgets/empty_state.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/providers/plan_catalog_provider.dart';
 import 'package:workout_app/services/service_locator.dart';
@@ -98,16 +100,24 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
     }
   }
 
+  Future<void> _createPlan(dynamic controller) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CalendarPlanCreate(),
+      ),
+    );
+    if (!mounted) return;
+    if (result == true) {
+      controller.refresh();
+    }
+  }
+
   Future<void> _showFilters() async {
     FocusScope.of(context).unfocus();
-    final filters = await showModalBottomSheet<Map<String, Set<String>>>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (_) => FractionallySizedBox(
-        heightFactor: 0.75,
-        child: PlanCatalogFilters(initial: ref.read(planCatalogProvider)),
-      ),
+    final filters = await PlanCatalogFilters.show(
+      context,
+      initial: ref.read(planCatalogProvider),
     );
     if (mounted && filters != null)
       await ref.read(planCatalogProvider.notifier).setFilters(filters);
@@ -128,6 +138,12 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
             onTitleTap: openChat,
             actions: [
               IconButton(
+                tooltip: 'Create new calendar plan',
+                icon: const Icon(Icons.add),
+                onPressed: () => _createPlan(controller),
+              ),
+              IconButton(
+                tooltip: 'Профиль',
                 icon: const Icon(Icons.person),
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const UserProfileScreen()),
@@ -140,89 +156,133 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
             child: Column(
               children: [
               Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: dimensions.pagePadding,
-                  vertical: 6,
+                padding: EdgeInsets.fromLTRB(
+                  dimensions.pagePadding,
+                  dimensions.rowGap,
+                  dimensions.pagePadding,
+                  dimensions.rowGap,
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _search,
-                        onChanged: controller.setQuery,
-                        onSubmitted: (_) => controller.refresh(),
-                        decoration: InputDecoration(
-                          hintText: 'Поиск планов',
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: catalog.query.isEmpty
-                              ? null
-                              : IconButton(
-                                  tooltip: 'Очистить поиск',
-                                  icon: const Icon(Icons.close),
-                                  onPressed: () {
-                                    _search.clear();
-                                    controller.setQuery('');
-                                  },
-                                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  decoration: InstrumentTheme.cardDecoration(
+                    context,
+                    color: Theme.of(context).colorScheme.surfaceContainerLow,
+                    radius: 14,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _search,
+                          onChanged: controller.setQuery,
+                          onSubmitted: (_) => controller.refresh(),
+                          decoration: InputDecoration(
+                            hintText: 'Поиск планов',
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 12,
+                            ),
+                            prefixIcon: const Icon(Icons.search),
+                            suffixIcon: catalog.query.isEmpty
+                                ? null
+                                : IconButton(
+                                    tooltip: 'Очистить поиск',
+                                    style: IconButton.styleFrom(
+                                      minimumSize: const Size(48, 48),
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.padded,
+                                    ),
+                                    icon: const Icon(Icons.close),
+                                    onPressed: () {
+                                      _search.clear();
+                                      controller.setQuery('');
+                                    },
+                                  ),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Badge(
-                      isLabelVisible: catalog.filterCount > 0,
-                      label: Text('${catalog.filterCount}'),
-                      child: IconButton(
-                        tooltip: 'Фильтры',
-                        onPressed: _showFilters,
-                        icon: const Icon(Icons.tune),
+                      const SizedBox(width: 4),
+                      Badge(
+                        isLabelVisible: catalog.filterCount > 0,
+                        label: Text(
+                          '${catalog.filterCount}',
+                          style: InstrumentTheme.tabular(
+                            const TextStyle(fontSize: 11),
+                          ),
+                        ),
+                        child: IconButton(
+                          tooltip: 'Фильтры',
+                          style: IconButton.styleFrom(
+                            minimumSize: const Size(48, 48),
+                            tapTargetSize: MaterialTapTargetSize.padded,
+                          ),
+                          onPressed: _showFilters,
+                          icon: const Icon(Icons.tune),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
               if (catalog.filterCount > 0)
-                SizedBox(
-                  height: 44 * MediaQuery.textScalerOf(context).scale(1),
-                  child: ListView(
+                Padding(
+                  padding: EdgeInsets.only(bottom: dimensions.rowGap),
+                  child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     padding: EdgeInsets.symmetric(
                       horizontal: dimensions.pagePadding,
                     ),
-                    children: [
-                      for (final facet in catalog.filters.entries)
-                        for (final value in facet.value)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: InputChip(
-                              label: Text(catalogFilterLabel(facet.key, value)),
-                              onDeleted: () {
-                                final next = {
-                                  for (final e in catalog.filters.entries)
-                                    e.key: {...e.value},
-                                };
-                                next[facet.key]!.remove(value);
-                                controller.setFilters(next);
-                              },
+                    child: Row(
+                      children: [
+                        for (final facet in catalog.filters.entries)
+                          for (final value in facet.value)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 6),
+                              child: InputChip(
+                                label: Text(
+                                  catalogFilterLabel(facet.key, value),
+                                ),
+                                onDeleted: () {
+                                  final next = {
+                                    for (final e in catalog.filters.entries)
+                                      e.key: {...e.value},
+                                  };
+                                  next[facet.key]!.remove(value);
+                                  controller.setFilters(next);
+                                },
+                              ),
                             ),
-                          ),
-                      TextButton(
-                        onPressed: () => controller.setFilters({}),
-                        child: const Text('Сбросить'),
-                      ),
-                    ],
+                        TextButton(
+                          onPressed: () => controller.setFilters({}),
+                          child: const Text('Сбросить'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               if (!catalog.loading && catalog.error == null)
                 Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: dimensions.pagePadding,
-                    vertical: 4,
+                    vertical: 2,
                   ),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       'Найдено: ${catalog.page.total}',
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: InstrumentTheme.tabular(
+                        Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ) ??
+                            const TextStyle(fontSize: 12),
+                      ),
                     ),
                   ),
                 ),
@@ -253,7 +313,7 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                             dimensions.pagePadding,
                             dimensions.rowGap,
                             dimensions.pagePadding,
-                            96 + MediaQuery.paddingOf(context).bottom,
+                            AmbientScaffoldShell.bottomContentInset(context),
                           ),
                           itemCount: catalog.page.items.isEmpty
                               ? 1
@@ -300,22 +360,6 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
             ],
             ),
           ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () async {
-              final result = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CalendarPlanCreate(),
-                ),
-              );
-              if (!mounted) return;
-              if (result == true) {
-                controller.refresh();
-              }
-            },
-            child: const Icon(Icons.add),
-            tooltip: 'Create new calendar plan',
-          ),
         );
       },
     );
@@ -344,7 +388,7 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
         dimensions.pagePadding,
         dimensions.rowGap,
         dimensions.pagePadding,
-        96 + MediaQuery.paddingOf(context).bottom,
+        AmbientScaffoldShell.bottomContentInset(context),
       ),
       itemCount: totalRows,
       separatorBuilder: (_, _) => SizedBox(height: dimensions.rowGap),

@@ -20,7 +20,6 @@ class ProfileService extends BaseApiService {
       throw Exception('Unexpected profile response: $response');
     } catch (e, st) {
       handleError('Failed to fetch profile', e, st);
-      rethrow;
     }
   }
 
@@ -36,7 +35,6 @@ class ProfileService extends BaseApiService {
       throw Exception('Unexpected profile response: $response');
     } catch (e, st) {
       handleError('Failed to fetch profile by id', e, st);
-      rethrow;
     }
   }
 
@@ -48,8 +46,9 @@ class ProfileService extends BaseApiService {
     List<String>? languages,
     CoachingRatePlan? ratePlan,
   }) async {
-    final payload = <String, dynamic>{};
-    if (enabled != null) payload['enabled'] = enabled;
+    final payload = <String, dynamic>{
+      'enabled': enabled,
+    };
     if (tagline != null) payload['tagline'] = tagline;
     if (description != null) payload['description'] = description;
     if (specializations != null) payload['specializations'] = specializations;
@@ -68,7 +67,6 @@ class ProfileService extends BaseApiService {
       throw Exception('Unexpected coaching profile update response: $response');
     } catch (e, st) {
       handleError('Failed to update coaching profile', e, st);
-      rethrow;
     }
   }
 
@@ -118,7 +116,6 @@ class ProfileService extends BaseApiService {
       throw Exception('Unexpected profile update response: $response');
     } catch (e, st) {
       handleError('Failed to update profile', e, st);
-      rethrow;
     }
   }
 
@@ -146,7 +143,6 @@ class ProfileService extends BaseApiService {
       throw Exception('Unexpected settings update response: $response');
     } catch (e, st) {
       handleError('Failed to update settings', e, st);
-      rethrow;
     }
   }
 
@@ -163,7 +159,6 @@ class ProfileService extends BaseApiService {
       throw Exception('Unexpected onboarding link response: $response');
     } catch (e, st) {
       handleError('Failed to create Stripe Connect onboarding link', e, st);
-      rethrow;
     }
   }
 }

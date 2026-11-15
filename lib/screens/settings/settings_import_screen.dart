@@ -3,8 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:provider/provider.dart';
 import 'package:workout_app/config/api_config.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/services/api_client.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
+import 'package:workout_app/widgets/primary_app_bar.dart';
+import 'package:workout_app/widgets/responsive_container.dart';
 
 class SettingsImportScreen extends StatefulWidget {
   const SettingsImportScreen({super.key});
@@ -19,7 +25,6 @@ class _SettingsImportScreenState extends State<SettingsImportScreen> {
   PlatformFile? _selectedFile;
   _ImportResult? _result;
   String? _error;
-  String? _taskId;
 
   Future<void> _pickFile() async {
     final picked = await FilePicker.platform.pickFiles(
@@ -53,7 +58,6 @@ class _SettingsImportScreenState extends State<SettingsImportScreen> {
       _importing = true;
       _error = null;
       _result = null;
-      _taskId = null;
     });
 
     try {
@@ -78,7 +82,6 @@ class _SettingsImportScreenState extends State<SettingsImportScreen> {
       }
 
       if (!mounted) return;
-      setState(() => _taskId = taskId);
 
       await _pollTask(apiClient, taskId);
     } catch (e) {
@@ -121,7 +124,11 @@ class _SettingsImportScreenState extends State<SettingsImportScreen> {
         }
         if (!mounted) return;
         setState(() {
-          _result = const _ImportResult(createdWorkouts: 0, totalInFile: 0, errors: 0);
+          _result = const _ImportResult(
+            createdWorkouts: 0,
+            totalInFile: 0,
+            errors: 0,
+          );
         });
         return;
       }
@@ -140,126 +147,263 @@ class _SettingsImportScreenState extends State<SettingsImportScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
     final dimensions = UiDimensions.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final hairline =
+        (isDark ? instrument.hairlineBorder : scheme.outlineVariant)
+            .withValues(alpha: isDark ? 0.85 : 0.55);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Import workouts')),
-      body: Padding(
-        padding: EdgeInsets.all(dimensions.pagePadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    return AmbientScaffoldShell(
+      appBar: const PrimaryAppBar.detail(title: 'Import workouts'),
+      body: ResponsiveContainer(
+        maxWidth: Breakpoints.maxContentWidthNarrow,
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            dimensions.pagePadding,
+            AmbientScaffoldShell.topContentInset(context),
+            dimensions.pagePadding,
+            MediaQuery.paddingOf(context).bottom + 28,
+          ),
           children: [
-            Card(
-              child: Padding(
-                padding: EdgeInsets.all(dimensions.cardPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.fitness_center, color: colorScheme.primary),
-                        const SizedBox(width: 12),
-                        Text('Hevy', style: theme.textTheme.titleMedium),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Import workout history from a Hevy CSV export file. '
-                      'Go to Hevy app → Settings → Export data to get the file.',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                    SizedBox(height: dimensions.rowGap),
-                    OutlinedButton.icon(
-                      onPressed: _importing ? null : _pickFile,
-                      icon: const Icon(Icons.file_upload_outlined),
-                      label: Text(_selectedFileName ?? 'Select CSV file'),
-                    ),
-                  ],
-                ),
+            Container(
+              decoration: InstrumentTheme.instrumentCardDecoration(
+                context,
+                accentColor: instrument.deloadAura,
+                radius: 22,
               ),
-            ),
-            SizedBox(height: dimensions.rowGap),
-            if (_selectedFile != null && _result == null)
-              FilledButton.icon(
-                onPressed: _importing ? null : _startImport,
-                icon: _importing
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.cloud_upload),
-                label: Text(_importing ? 'Importing...' : 'Start import'),
-              ),
-            if (_importing)
-              const Padding(
-                padding: EdgeInsets.only(top: 16),
-                child: Column(
-                  children: [
-                    LinearProgressIndicator(),
-                    SizedBox(height: 8),
-                    Text(
-                      'This may take a few minutes for large files...',
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: Card(
-                  color: colorScheme.errorContainer,
-                  child: Padding(
-                    padding: EdgeInsets.all(dimensions.cardPadding),
-                    child: Row(
-                      children: [
-                        Icon(Icons.error_outline, color: colorScheme.error),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _error!,
-                            style: TextStyle(color: colorScheme.onErrorContainer),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            if (_result != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: Card(
-                  color: colorScheme.primaryContainer,
-                  child: Padding(
-                    padding: EdgeInsets.all(dimensions.cardPadding),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(dimensions.cardPadding + 2),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.check_circle, color: colorScheme.primary),
-                            const SizedBox(width: 12),
-                            Text('Import complete', style: theme.textTheme.titleMedium),
+                            Icon(
+                              Icons.fitness_center_rounded,
+                              size: 18,
+                              color: instrument.deloadAura,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'CSV DATA PIPELINE',
+                                style: InstrumentTheme.microLabel(
+                                  context,
+                                  color: instrument.deloadAura,
+                                ),
+                              ),
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        Text('Created: ${_result!.createdWorkouts} workouts'),
-                        Text('Total in file: ${_result!.totalInFile}'),
-                        if (_result!.errors > 0)
-                          Text(
-                            'Errors: ${_result!.errors}',
-                            style: TextStyle(color: colorScheme.error),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Hevy Workout Export',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Import workout history from a Hevy CSV export file. '
+                          'Go to Hevy app → Settings → Export data to get the file.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
                       ],
                     ),
                   ),
+                  Container(height: 1, color: hairline),
+                  Padding(
+                    padding: EdgeInsets.all(dimensions.cardPadding + 2),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        InstrumentActionButton(
+                          label: _selectedFileName ?? 'Select CSV file',
+                          icon: Icons.file_upload_outlined,
+                          variant: InstrumentActionVariant.secondary,
+                          expanded: true,
+                          onPressed: _importing ? null : _pickFile,
+                        ),
+                        if (_selectedFile != null && _result == null) ...[
+                          const SizedBox(height: 12),
+                          InstrumentActionButton(
+                            label: _importing ? 'Importing...' : 'Start import',
+                            icon: Icons.cloud_upload_rounded,
+                            variant: InstrumentActionVariant.primary,
+                            accentColor: instrument.deloadAura,
+                            loading: _importing,
+                            expanded: true,
+                            onPressed: _importing ? null : _startImport,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (_importing) ...[
+                    Container(height: 1, color: hairline),
+                    Padding(
+                      padding: EdgeInsets.all(dimensions.cardPadding + 2),
+                      child: Column(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(999),
+                            child: LinearProgressIndicator(
+                              minHeight: 4,
+                              backgroundColor: hairline,
+                              color: instrument.deloadAura,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'This may take a few minutes for large files...',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                decoration: InstrumentTheme.instrumentCardDecoration(
+                  context,
+                  accentColor: instrument.peakEffortColor,
+                  radius: 20,
+                ),
+                padding: EdgeInsets.all(dimensions.cardPadding + 2),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.error_outline_rounded,
+                      color: instrument.peakEffortColor,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _error!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: instrument.peakEffortColor,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            ],
+            if (_result != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                decoration: InstrumentTheme.instrumentCardDecoration(
+                  context,
+                  accentColor: instrument.successColor,
+                  radius: 20,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(dimensions.cardPadding + 2),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_rounded,
+                            color: instrument.successColor,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Import complete',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(height: 1, color: hairline),
+                    _ImportMetricRow(
+                      label: 'Created workouts',
+                      value: '${_result!.createdWorkouts}',
+                      color: instrument.successColor,
+                    ),
+                    Container(height: 1, color: hairline),
+                    _ImportMetricRow(
+                      label: 'Total rows in file',
+                      value: '${_result!.totalInFile}',
+                    ),
+                    if (_result!.errors > 0) ...[
+                      Container(height: 1, color: hairline),
+                      _ImportMetricRow(
+                        label: 'Row errors',
+                        value: '${_result!.errors}',
+                        color: instrument.peakEffortColor,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ImportMetricRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? color;
+
+  const _ImportMetricRow({
+    required this.label,
+    required this.value,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: InstrumentTheme.tabular(
+              (theme.textTheme.titleMedium ?? const TextStyle()).copyWith(
+                fontWeight: FontWeight.w700,
+                color: color ?? scheme.onSurface,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

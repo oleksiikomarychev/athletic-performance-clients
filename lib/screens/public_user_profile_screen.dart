@@ -1,87 +1,112 @@
-import 'package:flutter/material.dart';
-import 'package:workout_app/config/theme/ui_dimensions.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:workout_app/widgets/primary_app_bar.dart';
-import 'package:workout_app/widgets/assistant_chat_host.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/models/user_profile.dart';
+import 'package:workout_app/models/user_stats.dart';
+import 'package:workout_app/providers/ambient_environment_provider.dart';
+import 'package:workout_app/providers/providers.dart';
 import 'package:workout_app/services/base_api_service.dart';
+import 'package:workout_app/services/service_locator.dart' as sl;
+import 'package:workout_app/src/widgets/snack_utils.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
+import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/widgets/coach_rating_display.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
+import 'package:workout_app/widgets/primary_app_bar.dart';
+import 'package:workout_app/widgets/profile_sections.dart';
 import 'package:workout_app/widgets/review_card.dart';
 import 'package:workout_app/widgets/review_form_dialog.dart';
-
-import '../config/constants/theme_constants.dart';
-import '../models/user_profile.dart';
-import '../models/user_stats.dart';
-import '../models/crm_coach_athlete_link.dart';
-import '../providers/providers.dart';
-import '../services/service_locator.dart' as sl;
-import '../widgets/user_profile_view.dart';
-import '../widgets/profile_sections.dart';
+import 'package:workout_app/widgets/user_profile_view.dart';
 
 class PublicUserProfileScreen extends ConsumerWidget {
   final String userId;
   final String? initialName;
 
-  const PublicUserProfileScreen({super.key, required this.userId, this.initialName});
+  const PublicUserProfileScreen({
+    super.key,
+    required this.userId,
+    this.initialName,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(publicUserProfileProvider(userId));
     final aggregatesAsync = ref.watch(publicProfileAggregatesProvider(userId));
-    final reviewsAsync = ref.watch(coachReviewsProvider(userId));
+    final env = ref.watch(activeTrainingEnvironmentProvider(null));
 
     return AssistantChatHost(
       builder: (context, openChat) {
-        return Scaffold(
+        return AmbientScaffoldShell(
+          environment: env,
           appBar: PrimaryAppBar(
             title: initialName ?? 'Profile',
             onTitleTap: openChat,
           ),
           body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(publicUserProfileProvider(userId));
-          ref.invalidate(publicProfileAggregatesProvider(userId));
-          ref.invalidate(coachReviewsProvider(userId));
-          await Future.wait([
-            ref.read(publicUserProfileProvider(userId).future),
-            ref.read(publicProfileAggregatesProvider(userId).future),
-            ref.read(coachReviewsProvider(userId).future),
-          ]);
-        },
-        child: profileAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => _buildErrorState(context, ref, error),
-          data: (profile) {
-            return aggregatesAsync.when(
+            onRefresh: () async {
+              ref.invalidate(publicUserProfileProvider(userId));
+              ref.invalidate(publicProfileAggregatesProvider(userId));
+              ref.invalidate(coachReviewsProvider(userId));
+              await Future.wait([
+                ref.read(publicUserProfileProvider(userId).future),
+                ref.read(publicProfileAggregatesProvider(userId).future),
+                ref.read(coachReviewsProvider(userId).future),
+              ]);
+            },
+            child: profileAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => _buildErrorState(context, ref, error),
-              data: (stats) => _buildContent(context, ref, profile, stats),
-            );
-          },
-        ),
-      ),
-    );
+              data: (profile) {
+                return aggregatesAsync.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (error, _) => _buildErrorState(context, ref, error),
+                  data: (stats) => _buildContent(context, ref, profile, stats),
+                );
+              },
+            ),
+          ),
+        );
       },
     );
   }
 
   Widget _buildErrorState(BuildContext context, WidgetRef ref, Object error) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final dims = UiDimensions.of(context);
+
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
+        padding: EdgeInsets.all(dims.pagePadding),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 40, color: AppColors.error),
+            Icon(
+              Icons.error_outline,
+              size: 40,
+              color: instrument.peakEffortColor,
+            ),
             const SizedBox(height: 12),
-            Text('Failed to load profile: $error'),
-            const SizedBox(height: 12),
-            ElevatedButton(
+            Text(
+              'Failed to load profile: $error',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 14),
+            InstrumentActionButton(
+              label: 'Retry',
+              icon: Icons.refresh,
+              variant: InstrumentActionVariant.primary,
               onPressed: () {
                 ref.invalidate(publicUserProfileProvider(userId));
                 ref.invalidate(publicProfileAggregatesProvider(userId));
               },
-              child: const Text('Retry'),
             ),
           ],
         ),
@@ -89,14 +114,26 @@ class PublicUserProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, WidgetRef ref, UserProfile profile, UserStats stats) {
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    UserProfile profile,
+    UserStats stats,
+  ) {
     final currentUser = FirebaseAuth.instance.currentUser;
     final isSelf = currentUser != null && currentUser.uid == profile.userId;
     final coaching = profile.coaching;
     final canRequestCoaching = !isSelf && coaching != null && coaching.enabled;
+    final dims = UiDimensions.of(context);
 
     return ListView(
-      padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(
+        dims.pagePadding,
+        AmbientScaffoldShell.topContentInset(context),
+        dims.pagePadding,
+        AmbientScaffoldShell.bottomContentInset(context),
+      ),
       children: [
         Center(
           child: ConstrainedBox(
@@ -105,107 +142,115 @@ class PublicUserProfileScreen extends ConsumerWidget {
               profile: profile,
               isOwner: false,
               subtitle: profile.userId,
-              onRequestCoaching:
-                  canRequestCoaching ? () => _showRequestDialog(context, ref, profile) : null,
+              onRequestCoaching: canRequestCoaching
+                  ? () => _showRequestDialog(context, ref, profile)
+                  : null,
               showCoachingCard: true,
               additionalSections: [
-                SizedBox(height: UiDimensions.of(context).sectionGap),
+                SizedBox(height: dims.sectionGap),
                 ProfileStatsRow(stats: stats, padding: EdgeInsets.zero),
               ],
             ),
           ),
         ),
-        SizedBox(height: UiDimensions.of(context).sectionGap),
+        SizedBox(height: dims.sectionGap),
         ProfileActivitySection(stats: stats, padding: EdgeInsets.zero),
-        SizedBox(height: UiDimensions.of(context).sectionGap),
+        SizedBox(height: dims.sectionGap),
         ProfileCompletedWorkoutsSection(
           sessions: stats.completedSessions,
           padding: EdgeInsets.zero,
           onSessionTap: (session) {
-
-            Navigator.of(context).pushNamed(
-              '/session-log',
-              arguments: session,
-            );
+            Navigator.of(context).pushNamed('/session-log', arguments: session);
           },
         ),
         if (coaching != null && coaching.enabled) ...[
-          SizedBox(height: UiDimensions.of(context).sectionGap),
+          SizedBox(height: dims.sectionGap),
           _buildReviewsSection(context, ref, profile),
         ],
       ],
     );
   }
 
-  Future<void> _showRequestDialog(BuildContext context, WidgetRef ref, UserProfile profile) async {
+  Future<void> _showRequestDialog(
+    BuildContext context,
+    WidgetRef ref,
+    UserProfile profile,
+  ) async {
     final noteController = TextEditingController();
-    final result = await showDialog<bool>(
+    final result = await showInstrumentDialog<bool>(
       context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          title: Text('Request coaching from ${profile.displayName ?? profile.userId}'),
-          content: TextField(
-            controller: noteController,
-            decoration: const InputDecoration(
-              labelText: 'Message (optional)',
-            ),
-            maxLines: 3,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Send'),
-            ),
-          ],
-        );
-      },
+      eyebrow: 'COACHING REQUEST',
+      title: 'Request coaching from ${profile.displayName ?? profile.userId}',
+      content: TextField(
+        controller: noteController,
+        decoration: InstrumentTheme.inputDecoration(
+          context,
+          labelText: 'Message (optional)',
+        ),
+        maxLines: 3,
+      ),
+      actionsBuilder: (ctx) => [
+        InstrumentActionButton(
+          label: 'Cancel',
+          variant: InstrumentActionVariant.secondary,
+          onPressed: () => Navigator.of(ctx).pop(false),
+        ),
+        InstrumentActionButton(
+          label: 'Send',
+          variant: InstrumentActionVariant.primary,
+          onPressed: () => Navigator.of(ctx).pop(true),
+        ),
+      ],
     );
 
     if (result != true) return;
 
     try {
       final svc = ref.read(sl.crmRelationshipsServiceProvider);
-      await svc.requestCoaching(coachId: profile.userId, note: noteController.text.trim());
+      await svc.requestCoaching(
+        coachId: profile.userId,
+        note: noteController.text.trim(),
+      );
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Request sent')),
-        );
+        showAppSnackBar(context, 'Request sent');
       }
     } catch (e) {
       if (context.mounted) {
-        String message;
-        if (e is ApiException) {
-          message = e.message;
-        } else {
-          message = 'Failed to send request: $e';
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        final message = e is ApiException
+            ? e.message
+            : 'Failed to send request: $e';
+        showAppSnackBar(context, message, isError: true);
       }
     }
   }
 
-  Widget _buildReviewsSection(BuildContext context, WidgetRef ref, UserProfile profile) {
+  Widget _buildReviewsSection(
+    BuildContext context,
+    WidgetRef ref,
+    UserProfile profile,
+  ) {
     final reviewsAsync = ref.watch(coachReviewsProvider(profile.userId));
     final coaching = profile.coaching;
     final currentUser = FirebaseAuth.instance.currentUser;
     final isSelf = currentUser != null && currentUser.uid == profile.userId;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final dims = UiDimensions.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        Wrap(
+          spacing: 10,
+          runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text(
               'Reviews',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
-            const SizedBox(width: 8),
             if (coaching != null && coaching.averageRating != null)
               CoachRatingDisplay(
                 averageRating: coaching.averageRating,
@@ -213,30 +258,48 @@ class PublicUserProfileScreen extends ConsumerWidget {
               ),
           ],
         ),
-        const SizedBox(height: 16),
-        if (!isSelf && coaching != null && coaching.enabled)
-          ElevatedButton.icon(
+        const SizedBox(height: 12),
+        if (!isSelf && coaching != null && coaching.enabled) ...[
+          InstrumentActionButton(
+            label: 'Write a Review',
+            icon: Icons.star_rounded,
+            variant: InstrumentActionVariant.primary,
             onPressed: () => _showReviewDialog(context, ref, profile),
-            icon: const Icon(Icons.star),
-            label: const Text('Write a Review'),
           ),
-        if (!isSelf && coaching != null && coaching.enabled) const SizedBox(height: 16),
+          const SizedBox(height: 12),
+        ],
         reviewsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => const Center(child: Text('Failed to load reviews')),
+          error: (error, _) => Center(
+            child: Text(
+              'Failed to load reviews',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
           data: (response) {
             if (response.reviews.isEmpty) {
-              return Card(
-                child: Padding(
-                  padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
-                  child: const Center(
-                    child: Text('No reviews yet'),
+              return Container(
+                decoration: InstrumentTheme.instrumentCardDecoration(
+                  context,
+                  radius: 18,
+                ),
+                padding: EdgeInsets.all(dims.cardPadding),
+                child: Center(
+                  child: Text(
+                    'No reviews yet',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               );
             }
             return Column(
-              children: response.reviews.map((review) => ReviewCard(review: review)).toList(),
+              children: response.reviews
+                  .map((review) => ReviewCard(review: review))
+                  .toList(),
             );
           },
         ),
@@ -244,7 +307,11 @@ class PublicUserProfileScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _showReviewDialog(BuildContext context, WidgetRef ref, UserProfile profile) async {
+  Future<void> _showReviewDialog(
+    BuildContext context,
+    WidgetRef ref,
+    UserProfile profile,
+  ) async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
 
@@ -277,9 +344,7 @@ class PublicUserProfileScreen extends ConsumerWidget {
       );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Cannot review: $e')),
-        );
+        showAppSnackBar(context, 'Cannot review: $e', isError: true);
       }
     }
   }

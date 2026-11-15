@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 
 class CoachRatingDisplay extends StatelessWidget {
   final double? averageRating;
@@ -19,52 +19,63 @@ class CoachRatingDisplay extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+
+    return Wrap(
+      spacing: 4,
+      runSpacing: 2,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        _buildStarRating(context, averageRating!),
-        const SizedBox(width: 4),
+        _buildStarRating(context, averageRating!, instrument, scheme),
         Text(
           averageRating!.toStringAsFixed(1),
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
-        if (showCount) ...[
-          const SizedBox(width: 4),
-          Text(
-            '($reviewCount)',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 12,
+          style: InstrumentTheme.tabular(
+            (theme.textTheme.labelLarge ?? const TextStyle()).copyWith(
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurface,
             ),
           ),
-        ],
+        ),
+        if (showCount)
+          Text(
+            '($reviewCount)',
+            style: InstrumentTheme.tabular(
+              (theme.textTheme.labelSmall ?? const TextStyle()).copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
       ],
     );
   }
 
-  Widget _buildStarRating(BuildContext context, double rating) {
+  Widget _buildStarRating(
+    BuildContext context,
+    double rating,
+    InstrumentTheme instrument,
+    ColorScheme scheme,
+  ) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(5, (index) {
         if (index < rating - 0.5) {
-          return const Icon(
-            Icons.star,
-            color: AppColors.star,
+          return Icon(
+            Icons.star_rounded,
+            color: instrument.stormAura,
             size: 16,
           );
         } else if (index < rating) {
-          return const Icon(
-            Icons.star_half,
-            color: AppColors.star,
+          return Icon(
+            Icons.star_half_rounded,
+            color: instrument.stormAura,
             size: 16,
           );
         } else {
           return Icon(
-            Icons.star_border,
-            color: Theme.of(context).colorScheme.outlineVariant,
+            Icons.star_border_rounded,
+            color: scheme.outlineVariant,
             size: 16,
           );
         }

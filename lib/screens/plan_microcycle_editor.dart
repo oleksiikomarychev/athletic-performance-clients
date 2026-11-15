@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'dart:async';
 import 'package:workout_app/models/microcycle.dart';
@@ -197,261 +198,119 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final dimensions = UiDimensions.of(context);
+
     return AssistantChatHost(
+      contextBuilder: () async => {
+        'screen': 'plan_microcycle_editor',
+        'entities': {
+          'microcycle_id': _editing.id,
+          'microcycle_name': _editing.name,
+          'workouts_count': _editing.planWorkouts.length,
+          'dirty': _dirty,
+        },
+      },
       builder: (context, openChat) {
         return Scaffold(
           appBar: PrimaryAppBar(
-            title: 'Редактор микроцикла: ${_editing.name}',
+            title: 'Микроцикл: ${_editing.name}',
             onTitleTap: openChat,
             actions: [
-              IconButton(
-                onPressed: () async {
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text('Удалить микроцикл'),
-                      content: Text('Вы уверены, что хотите удалить микроцикл "${_editing.name}"?'),
-                      actions: [
-                        TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Отмена')),
-                        FilledButton(
-                          onPressed: () => Navigator.of(ctx).pop(true),
-                          style: FilledButton.styleFrom(backgroundColor: Colors.red),
-                          child: const Text('Удалить'),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (confirmed == true) {
-                    try {
-                      await _mesoService.deleteMicrocycle(_editing.id!);
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Микроцикл удалён')),
-                        );
-                        Navigator.of(context).pop({'deletedId': _editing.id});
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Ошибка удаления: $e')),
-                        );
-                      }
-                    }
-                  }
-                },
-                icon: const Icon(Icons.delete_outline, color: Colors.red),
-                tooltip: 'Удалить микроцикл',
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: IconButton(
+                  tooltip: 'Удалить микроцикл',
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    tapTargetSize: MaterialTapTargetSize.padded,
+                  ),
+                  onPressed: _confirmDeleteMicrocycle,
+                  icon: Icon(Icons.delete_outline, color: colors.error),
+                ),
               ),
-              IconButton(
-                onPressed: _saving ? null : _save,
-                icon: _saving
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.save),
-                tooltip: 'Сохранить',
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: IconButton(
+                  tooltip: 'Сохранить',
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    tapTargetSize: MaterialTapTargetSize.padded,
+                  ),
+                  onPressed: _saving ? null : _save,
+                  icon: _saving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.save),
+                ),
               ),
             ],
           ),
           body: Padding(
-            padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
+            padding: EdgeInsets.all(dimensions.pagePadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    if (_dirty)
-                      const Padding(
-                        padding: EdgeInsets.only(right: 8.0),
-                        child: Icon(Icons.circle, size: 10, color: Colors.amber),
+                if (_dirty)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: dimensions.rowGap),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
                       ),
-                    if (_dirty)
-                      const Text('Есть несохранённые изменения', style: TextStyle(fontSize: 12)),
-                  ],
-                ),
+                      decoration: InstrumentTheme.cardDecoration(
+                        context,
+                        color: instrument.moderateEffortColor.withValues(
+                          alpha: 0.12,
+                        ),
+                        borderColor: instrument.moderateEffortColor.withValues(
+                          alpha: 0.45,
+                        ),
+                        radius: 10,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.circle,
+                            size: 8,
+                            color: instrument.moderateEffortColor,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Есть несохранённые изменения',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: instrument.moderateEffortColor,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 if (_error != null)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                    padding: EdgeInsets.only(bottom: dimensions.rowGap),
+                    child: Text(
+                      _error!,
+                      style: TextStyle(color: colors.error),
+                    ),
                   ),
                 Expanded(
-                  child: ListView.builder(
+                  child: ListView.separated(
                     itemCount: _editing.planWorkouts.length,
-                    itemBuilder: (context, wIdx) {
-                      final pw = _editing.planWorkouts[wIdx];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        child: ExpansionTile(
-                          title: Text('${pw.dayLabel}'),
-                          subtitle: Text('Порядок: ${pw.orderIndex}'),
-                          children: [
-                            ...pw.exercises.asMap().entries.map((entry) {
-                              final eIdx = entry.key;
-                              final ex = entry.value;
-                              return Padding(
-                                padding: EdgeInsets.symmetric(horizontal: UiDimensions.of(context).cardPadding, vertical: 6),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(child: Text('${ex.exerciseName}')),
-                                        TextButton.icon(
-                                          onPressed: () async {
-                                            final result = await Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder: (_) => const ExerciseSelectionScreen(),
-                                              ),
-                                            );
-                                            if (result is ExerciseDefinition) {
-                                              setState(() {
-                                                _editing.planWorkouts[wIdx].exercises[eIdx] = PlanExercise(
-                                                  id: ex.id,
-                                                  exerciseDefinitionId: result.id ?? ex.exerciseDefinitionId,
-                                                  exerciseName: result.name,
-                                                  orderIndex: ex.orderIndex,
-                                                  planWorkoutId: ex.planWorkoutId,
-                                                  sets: ex.sets,
-                                                );
-                                                _markDirtyAndScheduleSave();
-                                              });
-                                            }
-                                          },
-                                          icon: const Icon(Icons.swap_horiz),
-                                          label: const Text('Заменить упражнение'),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        TextButton.icon(
-                                          onPressed: () {
-                                            setState(() {
-                                              final sets = List<PlanSet>.from(_editing.planWorkouts[wIdx].exercises[eIdx].sets);
-                                              sets.add(const PlanSet(id: 0));
-                                              _editing.planWorkouts[wIdx].exercises[eIdx] = PlanExercise(
-                                                id: ex.id,
-                                                exerciseDefinitionId: ex.exerciseDefinitionId,
-                                                exerciseName: ex.exerciseName,
-                                                orderIndex: ex.orderIndex,
-                                                planWorkoutId: ex.planWorkoutId,
-                                                sets: sets,
-                                              );
-                                              _markDirtyAndScheduleSave();
-                                            });
-                                          },
-                                          icon: const Icon(Icons.add),
-                                          label: const Text('Добавить подход'),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        TextButton.icon(
-                                          onPressed: () {
-                                            _bulkEditExerciseSets(workoutIdx: wIdx, exerciseIdx: eIdx);
-                                          },
-                                          icon: const Icon(Icons.tune),
-                                          label: const Text('Массово'),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    ...ex.sets.asMap().entries.map((sEntry) {
-                                      final sIdx = sEntry.key;
-                                      final set = sEntry.value;
-                                      return Row(
-                                        children: [
-                                          Expanded(
-                                            child: TextFormField(
-                                              initialValue: set.intensity?.toString() ?? '',
-                                              decoration: const InputDecoration(labelText: '%1RM'),
-                                              keyboardType: TextInputType.number,
-                                              onChanged: (v) {
-                                                final val = int.tryParse(v);
-                                                setState(() {
-                                                  _editing.planWorkouts[wIdx].exercises[eIdx].sets[sIdx] = PlanSet(
-                                                    id: set.id,
-                                                    orderIndex: set.orderIndex,
-                                                    intensity: val,
-                                                    effort: set.effort,
-                                                    volume: set.volume,
-                                                    planExerciseId: set.planExerciseId,
-                                                  );
-                                                  _markDirtyAndScheduleSave();
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: TextFormField(
-                                              initialValue: (set.effort?.toString() ?? ''),
-                                              decoration: const InputDecoration(labelText: 'RPE'),
-                                              keyboardType: TextInputType.number,
-                                              onChanged: (v) {
-                                                final val = int.tryParse(v);
-                                                setState(() {
-                                                  _editing.planWorkouts[wIdx].exercises[eIdx].sets[sIdx] = PlanSet(
-                                                    id: set.id,
-                                                    orderIndex: set.orderIndex,
-                                                    intensity: set.intensity,
-                                                    effort: val,
-                                                    volume: set.volume,
-                                                    planExerciseId: set.planExerciseId,
-                                                  );
-                                                  _markDirtyAndScheduleSave();
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: TextFormField(
-                                              initialValue: set.volume?.toString() ?? '',
-                                              decoration: const InputDecoration(labelText: 'Повторы'),
-                                              keyboardType: TextInputType.number,
-                                              onChanged: (v) {
-                                                final val = int.tryParse(v);
-                                                setState(() {
-                                                  _editing.planWorkouts[wIdx].exercises[eIdx].sets[sIdx] = PlanSet(
-                                                    id: set.id,
-                                                    orderIndex: set.orderIndex,
-                                                    intensity: set.intensity,
-                                                    effort: set.effort,
-                                                    volume: val,
-                                                    planExerciseId: set.planExerciseId,
-                                                  );
-                                                  _markDirtyAndScheduleSave();
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                          IconButton(
-                                            tooltip: 'Удалить подход',
-                                            icon: const Icon(Icons.delete_outline),
-                                            onPressed: () {
-                                              setState(() {
-                                                final sets = List<PlanSet>.from(_editing.planWorkouts[wIdx].exercises[eIdx].sets);
-                                                if (sIdx >= 0 && sIdx < sets.length) {
-                                                  sets.removeAt(sIdx);
-                                                  _editing.planWorkouts[wIdx].exercises[eIdx] = PlanExercise(
-                                                    id: ex.id,
-                                                    exerciseDefinitionId: ex.exerciseDefinitionId,
-                                                    exerciseName: ex.exerciseName,
-                                                    orderIndex: ex.orderIndex,
-                                                    planWorkoutId: ex.planWorkoutId,
-                                                    sets: sets,
-                                                  );
-                                                  _markDirtyAndScheduleSave();
-                                                }
-                                              });
-                                            },
-                                          ),
-                                        ],
-                                      );
-                                    }),
-                                  ],
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      );
-                    },
+                    separatorBuilder: (_, __) =>
+                        SizedBox(height: dimensions.rowGap),
+                    itemBuilder: (context, wIdx) =>
+                        _buildWorkoutTile(context, wIdx, dimensions),
                   ),
                 ),
               ],
@@ -460,5 +319,382 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
         );
       },
     );
+  }
+
+  Widget _buildWorkoutTile(
+    BuildContext context,
+    int wIdx,
+    UiDimensions dimensions,
+  ) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final pw = _editing.planWorkouts[wIdx];
+    return Container(
+      decoration: InstrumentTheme.cardDecoration(
+        context,
+        color: colors.surfaceContainerLow,
+        radius: 14,
+      ),
+      child: ExpansionTile(
+        shape: const Border(),
+        collapsedShape: const Border(),
+        tilePadding: EdgeInsets.symmetric(
+          horizontal: dimensions.cardPadding,
+          vertical: 4,
+        ),
+        childrenPadding: EdgeInsets.fromLTRB(
+          dimensions.cardPadding,
+          0,
+          dimensions.cardPadding,
+          dimensions.cardPadding,
+        ),
+        title: Text(
+          pw.dayLabel,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        subtitle: Text(
+          'ПОРЯДОК: ${pw.orderIndex} · УПРАЖНЕНИЙ: ${pw.exercises.length}',
+          style: InstrumentTheme.tabular(InstrumentTheme.microLabel(context)),
+        ),
+        children: [
+          for (int eIdx = 0; eIdx < pw.exercises.length; eIdx++)
+            _buildExerciseSection(context, wIdx, eIdx, dimensions),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExerciseSection(
+    BuildContext context,
+    int wIdx,
+    int eIdx,
+    UiDimensions dimensions,
+  ) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
+    final ex = _editing.planWorkouts[wIdx].exercises[eIdx];
+
+    return Container(
+      margin: EdgeInsets.only(top: dimensions.rowGap),
+      padding: EdgeInsets.all(dimensions.cardPadding),
+      decoration: InstrumentTheme.cardDecoration(
+        context,
+        color: colors.surfaceContainerHighest.withValues(alpha: 0.35),
+        radius: 12,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            ex.exerciseName,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(48, 48),
+                  tapTargetSize: MaterialTapTargetSize.padded,
+                ),
+                onPressed: () => _replaceExercise(wIdx, eIdx, ex),
+                icon: const Icon(Icons.swap_horiz, size: 18),
+                label: const Text('Заменить'),
+              ),
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(48, 48),
+                  tapTargetSize: MaterialTapTargetSize.padded,
+                ),
+                onPressed: () => _addSet(wIdx, eIdx, ex),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Подход'),
+              ),
+              TextButton.icon(
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(48, 48),
+                  tapTargetSize: MaterialTapTargetSize.padded,
+                ),
+                onPressed: () =>
+                    _bulkEditExerciseSets(workoutIdx: wIdx, exerciseIdx: eIdx),
+                icon: const Icon(Icons.tune, size: 18),
+                label: const Text('Массово'),
+              ),
+            ],
+          ),
+          SizedBox(height: dimensions.rowGap),
+          for (int sIdx = 0; sIdx < ex.sets.length; sIdx++) ...[
+            if (sIdx > 0) SizedBox(height: dimensions.rowGap),
+            _buildPlanSetRow(
+              context,
+              wIdx: wIdx,
+              eIdx: eIdx,
+              sIdx: sIdx,
+              ex: ex,
+              set: ex.sets[sIdx],
+              dimensions: dimensions,
+              instrument: instrument,
+              colors: colors,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlanSetRow(
+    BuildContext context, {
+    required int wIdx,
+    required int eIdx,
+    required int sIdx,
+    required PlanExercise ex,
+    required PlanSet set,
+    required UiDimensions dimensions,
+    required InstrumentTheme instrument,
+    required ColorScheme colors,
+  }) {
+    final rpeAccent = instrument.colorForRpe(set.effort?.toDouble(), colors);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: 28,
+          child: Text(
+            '#${sIdx + 1}',
+            style: InstrumentTheme.tabular(
+              InstrumentTheme.microLabel(context),
+            ),
+          ),
+        ),
+        Expanded(
+          child: _buildNumericCell(
+            context,
+            key: ValueKey('pm-$wIdx-$eIdx-$sIdx-int'),
+            initialValue: set.intensity?.toString() ?? '',
+            labelText: '%1RM',
+            onChanged: (val) => _updateSet(
+              wIdx,
+              eIdx,
+              sIdx,
+              intensity: val,
+              updateIntensity: true,
+            ),
+          ),
+        ),
+        SizedBox(width: dimensions.rowGap),
+        Expanded(
+          child: _buildNumericCell(
+            context,
+            key: ValueKey('pm-$wIdx-$eIdx-$sIdx-rpe'),
+            initialValue: set.effort?.toString() ?? '',
+            labelText: 'RPE',
+            accentColor: set.effort != null ? rpeAccent : null,
+            onChanged: (val) => _updateSet(
+              wIdx,
+              eIdx,
+              sIdx,
+              effort: val,
+              updateEffort: true,
+            ),
+          ),
+        ),
+        SizedBox(width: dimensions.rowGap),
+        Expanded(
+          child: _buildNumericCell(
+            context,
+            key: ValueKey('pm-$wIdx-$eIdx-$sIdx-vol'),
+            initialValue: set.volume?.toString() ?? '',
+            labelText: 'Повторы',
+            onChanged: (val) => _updateSet(
+              wIdx,
+              eIdx,
+              sIdx,
+              volume: val,
+              updateVolume: true,
+            ),
+          ),
+        ),
+        SizedBox(
+          width: 48,
+          height: 48,
+          child: IconButton(
+            tooltip: 'Удалить подход',
+            style: IconButton.styleFrom(
+              minimumSize: const Size(48, 48),
+              tapTargetSize: MaterialTapTargetSize.padded,
+            ),
+            icon: Icon(Icons.delete_outline, color: colors.error, size: 20),
+            onPressed: () {
+              setState(() {
+                final sets = List<PlanSet>.from(
+                  _editing.planWorkouts[wIdx].exercises[eIdx].sets,
+                );
+                if (sIdx >= 0 && sIdx < sets.length) {
+                  sets.removeAt(sIdx);
+                  _editing.planWorkouts[wIdx].exercises[eIdx] = PlanExercise(
+                    id: ex.id,
+                    exerciseDefinitionId: ex.exerciseDefinitionId,
+                    exerciseName: ex.exerciseName,
+                    orderIndex: ex.orderIndex,
+                    planWorkoutId: ex.planWorkoutId,
+                    sets: sets,
+                  );
+                  _markDirtyAndScheduleSave();
+                }
+              });
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNumericCell(
+    BuildContext context, {
+    Key? key,
+    required String initialValue,
+    required String labelText,
+    Color? accentColor,
+    required ValueChanged<int?> onChanged,
+  }) {
+    final theme = Theme.of(context);
+    final baseDecoration = InstrumentTheme.inputDecoration(
+      context,
+      labelText: labelText,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+    );
+    final decoration = accentColor == null
+        ? baseDecoration
+        : baseDecoration.copyWith(
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: accentColor.withValues(alpha: 0.65),
+                width: 1.0,
+              ),
+            ),
+          );
+    return TextFormField(
+      key: key,
+      initialValue: initialValue,
+      keyboardType: TextInputType.number,
+      textAlign: TextAlign.center,
+      style: InstrumentTheme.tabular(
+        (theme.textTheme.bodyMedium ?? const TextStyle()).copyWith(
+          fontWeight: FontWeight.w700,
+          color: accentColor,
+        ),
+      ),
+      decoration: decoration,
+      onChanged: (v) => onChanged(int.tryParse(v)),
+    );
+  }
+
+  void _updateSet(
+    int wIdx,
+    int eIdx,
+    int sIdx, {
+    int? intensity,
+    bool updateIntensity = false,
+    int? effort,
+    bool updateEffort = false,
+    int? volume,
+    bool updateVolume = false,
+  }) {
+    setState(() {
+      final current = _editing.planWorkouts[wIdx].exercises[eIdx].sets[sIdx];
+      _editing.planWorkouts[wIdx].exercises[eIdx].sets[sIdx] = PlanSet(
+        id: current.id,
+        orderIndex: current.orderIndex,
+        intensity: updateIntensity ? intensity : current.intensity,
+        effort: updateEffort ? effort : current.effort,
+        volume: updateVolume ? volume : current.volume,
+        planExerciseId: current.planExerciseId,
+      );
+      _markDirtyAndScheduleSave();
+    });
+  }
+
+  Future<void> _replaceExercise(int wIdx, int eIdx, PlanExercise ex) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ExerciseSelectionScreen()),
+    );
+    if (result is ExerciseDefinition && mounted) {
+      setState(() {
+        _editing.planWorkouts[wIdx].exercises[eIdx] = PlanExercise(
+          id: ex.id,
+          exerciseDefinitionId: result.id ?? ex.exerciseDefinitionId,
+          exerciseName: result.name,
+          orderIndex: ex.orderIndex,
+          planWorkoutId: ex.planWorkoutId,
+          sets: ex.sets,
+        );
+        _markDirtyAndScheduleSave();
+      });
+    }
+  }
+
+  void _addSet(int wIdx, int eIdx, PlanExercise ex) {
+    setState(() {
+      final sets = List<PlanSet>.from(
+        _editing.planWorkouts[wIdx].exercises[eIdx].sets,
+      )..add(const PlanSet(id: 0));
+      _editing.planWorkouts[wIdx].exercises[eIdx] = PlanExercise(
+        id: ex.id,
+        exerciseDefinitionId: ex.exerciseDefinitionId,
+        exerciseName: ex.exerciseName,
+        orderIndex: ex.orderIndex,
+        planWorkoutId: ex.planWorkoutId,
+        sets: sets,
+      );
+      _markDirtyAndScheduleSave();
+    });
+  }
+
+  Future<void> _confirmDeleteMicrocycle() async {
+    final colors = Theme.of(context).colorScheme;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Удалить микроцикл'),
+        content: Text(
+          'Вы уверены, что хотите удалить микроцикл "${_editing.name}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: colors.error),
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await _mesoService.deleteMicrocycle(_editing.id);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Микроцикл удалён')));
+        Navigator.of(context).pop({'deletedId': _editing.id});
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Ошибка удаления: $e')));
+      }
+    }
   }
 }

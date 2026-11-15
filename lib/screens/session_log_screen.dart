@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:intl/intl.dart';
 import 'package:workout_app/models/workout_session.dart';
-import 'package:workout_app/config/constants/theme_constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/models/workout.dart';
 import 'package:workout_app/models/exercise_instance.dart';
@@ -97,7 +97,6 @@ class _SessionLogScreenState extends ConsumerState<SessionLogScreen> {
     return AssistantChatHost(
       builder: (context, openChat) {
         return Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surface,
           appBar: PrimaryAppBar(
             title: 'Session #${session.id ?? '-'} Logs',
             onTitleTap: openChat,
@@ -105,19 +104,40 @@ class _SessionLogScreenState extends ConsumerState<SessionLogScreen> {
           body: ListView(
             padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
             children: [
-              _InfoRow(
-                label: 'Workout ID',
-                value: session.workoutId.toString(),
-              ),
-              _InfoRow(label: 'Status', value: session.status),
-              _InfoRow(label: 'Started', value: _fmtDate(session.startedAt)),
-              _InfoRow(label: 'Finished', value: _fmtDate(session.finishedAt)),
-              _InfoRow(
-                label: 'Duration (sec)',
-                value: (session.durationSeconds ?? 0).toString(),
+              Container(
+                padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
+                decoration: InstrumentTheme.cardDecoration(
+                  context,
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  radius: 14,
+                ),
+                child: Column(
+                  children: [
+                    _InfoRow(
+                      label: 'WORKOUT ID',
+                      value: session.workoutId.toString(),
+                    ),
+                    _InfoRow(label: 'STATUS', value: session.status.toUpperCase()),
+                    _InfoRow(
+                      label: 'STARTED',
+                      value: _fmtDate(session.startedAt),
+                    ),
+                    _InfoRow(
+                      label: 'FINISHED',
+                      value: _fmtDate(session.finishedAt),
+                    ),
+                    _InfoRow(
+                      label: 'DURATION',
+                      value: '${session.durationSeconds ?? 0} s',
+                    ),
+                  ],
+                ),
               ),
               SizedBox(height: UiDimensions.of(context).sectionGap),
-              Text('Exercises & Sets', style: AppTextStyles.titleMedium),
+              Text(
+                'EXERCISES & SETS',
+                style: InstrumentTheme.microLabel(context),
+              ),
               const SizedBox(height: 8),
               if (_loading)
                 const Center(
@@ -131,23 +151,31 @@ class _SessionLogScreenState extends ConsumerState<SessionLogScreen> {
               else
                 ..._workout!.exerciseInstances.map(_buildInstanceCard),
               SizedBox(height: UiDimensions.of(context).sectionGap),
-              Text('Raw Progress', style: AppTextStyles.titleMedium),
+              Text(
+                'RAW PROGRESS',
+                style: InstrumentTheme.microLabel(context),
+              ),
               const SizedBox(height: 4),
               Text(
                 'Diagnostics only: JSON с ключом completed, где ключи — id инстансов упражнения, а значения — массив id завершённых сетов. Используется для подсветки сетов выше.',
-                style: AppTextStyles.bodySmall.copyWith(
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
+                decoration: InstrumentTheme.cardDecoration(
+                  context,
                   color: Theme.of(context).colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: AppShadows.sm,
+                  radius: 12,
                 ),
-                child: Text(session.progress.toString()),
+                child: Text(
+                  session.progress.toString(),
+                  style: InstrumentTheme.tabular(
+                    Theme.of(context).textTheme.bodySmall ?? const TextStyle(),
+                  ),
+                ),
               ),
             ],
           ),
@@ -157,6 +185,8 @@ class _SessionLogScreenState extends ConsumerState<SessionLogScreen> {
   }
 
   Widget _buildInstanceCard(ExerciseInstance instance) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final name =
         instance.exerciseDefinition?.name ??
         'Exercise #${instance.id ?? instance.exerciseListId}';
@@ -165,32 +195,32 @@ class _SessionLogScreenState extends ConsumerState<SessionLogScreen> {
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: AppShadows.sm,
+      padding: EdgeInsets.all(UiDimensions.of(context).cardPadding),
+      decoration: InstrumentTheme.cardDecoration(
+        context,
+        color: colors.surfaceContainerLow,
+        radius: 14,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.fitness_center, color: AppColors.primary),
+              Icon(Icons.fitness_center, color: colors.primary, size: 18),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   name,
-                  style: AppTextStyles.titleMedium.copyWith(
+                  style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
               if (sets.isNotEmpty)
                 Text(
-                  '${sets.length} set${sets.length == 1 ? '' : 's'}',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  '${sets.length} SET${sets.length == 1 ? '' : 'S'}',
+                  style: InstrumentTheme.tabular(
+                    InstrumentTheme.microLabel(context),
                   ),
                 ),
             ],
@@ -199,8 +229,8 @@ class _SessionLogScreenState extends ConsumerState<SessionLogScreen> {
           if (sets.isEmpty)
             Text(
               'No sets',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colors.onSurfaceVariant,
               ),
             )
           else
@@ -225,21 +255,27 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           SizedBox(
-            width: 140,
+            width: 120,
+            child: Text(label, style: InstrumentTheme.microLabel(context)),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
             child: Text(
-              label,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              value,
+              style: InstrumentTheme.tabular(
+                theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ) ??
+                    const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          Expanded(child: Text(value, style: AppTextStyles.bodyMedium)),
         ],
       ),
     );
@@ -255,21 +291,27 @@ class _SetChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = _formatSet(set);
     final scheme = Theme.of(context).colorScheme;
+    final instrument = InstrumentTheme.of(context);
     final bg = completed
-        ? scheme.tertiaryContainer
-        : scheme.surfaceContainerHigh;
-    final border = completed ? scheme.tertiary : scheme.outlineVariant;
+        ? Color.alphaBlend(
+            instrument.successColor.withValues(alpha: 0.14),
+            scheme.surfaceContainerLow,
+          )
+        : scheme.surfaceContainerHighest.withValues(alpha: 0.45);
+    final border = completed
+        ? instrument.successColor.withValues(alpha: 0.55)
+        : scheme.outlineVariant.withValues(alpha: 0.45);
     final icon = completed ? Icons.check_circle : Icons.radio_button_unchecked;
     final iconColor = completed
-        ? scheme.onTertiaryContainer
+        ? instrument.successColor
         : scheme.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
+      decoration: InstrumentTheme.cardDecoration(
+        context,
         color: bg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: border),
-        boxShadow: AppShadows.xs,
+        borderColor: border,
+        radius: 10,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -278,9 +320,12 @@ class _SetChip extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             text,
-            style: AppTextStyles.bodySmall.copyWith(
-              fontWeight: FontWeight.w600,
-              color: completed ? scheme.onTertiaryContainer : scheme.onSurface,
+            style: InstrumentTheme.tabular(
+              (Theme.of(context).textTheme.bodySmall ?? const TextStyle())
+                  .copyWith(
+                fontWeight: FontWeight.w700,
+                color: scheme.onSurface,
+              ),
             ),
           ),
         ],

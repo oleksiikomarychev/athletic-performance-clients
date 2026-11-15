@@ -1,5 +1,3 @@
-import 'package:intl/intl.dart';
-
 import '../constants/profile_constants.dart';
 import '../models/workout_session.dart';
 

@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/providers/target_data_providers.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
 
 class TriggerBuilder extends ConsumerStatefulWidget {
   final Map<String, dynamic> initial;
   final ValueChanged<Map<String, dynamic>> onChanged;
-  const TriggerBuilder({super.key, required this.initial, required this.onChanged});
+  const TriggerBuilder({
+    super.key,
+    required this.initial,
+    required this.onChanged,
+  });
 
   @override
   ConsumerState<TriggerBuilder> createState() => _TriggerBuilderState();
@@ -14,7 +20,6 @@ class TriggerBuilder extends ConsumerStatefulWidget {
 
 class _TriggerBuilderState extends ConsumerState<TriggerBuilder> {
   late String _metric;
-
   final Set<int> _selectedExerciseIds = {};
 
   @override
@@ -81,79 +86,154 @@ class _TriggerBuilderState extends ConsumerState<TriggerBuilder> {
     return '';
   }
 
-  bool get _metricNeedsExercises => _metric == 'Total_Reps' || _metric == 'e1RM' || _metric == 'Performance_Trend' || _metric == 'RPE_Delta_From_Plan' || _metric == 'Reps_Delta_From_Plan';
+  bool get _metricNeedsExercises =>
+      _metric == 'Total_Reps' ||
+      _metric == 'e1RM' ||
+      _metric == 'Performance_Trend' ||
+      _metric == 'RPE_Delta_From_Plan' ||
+      _metric == 'Reps_Delta_From_Plan';
 
   Future<void> _openExercisePicker() async {
     final l10n = AppLocalizations.of(context);
     final defs = await ref.read(exerciseDefinitionsProvider.future);
+    if (!mounted) return;
 
     final temp = <int>{..._selectedExerciseIds};
-    if (!mounted) return;
     String searchQuery = '';
-    await showDialog(
+
+    final confirmed = await showInstrumentBottomSheet<bool>(
       context: context,
+      eyebrow: 'TRIGGER SCOPE',
+      title: 'Выбор упражнений',
+      heightFactor: 0.85,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setLocal) {
-            final filtered = defs.where((d) => d.name.toLowerCase().contains(searchQuery.toLowerCase())).toList();
-            return AlertDialog(
-              title: const Text('Выбор упражнений'),
-              content: SizedBox(
-                width: (MediaQuery.sizeOf(ctx).width - 96).clamp(0.0, 420.0),
-                height: (MediaQuery.sizeOf(ctx).height -
-                        MediaQuery.viewInsetsOf(ctx).bottom -
-                        180)
-                    .clamp(160.0, 480.0),
-                child: Column(
-                  children: [
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: l10n.search,
-                        prefixIcon: const Icon(Icons.search),
-                      ),
-                      onChanged: (v) => setLocal(() => searchQuery = v),
+            final theme = Theme.of(ctx);
+            final scheme = theme.colorScheme;
+            final instrument = InstrumentTheme.of(ctx);
+            final filtered = defs
+                .where(
+                  (d) =>
+                      d.name.toLowerCase().contains(searchQuery.toLowerCase()),
+                )
+                .toList();
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  decoration: InstrumentTheme.inputDecoration(
+                    ctx,
+                    hintText: l10n.search,
+                    prefixIcon: const Icon(Icons.search_rounded),
+                  ),
+                  onChanged: (v) => setLocal(() => searchQuery = v),
+                ),
+                const SizedBox(height: 12),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: (MediaQuery.sizeOf(ctx).height * 0.45)
+                        .clamp(180.0, 380.0),
+                  ),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, __) => Container(
+                      height: 1,
+                      color: instrument.hairlineBorder,
                     ),
-                    const SizedBox(height: 12),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: filtered.length,
-                        itemBuilder: (ctx, idx) {
-                          final def = filtered[idx];
-                          if (def.id == null) return const SizedBox.shrink();
-                          final sel = temp.contains(def.id!);
-                          return CheckboxListTile(
-                            value: sel,
-                            title: Text(def.name),
-                            subtitle: Text(l10n.idPrefix(def.id.toString())),
-                            onChanged: (v) {
-                              setLocal(() {
-                                if (v == true) {
-                                  temp.add(def.id!);
-                                } else {
-                                  temp.remove(def.id!);
-                                }
-                              });
-                            },
-                          );
+                    itemBuilder: (ctx, idx) {
+                      final def = filtered[idx];
+                      final id = def.id;
+                      if (id == null) return const SizedBox.shrink();
+                      final sel = temp.contains(id);
+                      return InkWell(
+                        onTap: () {
+                          setLocal(() {
+                            if (sel) {
+                              temp.remove(id);
+                            } else {
+                              temp.add(id);
+                            }
+                          });
                         },
-                      ),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 52),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 10,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        def.name,
+                                        style: theme.textTheme.titleSmall
+                                            ?.copyWith(
+                                          fontWeight: sel
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                          color: sel
+                                              ? instrument.workingAura
+                                              : scheme.onSurface,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        l10n.idPrefix(id.toString()),
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                          color: scheme.onSurfaceVariant,
+                                          fontFeatures: const [
+                                            FontFeature.tabularFigures(),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Icon(
+                                  sel
+                                      ? Icons.check_circle_rounded
+                                      : Icons.circle_outlined,
+                                  size: 20,
+                                  color: sel
+                                      ? instrument.workingAura
+                                      : scheme.onSurfaceVariant,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    InstrumentActionButton(
+                      label: l10n.cancel,
+                      variant: InstrumentActionVariant.secondary,
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                    ),
+                    InstrumentActionButton(
+                      label: l10n.done,
+                      variant: InstrumentActionVariant.primary,
+                      onPressed: () => Navigator.of(ctx).pop(true),
                     ),
                   ],
-                ),
-              ),
-              actions: [
-                TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(l10n.cancel)),
-                FilledButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectedExerciseIds
-                        ..clear()
-                        ..addAll(temp);
-                    });
-                    _emit();
-                    Navigator.of(ctx).pop();
-                  },
-                  child: Text(l10n.done),
                 ),
               ],
             );
@@ -161,28 +241,65 @@ class _TriggerBuilderState extends ConsumerState<TriggerBuilder> {
         );
       },
     );
+
+    if (confirmed == true && mounted) {
+      setState(() {
+        _selectedExerciseIds
+          ..clear()
+          ..addAll(temp);
+      });
+      _emit();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final instrument = InstrumentTheme.of(context);
     final defsAsync = ref.watch(exerciseDefinitionsProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         DropdownButtonFormField<String>(
-          value: _metric.isEmpty ? null : _metric,
+          initialValue: _metric.isEmpty ? null : _metric,
+          isExpanded: true,
           items: [
-            DropdownMenuItem(value: 'Readiness_Score', child: Text(l10n.macroTriggerMetricReadiness)),
-            DropdownMenuItem(value: 'RPE_Session', child: Text(l10n.macroTriggerMetricRpeSession)),
-            DropdownMenuItem(value: 'Total_Reps', child: Text(l10n.macroTriggerMetricTotalReps)),
-            DropdownMenuItem(value: 'e1RM', child: Text(l10n.macroTriggerMetricE1rm)),
-            DropdownMenuItem(value: 'Performance_Trend', child: Text(l10n.macroTriggerMetricPerformanceTrend)),
-            DropdownMenuItem(value: 'RPE_Delta_From_Plan', child: Text(l10n.macroTriggerMetricRpeDelta)),
-            DropdownMenuItem(value: 'Reps_Delta_From_Plan', child: Text(l10n.macroTriggerMetricRepsDelta)),
+            DropdownMenuItem(
+              value: 'Readiness_Score',
+              child: Text(l10n.macroTriggerMetricReadiness),
+            ),
+            DropdownMenuItem(
+              value: 'RPE_Session',
+              child: Text(l10n.macroTriggerMetricRpeSession),
+            ),
+            DropdownMenuItem(
+              value: 'Total_Reps',
+              child: Text(l10n.macroTriggerMetricTotalReps),
+            ),
+            DropdownMenuItem(
+              value: 'e1RM',
+              child: Text(l10n.macroTriggerMetricE1rm),
+            ),
+            DropdownMenuItem(
+              value: 'Performance_Trend',
+              child: Text(l10n.macroTriggerMetricPerformanceTrend),
+            ),
+            DropdownMenuItem(
+              value: 'RPE_Delta_From_Plan',
+              child: Text(l10n.macroTriggerMetricRpeDelta),
+            ),
+            DropdownMenuItem(
+              value: 'Reps_Delta_From_Plan',
+              child: Text(l10n.macroTriggerMetricRepsDelta),
+            ),
           ],
-          decoration: InputDecoration(labelText: l10n.macroTriggerMetricLabel, border: const OutlineInputBorder()),
+          decoration: InstrumentTheme.inputDecoration(
+            context,
+            labelText: l10n.macroTriggerMetricLabel,
+          ),
           onChanged: (v) {
             setState(() => _metric = v ?? '');
             _emit();
@@ -190,53 +307,79 @@ class _TriggerBuilderState extends ConsumerState<TriggerBuilder> {
           validator: (v) => (v == null || v.isEmpty) ? l10n.fieldRequired : null,
         ),
         if (_metric.isNotEmpty) ...[
-          const SizedBox(height: 6),
+          const SizedBox(height: 10),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.info_outline, size: 16, color: Colors.grey),
-              const SizedBox(width: 6),
+              Icon(
+                Icons.info_outline_rounded,
+                size: 16,
+                color: scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   _metricTooltip(_metric) ?? '',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 6),
-          Text(_metricHelp(_metric), style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            _metricHelp(_metric),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
         ],
-        const SizedBox(height: 8),
         if (_metricNeedsExercises) ...[
-          Text('Эта метрика применяется к выбранным упражнениям. Выберите одно или несколько.', style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              FilledButton.icon(
-                onPressed: defsAsync.isLoading ? null : _openExercisePicker,
-                icon: const Icon(Icons.list_alt),
-                label: const Text('Выбрать упражнения'),
-              ),
-              const SizedBox(width: 12),
-              defsAsync.isLoading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const SizedBox.shrink(),
-            ],
+          const SizedBox(height: 12),
+          Text(
+            'Эта метрика применяется к выбранным упражнениям. Выберите одно или несколько.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 8),
-          if (_selectedExerciseIds.isNotEmpty)
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 8,
+            children: [
+              InstrumentActionButton(
+                label: 'Выбрать упражнения',
+                icon: Icons.list_alt_rounded,
+                variant: InstrumentActionVariant.secondary,
+                loading: defsAsync.isLoading,
+                onPressed: defsAsync.isLoading ? null : _openExercisePicker,
+              ),
+            ],
+          ),
+          if (_selectedExerciseIds.isNotEmpty) ...[
+            const SizedBox(height: 10),
             Wrap(
-              spacing: 6,
-              runSpacing: 6,
+              spacing: 8,
+              runSpacing: 8,
               children: _selectedExerciseIds
-                  .map((id) => Chip(
-                        label: Text(l10n.idPrefix(id.toString())),
-                        onDeleted: () {
-                          setState(() => _selectedExerciseIds.remove(id));
-                          _emit();
-                        },
-                      ))
+                  .map(
+                    (id) => InstrumentSelectablePill(
+                      label: l10n.idPrefix(id.toString()),
+                      selected: true,
+                      bordered: false,
+                      accentColor: instrument.workingAura,
+                      icon: Icons.close_rounded,
+                      onTap: () {
+                        setState(() => _selectedExerciseIds.remove(id));
+                        _emit();
+                      },
+                    ),
+                  )
                   .toList(),
             ),
+          ],
         ],
       ],
     );

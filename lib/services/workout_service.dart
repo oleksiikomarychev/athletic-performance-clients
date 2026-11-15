@@ -111,11 +111,9 @@ class WorkoutService extends BaseApiService {
         }
       } else {
         handleError('Invalid response format for workouts list', Exception('Expected a list or map of workouts'));
-        return [];
       }
     } catch (e, stackTrace) {
       handleError('Failed to get workouts', e, stackTrace);
-      return [];
     }
   }
 
@@ -136,11 +134,9 @@ class WorkoutService extends BaseApiService {
       } else {
         handleError('Invalid response format when starting workout via BFF',
             Exception('Expected a workout object'));
-        throw Exception('Failed to start workout');
       }
     } catch (e, st) {
       handleError('Failed to start workout via BFF', e, st);
-      rethrow;
     }
   }
 
@@ -169,11 +165,9 @@ class WorkoutService extends BaseApiService {
       } else {
         handleError('Invalid response format when finishing workout via BFF',
             Exception('Expected a workout object'));
-        throw Exception('Failed to finish workout');
       }
     } catch (e, st) {
       handleError('Failed to finish workout via BFF', e, st);
-      rethrow;
     }
   }
 
@@ -200,18 +194,13 @@ class WorkoutService extends BaseApiService {
               json['exercise_instances'] = json['exercise_instances'] ?? [];
               return Workout.fromJson(json);
             })
-            .map((workout) => workout.copyWith(
-                  exerciseInstances: workout.exerciseInstances ?? [],
-                ))
             .toList();
       } else {
         handleError('Invalid response format for workouts list by progression',
             Exception('Expected a list of workouts for progression'));
-        return [];
       }
     } catch (e, stackTrace) {
       handleError('Failed to get workouts by progression ID', e, stackTrace);
-      return [];
     }
   }
 
@@ -231,11 +220,9 @@ class WorkoutService extends BaseApiService {
       } else {
         handleError('Invalid response format for workout',
             Exception('Expected a workout object'));
-        throw Exception('Failed to get workout');
       }
     } catch (e, stackTrace) {
       handleError('Failed to get workout', e, stackTrace);
-      throw Exception('Failed to get workout');
     }
   }
 
@@ -292,7 +279,6 @@ class WorkoutService extends BaseApiService {
     if (workout.id == null) {
       handleError('Cannot update workout without an ID',
           Exception('Workout ID is required'));
-      throw Exception('Cannot update workout without an ID');
     }
 
     try {
@@ -347,11 +333,9 @@ class WorkoutService extends BaseApiService {
       } else {
         handleError('Invalid response format for user maxes',
             Exception('Expected a list of user maxes'));
-        return [];
       }
     } catch (e, stackTrace) {
       handleError('Failed to get user maxes for exercise', e, stackTrace);
-      rethrow;
     }
   }
 
@@ -427,11 +411,9 @@ class WorkoutService extends BaseApiService {
       } else {
         handleError('Invalid response format when updating exercise set',
             Exception('Expected an exercise instance object in response'));
-        throw Exception('Failed to update exercise set');
       }
     } catch (e, stackTrace) {
       handleError('Failed to update exercise set', e, stackTrace);
-      rethrow;
     }
   }
 
@@ -453,11 +435,9 @@ class WorkoutService extends BaseApiService {
       } else {
         handleError('Invalid response format for workouts by type',
             Exception('Expected a list of workouts'));
-        return [];
       }
     } catch (e, stackTrace) {
       handleError('Failed to get workouts by type', e, stackTrace);
-      return [];
     }
   }
 
@@ -475,11 +455,9 @@ class WorkoutService extends BaseApiService {
       } else {
         handleError('Invalid response format for next generated workout',
             Exception('Expected a workout object'));
-        return null;
       }
     } catch (e, stackTrace) {
       handleError('Failed to get next generated workout', e, stackTrace);
-      return null;
     }
   }
 
@@ -497,11 +475,9 @@ class WorkoutService extends BaseApiService {
       } else {
         handleError('Invalid response format for next workout in plan',
             Exception('Expected a workout object'));
-        return null;
       }
     } catch (e, stackTrace) {
       handleError('Failed to get next workout in plan', e, stackTrace);
-      return null;
     }
   }
 
@@ -523,11 +499,9 @@ class WorkoutService extends BaseApiService {
       } else {
         handleError('Invalid response format for workouts by applied plan',
             Exception('Expected a list of workouts'));
-        return [];
       }
     } catch (e, stackTrace) {
       handleError('Failed to get workouts by applied plan', e, stackTrace);
-      return [];
     }
   }
 
@@ -557,11 +531,9 @@ class WorkoutService extends BaseApiService {
       } else {
         handleError('Invalid response format when creating exercise instance',
             Exception('Expected an exercise instance object in response'));
-        throw Exception('Failed to create exercise instance');
       }
     } catch (e, stackTrace) {
       handleError('Failed to create exercise instance', e, stackTrace);
-      throw Exception('Failed to create exercise instance');
     }
   }
 
@@ -586,11 +558,9 @@ class WorkoutService extends BaseApiService {
       } else {
         handleError('Invalid response format when updating exercise instance',
             Exception('Expected an exercise instance object in response'));
-        throw Exception('Failed to update exercise instance');
       }
     } catch (e, stackTrace) {
       handleError('Failed to update exercise instance', e, stackTrace);
-      throw Exception('Failed to update exercise instance');
     }
   }
 
@@ -610,7 +580,6 @@ class WorkoutService extends BaseApiService {
       return true;
     } catch (e, stackTrace) {
       handleError('Failed to delete exercise instance', e, stackTrace);
-      return false;
     }
   }
 
@@ -638,7 +607,6 @@ class WorkoutService extends BaseApiService {
       return 0;
     } catch (e, stackTrace) {
       handleError('Failed to replace exercise ID', e, stackTrace);
-      rethrow;
     }
   }
 

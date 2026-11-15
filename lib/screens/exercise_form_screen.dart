@@ -1,14 +1,19 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/models/exercise_definition.dart';
 import 'package:workout_app/models/exercise_instance.dart';
 import 'package:workout_app/models/exercise_set_dto.dart';
 import 'package:workout_app/models/progression_template.dart';
-import 'package:workout_app/services/exercise_service.dart';
 import 'package:workout_app/services/service_locator.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:workout_app/src/widgets/snack_utils.dart';
+import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
+import 'package:workout_app/widgets/assistant_chat_host.dart';
+import 'package:workout_app/widgets/instrument_modal.dart';
+import 'package:workout_app/widgets/loading_indicator.dart';
+import 'package:workout_app/widgets/primary_app_bar.dart';
 
 class ExerciseFormScreen extends ConsumerStatefulWidget {
   final ExerciseDefinition exercise;
@@ -37,14 +42,12 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
   final List<TextEditingController> _weightControllers = [];
   final List<ExerciseSetDto?> _existingSetDtos = [];
 
-
   List<String> _muscleGroups = [];
   String? _selectedMuscleGroup;
 
   List<ProgressionTemplate> _templates = [];
   ProgressionTemplate? _selectedTemplate;
   bool _isLoading = false;
-
 
   void _addSetRow({ExerciseSetDto? existing, String? volume, String? weight}) {
     final defaultReps = existing?.reps.toString() ?? '5';
@@ -71,20 +74,14 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
     setState(() {});
   }
 
-  void _clearAllSetRows() {
-    for (final c in _volumeControllers) { c.dispose(); }
-    for (final c in _weightControllers) { c.dispose(); }
-    _existingSetDtos.clear();
-    _volumeControllers.clear();
-    _weightControllers.clear();
-  }
-
   @override
   void initState() {
     super.initState();
 
     _nameController = TextEditingController(text: widget.exercise.name);
-    _muscleGroupController = TextEditingController(text: widget.exercise.muscleGroup ?? '');
+    _muscleGroupController = TextEditingController(
+      text: widget.exercise.muscleGroup ?? '',
+    );
 
     final existingSets = widget.initialInstance?.sets ?? [];
     if (existingSets.isNotEmpty) {
@@ -95,9 +92,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
       _addSetRow();
     }
 
-
     _selectedMuscleGroup = null;
-
     _loadData();
   }
 
@@ -105,18 +100,19 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
   void dispose() {
     _nameController.dispose();
     _muscleGroupController.dispose();
-    for (final c in _volumeControllers) { c.dispose(); }
-    for (final c in _weightControllers) { c.dispose(); }
+    for (final c in _volumeControllers) {
+      c.dispose();
+    }
+    for (final c in _weightControllers) {
+      c.dispose();
+    }
     super.dispose();
   }
 
   Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
     try {
       final exerciseService = ref.read(exerciseServiceProvider);
-
       final results = await Future.wait([
         exerciseService.getTemplates(),
         exerciseService.getMuscles(),
@@ -125,14 +121,14 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
       final templates = results[0] as List<ProgressionTemplate>;
       final muscles = results[1];
 
-
-      final groups = Set<String>.from(muscles.map((m) => (m as dynamic).group as String));
+      final groups = Set<String>.from(
+        muscles.map((m) => (m as dynamic).group as String),
+      );
       _muscleGroups = groups.toList()..sort();
 
       if (mounted) {
         setState(() {
           _templates = templates;
-
           final current = _muscleGroupController.text.trim();
           if (current.isNotEmpty) {
             String? match;
@@ -150,92 +146,84 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load data: $e')),
-        );
+        showAppSnackBar(context, 'Failed to load data: $e', isError: true);
       }
     } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
 
   Future<bool> _saveExercise() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        _isLoading = true;
-      });
+    if (!(_formKey.currentState?.validate() ?? false)) return false;
 
-      try {
-        final exerciseDef = widget.exercise;
-        final exerciseListId = exerciseDef.id;
-        if (exerciseListId == null) {
-          throw Exception('Exercise definition id is required');
-        }
+    setState(() => _isLoading = true);
+    try {
+      final exerciseDef = widget.exercise;
+      final exerciseListId = exerciseDef.id;
+      if (exerciseListId == null) {
+        throw Exception('Exercise definition id is required');
+      }
 
-        final sets = <ExerciseSetDto>[];
-        for (int i = 0; i < _volumeControllers.length; i++) {
-          final reps = int.tryParse(_volumeControllers[i].text.trim()) ?? 0;
-          final weightRaw = _weightControllers[i].text.replaceAll(',', '.').trim();
-          final weight = double.tryParse(weightRaw) ?? 0.0;
-          final existing = _existingSetDtos[i];
+      final sets = <ExerciseSetDto>[];
+      for (int i = 0; i < _volumeControllers.length; i++) {
+        final reps = int.tryParse(_volumeControllers[i].text.trim()) ?? 0;
+        final weightRaw = _weightControllers[i].text
+            .replaceAll(',', '.')
+            .trim();
+        final weight = double.tryParse(weightRaw) ?? 0.0;
+        final existing = _existingSetDtos[i];
 
-          sets.add(ExerciseSetDto(
+        sets.add(
+          ExerciseSetDto(
             id: existing?.id,
             reps: reps,
             weight: weight,
             effort: existing?.rpe?.toDouble() ?? 0.0,
             order: existing?.order ?? i,
             exerciseInstanceId: existing?.exerciseInstanceId,
-          ));
-        }
-
-        final newInstance = ExerciseInstance(
-          id: widget.initialInstance?.id,
-          workoutId: widget.initialInstance?.workoutId ?? widget.workoutId,
-          exerciseListId: exerciseListId,
-          exerciseDefinition: exerciseDef,
-          userMaxId: widget.initialInstance?.userMaxId,
-          sets: sets,
-          notes: widget.initialInstance?.notes,
-          order: widget.initialInstance?.order ?? widget.defaultOrder,
+          ),
         );
+      }
 
-        if (mounted) {
-          Navigator.of(context).pop({
-            'instance': newInstance,
-            'isNew': widget.initialInstance == null,
-            'refresh': true,
-          });
-        }
-        return true;
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error saving: $e')),
-          );
-        }
-        return false;
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
+      final newInstance = ExerciseInstance(
+        id: widget.initialInstance?.id,
+        workoutId: widget.initialInstance?.workoutId ?? widget.workoutId,
+        exerciseListId: exerciseListId,
+        exerciseDefinition: exerciseDef,
+        userMaxId: widget.initialInstance?.userMaxId,
+        sets: sets,
+        notes: widget.initialInstance?.notes,
+        order: widget.initialInstance?.order ?? widget.defaultOrder,
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop({
+          'instance': newInstance,
+          'isNew': widget.initialInstance == null,
+          'refresh': true,
+        });
+      }
+      return true;
+    } catch (e) {
+      if (mounted) {
+        showAppSnackBar(context, 'Error saving: $e', isError: true);
+      }
+      return false;
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
-    return false;
   }
 
-  Widget _buildTemplateDropdown() {
+  Widget _buildTemplateDropdown(BuildContext context) {
     return DropdownButtonFormField<ProgressionTemplate>(
       initialValue: _selectedTemplate,
-      decoration: const InputDecoration(
+      decoration: InstrumentTheme.inputDecoration(
+        context,
         labelText: 'Progression Template (optional)',
-        border: OutlineInputBorder(),
       ),
       hint: const Text('Select template'),
       isExpanded: true,
@@ -255,11 +243,9 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
         setState(() {
           _selectedTemplate = template;
           if (template != null) {
-
             if (_volumeControllers.isNotEmpty) {
               _volumeControllers.first.text = template.volume.toString();
             }
-
           } else {
             if (_volumeControllers.isNotEmpty) {
               _volumeControllers.first.text = '5';
@@ -275,159 +261,359 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: EdgeInsets.all(UiDimensions.of(context).pagePadding),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Add Exercise',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: UiDimensions.of(context).sectionGap),
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Exercise Name',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a name';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: UiDimensions.of(context).rowGap),
-                    DropdownButtonFormField<String>(
-                      initialValue: _selectedMuscleGroup,
-                      decoration: const InputDecoration(
-                        labelText: 'Muscle Group',
-                        border: OutlineInputBorder(),
-                      ),
-                      isExpanded: true,
-                      hint: _muscleGroups.isEmpty
-                          ? const Text('Loading...')
-                          : const Text('Select group'),
-                      items: _muscleGroups
-                          .map((g) => DropdownMenuItem<String>(
-                                value: g,
-                                child: Text(g),
-                              ))
-                          .toList(),
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedMuscleGroup = val;
-                          _muscleGroupController.text = val ?? '';
-                        });
-                      },
-                      validator: (val) {
-                        if (_muscleGroups.isEmpty) return 'Loading groups...';
-                        if (val == null || val.isEmpty) {
-                          return 'Please select a muscle group';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: UiDimensions.of(context).rowGap),
-                    _buildTemplateDropdown(),
-                    SizedBox(height: UiDimensions.of(context).sectionGap),
-                    Text(
-                      'Sets',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    ..._buildSetRows(),
-                    SizedBox(height: UiDimensions.of(context).rowGap),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _addSetRow();
-                        });
-                      },
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add Set'),
-                    ),
-                    SizedBox(height: UiDimensions.of(context).rowGap),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.save),
-                      label: const Text('Save Exercise'),
-                      onPressed: _isLoading
-                          ? null
-                          : () async {
-                              final result = await _saveExercise();
-                              if (result) {
-                                if (mounted) {
-                                  Navigator.of(context).pop({'refresh': true});
-                                }
-                              }
-                            },
-                    ),
-                  ],
-                ),
+    return AssistantChatHost(
+      contextBuilder: () async => {
+        'screen': 'exercise_form',
+        'entities': {
+          'workout_id': widget.workoutId,
+          'exercise_id': widget.exercise.id,
+          'sets_count': _volumeControllers.length,
+        },
+      },
+      builder: (context, openChat) {
+        final theme = Theme.of(context);
+        final instrument = InstrumentTheme.of(context);
+        final topInset = AmbientScaffoldShell.topContentInset(context);
+        final bottomInset = AmbientScaffoldShell.bottomContentInset(context);
+
+        return AmbientScaffoldShell(
+          appBar: PrimaryAppBar(
+            title: widget.initialInstance == null
+                ? 'Add Exercise'
+                : 'Edit Exercise',
+            onTitleTap: openChat,
+            showBack: true,
+            actions: [
+              IconButton(
+                onPressed: _isLoading ? null : _saveExercise,
+                icon: const Icon(Icons.check_rounded),
+                tooltip: 'Save Exercise',
               ),
-            ),
+            ],
+          ),
+          body: _isLoading
+              ? Padding(
+                  padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
+                  child: const LoadingIndicator(),
+                )
+              : Form(
+                  key: _formKey,
+                  child: ListView(
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      topInset + 8,
+                      16,
+                      bottomInset + 28,
+                    ),
+                    children: [
+                      _FormSectionCard(
+                        eyebrow: '01 · EXERCISE SPEC',
+                        title: 'Exercise Details',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            TextFormField(
+                              controller: _nameController,
+                              decoration: InstrumentTheme.inputDecoration(
+                                context,
+                                labelText: 'Exercise Name',
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter a name';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            DropdownButtonFormField<String>(
+                              initialValue: _selectedMuscleGroup,
+                              decoration: InstrumentTheme.inputDecoration(
+                                context,
+                                labelText: 'Muscle Group',
+                              ),
+                              isExpanded: true,
+                              hint: _muscleGroups.isEmpty
+                                  ? const Text('Loading...')
+                                  : const Text('Select group'),
+                              items: _muscleGroups
+                                  .map(
+                                    (g) => DropdownMenuItem<String>(
+                                      value: g,
+                                      child: Text(g),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (val) {
+                                setState(() {
+                                  _selectedMuscleGroup = val;
+                                  _muscleGroupController.text = val ?? '';
+                                });
+                              },
+                              validator: (val) {
+                                if (_muscleGroups.isEmpty) {
+                                  return 'Loading groups...';
+                                }
+                                if (val == null || val.isEmpty) {
+                                  return 'Please select a muscle group';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTemplateDropdown(context),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      _FormSectionCard(
+                        eyebrow: '02 · PRESCRIBED SETS (${_volumeControllers.length})',
+                        title: 'Sets',
+                        accentColor: instrument.workingAura,
+                        flushBody: true,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            for (
+                              int i = 0;
+                              i < _volumeControllers.length;
+                              i++
+                            ) ...[
+                              if (i > 0)
+                                Container(
+                                  height: 1,
+                                  color: instrument.hairlineBorder,
+                                ),
+                              _SetInputRow(
+                                index: i,
+                                weightController: _weightControllers[i],
+                                repsController: _volumeControllers[i],
+                                canDelete: _volumeControllers.length > 1,
+                                onDelete: () => _removeSetRow(i),
+                                theme: theme,
+                                instrument: instrument,
+                              ),
+                            ],
+                            Container(
+                              height: 1,
+                              color: instrument.hairlineBorder,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: InstrumentActionButton(
+                                label: 'Add Set',
+                                icon: Icons.add_rounded,
+                                variant: InstrumentActionVariant.secondary,
+                                expanded: true,
+                                onPressed: () {
+                                  setState(() {
+                                    _addSetRow();
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      InstrumentActionButton(
+                        label: 'Save Exercise',
+                        icon: Icons.save_rounded,
+                        expanded: true,
+                        loading: _isLoading,
+                        onPressed: _isLoading ? null : _saveExercise,
+                      ),
+                    ],
+                  ),
+                ),
+        );
+      },
     );
   }
+}
 
-  List<Widget> _buildSetRows() {
-    return List<Widget>.generate(_volumeControllers.length, (index) {
-      return Row(
+class _FormSectionCard extends StatelessWidget {
+  final String eyebrow;
+  final String title;
+  final Widget child;
+  final Color? accentColor;
+  final bool flushBody;
+
+  const _FormSectionCard({
+    required this.eyebrow,
+    required this.title,
+    required this.child,
+    this.accentColor,
+    this.flushBody = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final instrument = InstrumentTheme.of(context);
+
+    return Container(
+      decoration: InstrumentTheme.instrumentCardDecoration(
+        context,
+        accentColor: accentColor,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            flex: 1,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: TextFormField(
-                controller: _weightControllers[index],
-                decoration: const InputDecoration(
-                  labelText: 'Weight (kg)',
-                  border: OutlineInputBorder(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  eyebrow,
+                  style: InstrumentTheme.microLabel(
+                    context,
+                    color: accentColor,
+                  ).copyWith(
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Required';
-                  }
-                  return null;
-                },
-              ),
+                const SizedBox(height: 4),
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ),
-          Expanded(
-            flex: 1,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: TextFormField(
-                controller: _volumeControllers[index],
-                decoration: const InputDecoration(
-                  labelText: 'Reps',
-                  border: OutlineInputBorder(),
+          Container(height: 1, color: instrument.hairlineBorder),
+          if (flushBody)
+            child
+          else
+            Padding(padding: const EdgeInsets.all(16), child: child),
+        ],
+      ),
+    );
+  }
+}
+
+class _SetInputRow extends StatelessWidget {
+  final int index;
+  final TextEditingController weightController;
+  final TextEditingController repsController;
+  final bool canDelete;
+  final VoidCallback onDelete;
+  final ThemeData theme;
+  final InstrumentTheme instrument;
+
+  const _SetInputRow({
+    required this.index,
+    required this.weightController,
+    required this.repsController,
+    required this.canDelete,
+    required this.onDelete,
+    required this.theme,
+    required this.instrument,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tabularStyle = theme.textTheme.bodyLarge?.copyWith(
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+
+    final weightField = TextFormField(
+      controller: weightController,
+      style: tabularStyle,
+      decoration: InstrumentTheme.inputDecoration(
+        context,
+        labelText: 'Weight (kg)',
+      ),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Required';
+        }
+        return null;
+      },
+    );
+
+    final repsField = TextFormField(
+      controller: repsController,
+      style: tabularStyle,
+      decoration: InstrumentTheme.inputDecoration(
+        context,
+        labelText: 'Reps',
+      ),
+      keyboardType: TextInputType.number,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Required';
+        }
+        return null;
+      },
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 8, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'SET #${index + 1}',
+                  style: InstrumentTheme.microLabel(
+                    context,
+                    color: instrument.workingAura,
+                  ).copyWith(
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Required';
-                  }
-                  return null;
-                },
               ),
-            ),
+              ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                child: IconButton(
+                  icon: Icon(
+                    Icons.delete_outline_rounded,
+                    color: canDelete
+                        ? instrument.peakEffortColor
+                        : theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.35,
+                          ),
+                  ),
+                  tooltip: 'Remove set',
+                  onPressed: canDelete ? onDelete : null,
+                ),
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: _volumeControllers.length > 1
-                ? () => _removeSetRow(index)
-                : null,
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth < 260) {
+                  return Column(
+                    children: [
+                      weightField,
+                      const SizedBox(height: 10),
+                      repsField,
+                    ],
+                  );
+                }
+                return Row(
+                  children: [
+                    Expanded(child: weightField),
+                    const SizedBox(width: 10),
+                    Expanded(child: repsField),
+                  ],
+                );
+              },
+            ),
           ),
         ],
-      );
-    });
+      ),
+    );
   }
 }
