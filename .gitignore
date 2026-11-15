@@ -61,3 +61,6 @@ key.properties
 coverage/
 *.bak
 *.bak_*/
+
+# Markdown documentation
+*.md
