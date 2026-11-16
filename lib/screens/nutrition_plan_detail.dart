@@ -23,21 +23,22 @@ class NutritionPlanDetail extends StatefulWidget {
 
 class _NutritionPlanDetailState extends State<NutritionPlanDetail> {
   Future<void> _deleteSession() async {
+    final l10n = AppLocalizations.of(context);
     final instrument = InstrumentTheme.of(context);
     final confirmed = await showInstrumentDialog<bool>(
       context: context,
-      eyebrow: 'DESTRUCTIVE ACTION',
-      title: 'Delete Session',
-      message: 'Are you sure you want to delete this session?',
+      eyebrow: l10n.destructiveActionEyebrow,
+      title: l10n.deleteSessionTitle,
+      message: l10n.deleteSessionConfirm,
       accentColor: instrument.peakEffortColor,
       actions: [
         InstrumentActionButton(
-          label: 'Cancel',
+          label: l10n.cancel,
           variant: InstrumentActionVariant.secondary,
           onPressed: () => Navigator.pop(context, false),
         ),
         InstrumentActionButton(
-          label: 'Delete',
+          label: l10n.delete,
           variant: InstrumentActionVariant.destructive,
           onPressed: () => Navigator.pop(context, true),
         ),
@@ -48,11 +49,11 @@ class _NutritionPlanDetailState extends State<NutritionPlanDetail> {
       try {
         await NutritionApi.deleteSession(widget.sessionData['session_id']);
         if (!mounted) return;
-        showAppSnackBar(context, 'Session deleted successfully');
+        showAppSnackBar(context, l10n.sessionDeletedSuccess);
         Navigator.pop(context);
       } catch (e) {
         if (!mounted) return;
-        showAppSnackBar(context, 'Error: $e', isError: true);
+        showAppSnackBar(context, l10n.genericError('$e'), isError: true);
       }
     }
   }
@@ -98,12 +99,12 @@ class _NutritionPlanDetailState extends State<NutritionPlanDetail> {
             actions: [
               IconButton(
                 icon: const Icon(Icons.edit_outlined),
-                tooltip: 'Edit session',
+                tooltip: l10n.editSessionTooltip,
                 onPressed: _editSession,
               ),
               IconButton(
                 icon: const Icon(Icons.delete_outline_rounded),
-                tooltip: 'Delete session',
+                tooltip: l10n.deleteSessionTooltip,
                 onPressed: _deleteSession,
               ),
             ],
@@ -237,28 +238,29 @@ class _SessionTelemetryCard extends StatelessWidget {
       return unit.isEmpty ? s : '$s$unit';
     }
 
+    final l10n = AppLocalizations.of(context);
     return [
       InstrumentMetricCellData(
         slot: MetricSlot.tonnage,
-        label: 'KCAL',
+        label: l10n.kcalUpperLabel,
         value: fmt(kcal, ''),
         valueColor: instrument.stormAura,
       ),
       InstrumentMetricCellData(
         slot: MetricSlot.peakIntensity,
-        label: 'PROTEIN',
+        label: l10n.proteinUpperLabel,
         value: fmt(protein, 'g'),
         valueColor: instrument.deloadAura,
       ),
       InstrumentMetricCellData(
         slot: MetricSlot.avgRpe,
-        label: 'FAT',
+        label: l10n.fatUpperLabel,
         value: fmt(fat, 'g'),
         valueColor: instrument.moderateEffortColor,
       ),
       InstrumentMetricCellData(
         slot: MetricSlot.setsCount,
-        label: 'CARB',
+        label: l10n.carbUpperLabel,
         value: fmt(carbs, 'g'),
         valueColor: instrument.workingAura,
       ),

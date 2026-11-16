@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/config/api_config.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/providers/macro_context_providers.dart';
 import 'package:workout_app/providers/macro_preview_providers.dart';
 import 'package:workout_app/services/api_client.dart';
@@ -38,29 +39,33 @@ Future<void> showSessionMacroSuggestion(
     final missing =
         (preview['needs_weight_settings'] as List? ?? []).isNotEmpty;
     if (!context.mounted || (!missing && patches == 0 && inserts == 0)) return;
+    final l10n = AppLocalizations.of(context);
     final summary = [
-      if (patches > 0) 'Изменений подходов: $patches',
-      if (inserts > 0) 'Вставок мезоциклов: $inserts',
-      if (missing) 'Для расчёта веса нужны параметры плана.',
+      if (patches > 0) l10n.macroPreviewSetChangesCount(patches),
+      if (inserts > 0) l10n.macroPreviewMesoInsertsCount(inserts),
+      if (missing) l10n.macroPreviewMissingParamsHint,
     ].join('\n');
 
     final open = await showInstrumentDialog<bool>(
       context: context,
-      eyebrow: 'MACRO SUGGESTIONS',
-      title: 'Предложения по завершённой тренировке',
+      eyebrow: l10n.macroSuggestionsEyebrow,
+      title: l10n.macroPreviewDialogTitle,
       message: summary,
-      actionsBuilder: (dialogContext) => [
-        InstrumentActionButton(
-          label: 'Отмена',
-          variant: InstrumentActionVariant.secondary,
-          onPressed: () => Navigator.pop(dialogContext, false),
-        ),
-        InstrumentActionButton(
-          label: 'Посмотреть изменения',
-          variant: InstrumentActionVariant.primary,
-          onPressed: () => Navigator.pop(dialogContext, true),
-        ),
-      ],
+      actionsBuilder: (dialogContext) {
+        final dL10n = AppLocalizations.of(dialogContext);
+        return [
+          InstrumentActionButton(
+            label: dL10n.cancel,
+            variant: InstrumentActionVariant.secondary,
+            onPressed: () => Navigator.pop(dialogContext, false),
+          ),
+          InstrumentActionButton(
+            label: dL10n.macroPreviewViewChanges,
+            variant: InstrumentActionVariant.primary,
+            onPressed: () => Navigator.pop(dialogContext, true),
+          ),
+        ];
+      },
     );
     if (open == true && context.mounted) {
       await Navigator.of(context).push(
@@ -77,7 +82,7 @@ Future<void> showSessionMacroSuggestion(
     if (context.mounted) {
       showAppSnackBar(
         context,
-        'Не удалось загрузить предложения макросов: $e',
+        AppLocalizations.of(context).macroPreviewLoadError(e.toString()),
         isError: true,
       );
     }
@@ -100,19 +105,19 @@ class MacrosPreviewScreen extends ConsumerStatefulWidget {
       _MacrosPreviewScreenState();
 }
 
-String _values(Map set) {
+String _values(Map set, AppLocalizations l10n) {
   final parts = set['subsets'];
   if (parts is List && parts.isNotEmpty) {
-    return '${set['set_type'] ?? ''} [${parts.whereType<Map>().map(_values).join(' / ')}]';
+    return '${set['set_type'] ?? ''} [${parts.whereType<Map>().map((m) => _values(m, l10n)).join(' / ')}]';
   }
   final volume = set['volume'] ?? set['reps'];
   final effort = set['effort'] ?? set['rpe'];
   final weight = set['working_weight'] ?? set['weight'];
   return [
-    if (volume != null) '$volume повт.',
+    if (volume != null) l10n.unitRepsShort(volume.toString()),
     if (set['intensity'] != null) "${set['intensity']}%",
     if (effort != null) 'RPE $effort',
-    if (weight != null) '$weight кг',
+    if (weight != null) l10n.unitKgValue(weight.toString()),
   ].join(', ');
 }
 
@@ -172,15 +177,16 @@ class _MacrosPreviewScreenState extends ConsumerState<MacrosPreviewScreen> {
         final topInset = AmbientScaffoldShell.topContentInset(context);
         final bottomInset = AmbientScaffoldShell.bottomContentInset(context);
 
+        final l10n = AppLocalizations.of(context);
         return AmbientScaffoldShell(
           appBar: PrimaryAppBar(
-            title: 'Изменения по макросам',
+            title: l10n.macroPreviewAppBarTitle,
             onTitleTap: openChat,
             showBack: true,
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh_rounded),
-                tooltip: 'Обновить',
+                tooltip: l10n.refresh,
                 onPressed: state.loading
                     ? null
                     : () => notifier.runPreview(
@@ -233,7 +239,7 @@ class _MacrosPreviewScreenState extends ConsumerState<MacrosPreviewScreen> {
                     accentColor: instrument.moderateEffortColor,
                   ),
                   child: Text(
-                    'Для подтверждения требуется новая версия сервера.',
+                    l10n.macroPreviewConfirmNeedsNewServer,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: instrument.moderateEffortColor,
                     ),
@@ -243,7 +249,7 @@ class _MacrosPreviewScreenState extends ConsumerState<MacrosPreviewScreen> {
               ],
               if (anchor != null) ...[
                 Text(
-                  'Наблюдение: тренировка #$anchor',
+                  l10n.macroPreviewObservationWorkout(anchor.toString()),
                   style: InstrumentTheme.microLabel(
                     context,
                     color: instrument.workingAura,
@@ -272,7 +278,7 @@ class _MacrosPreviewScreenState extends ConsumerState<MacrosPreviewScreen> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Укажите параметры веса для расчёта этого предпросмотра.',
+                        l10n.macroPreviewSpecifyWeightParams,
                         style: theme.textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 12),
@@ -284,8 +290,9 @@ class _MacrosPreviewScreenState extends ConsumerState<MacrosPreviewScreen> {
                           ),
                           decoration: InstrumentTheme.inputDecoration(
                             context,
-                            labelText:
-                                '1ПМ, кг · ${names?.exerciseNames[eid] ?? "#$eid"}',
+                            labelText: l10n.macroPreviewOneRmKgForExercise(
+                              names?.exerciseNames[eid] ?? "#$eid",
+                            ),
                           ),
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
@@ -308,7 +315,7 @@ class _MacrosPreviewScreenState extends ConsumerState<MacrosPreviewScreen> {
                         ),
                         decoration: InstrumentTheme.inputDecoration(
                           context,
-                          labelText: 'Шаг веса, кг',
+                          labelText: l10n.macroPreviewWeightStepKg,
                         ),
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
@@ -319,7 +326,7 @@ class _MacrosPreviewScreenState extends ConsumerState<MacrosPreviewScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'ОКРУГЛЕНИЕ',
+                        l10n.applyPlanRoundingHeader,
                         style: InstrumentTheme.microLabel(context),
                       ),
                       const SizedBox(height: 8),
@@ -328,19 +335,19 @@ class _MacrosPreviewScreenState extends ConsumerState<MacrosPreviewScreen> {
                         runSpacing: 8,
                         children: [
                           InstrumentSelectablePill(
-                            label: 'До ближайшего шага',
+                            label: l10n.macroPreviewRoundNearest,
                             selected: _rounding == 'nearest',
                             bordered: false,
                             onTap: () => setState(() => _rounding = 'nearest'),
                           ),
                           InstrumentSelectablePill(
-                            label: 'Округлить вниз',
+                            label: l10n.macroPreviewRoundDown,
                             selected: _rounding == 'floor',
                             bordered: false,
                             onTap: () => setState(() => _rounding = 'floor'),
                           ),
                           InstrumentSelectablePill(
-                            label: 'Округлить вверх',
+                            label: l10n.macroPreviewRoundUp,
                             selected: _rounding == 'ceil',
                             bordered: false,
                             onTap: () => setState(() => _rounding = 'ceil'),
@@ -349,7 +356,7 @@ class _MacrosPreviewScreenState extends ConsumerState<MacrosPreviewScreen> {
                       ),
                       const SizedBox(height: 14),
                       InstrumentActionButton(
-                        label: 'Рассчитать предпросмотр',
+                        label: l10n.macroPreviewCalcButton,
                         icon: Icons.calculate_outlined,
                         expanded: true,
                         onPressed:
@@ -379,7 +386,7 @@ class _MacrosPreviewScreenState extends ConsumerState<MacrosPreviewScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: InstrumentTheme.instrumentCardDecoration(context),
-                  child: const Text('Изменений подходов нет.'),
+                  child: Text(l10n.macroPreviewNoSetChanges),
                 ),
               for (final item in items) ...[
                 _MacroDiffGroupCard(
@@ -396,7 +403,9 @@ class _MacrosPreviewScreenState extends ConsumerState<MacrosPreviewScreen> {
                     accentColor: instrument.successColor,
                   ),
                   child: Text(
-                    'Изменено экземпляров упражнений: ${changes['applied']}',
+                    l10n.macroPreviewExercisesModified(
+                      (changes['applied'] ?? 0).toString(),
+                    ),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: instrument.successColor,
                       fontWeight: FontWeight.w600,
@@ -417,8 +426,10 @@ class _MacrosPreviewScreenState extends ConsumerState<MacrosPreviewScreen> {
                   ),
                   child: Text(
                     result['applied'] == true
-                        ? 'Мезоцикл добавлен'
-                        : 'Мезоцикл не добавлен: ${result['reason']}',
+                        ? l10n.macroPreviewMesoAdded
+                        : l10n.macroPreviewMesoNotAdded(
+                            (result['reason'] ?? '').toString(),
+                          ),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: result['applied'] == true
                           ? instrument.successColor
@@ -430,7 +441,7 @@ class _MacrosPreviewScreenState extends ConsumerState<MacrosPreviewScreen> {
               ],
               if (preview?['preview_id'] != null) ...[
                 InstrumentActionButton(
-                  label: 'Подтвердить изменения подходов',
+                  label: l10n.macroPreviewConfirmSetsButton,
                   icon: Icons.check_circle_outline_rounded,
                   expanded: true,
                   accentColor: instrument.executionAccent,
@@ -442,7 +453,7 @@ class _MacrosPreviewScreenState extends ConsumerState<MacrosPreviewScreen> {
               ],
               if (hasMesos)
                 InstrumentActionButton(
-                  label: 'Применить правила вставки мезоциклов отдельно',
+                  label: l10n.macroPreviewApplyMesoRulesButton,
                   icon: Icons.layers_outlined,
                   variant: InstrumentActionVariant.secondary,
                   expanded: true,
@@ -453,7 +464,7 @@ class _MacrosPreviewScreenState extends ConsumerState<MacrosPreviewScreen> {
               const SizedBox(height: 4),
               if (changes != null)
                 Text(
-                  'Применено к активному плану #$id',
+                  l10n.macroPreviewAppliedToActivePlan(id.toString()),
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                     fontFeatures: const [FontFeature.tabularFigures()],
@@ -542,8 +553,7 @@ class _MacroDiffGroupCard extends StatelessWidget {
                   Text(
                     "${names?.workoutNames[p['workout_id']] ?? '#${p['workout_id']}'} · "
                     "${names?.exerciseNames[p['exercise_id']] ?? '#${p['exercise_id']}'} · "
-                    "экземпляр ${p['instance_id']}, "
-                    "${(p['set_id'] as int? ?? 0) < 0 ? 'новый подход' : "подход ${p['set_id']}"}",
+                    "${(p['set_id'] as int? ?? 0) < 0 ? AppLocalizations.of(context).macroPreviewInstanceNewSet((p['instance_id'] ?? '').toString()) : AppLocalizations.of(context).macroPreviewInstanceSet((p['instance_id'] ?? '').toString(), (p['set_id'] ?? '').toString())}",
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       fontFeatures: const [FontFeature.tabularFigures()],
@@ -552,7 +562,9 @@ class _MacroDiffGroupCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   if (p['before'] is Map)
                     Text(
-                      'Было: ${_values(p['before'])}',
+                      AppLocalizations.of(context).macroPreviewBefore(
+                        _values(p['before'], AppLocalizations.of(context)),
+                      ),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                         fontFeatures: const [FontFeature.tabularFigures()],
@@ -561,14 +573,18 @@ class _MacroDiffGroupCard extends StatelessWidget {
                   for (final a
                       in (p['alternatives'] as List? ?? []).whereType<Map>()) ...[
                     Text(
-                      'Запрошено: ${_values(a['requested'])}',
+                      AppLocalizations.of(context).macroPreviewRequested(
+                        _values(a['requested'], AppLocalizations.of(context)),
+                      ),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: instrument.moderateEffortColor,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                     Text(
-                      'Ближайший вариант: ${_values(a['proposed'])}',
+                      AppLocalizations.of(context).macroPreviewClosestOption(
+                        _values(a['proposed'], AppLocalizations.of(context)),
+                      ),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: instrument.workingAura,
                         fontFeatures: const [FontFeature.tabularFigures()],
@@ -577,7 +593,9 @@ class _MacroDiffGroupCard extends StatelessWidget {
                   ],
                   if (p['after'] is Map)
                     Text(
-                      'Результат: ${_values(p['after'])}',
+                      AppLocalizations.of(context).macroPreviewAfter(
+                        _values(p['after'], AppLocalizations.of(context)),
+                      ),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: instrument.successColor,
                         fontWeight: FontWeight.w600,
@@ -586,7 +604,7 @@ class _MacroDiffGroupCard extends StatelessWidget {
                     )
                   else
                     Text(
-                      'Удаление подхода',
+                      AppLocalizations.of(context).macroPreviewDeleteSet,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: instrument.peakEffortColor,
                         fontWeight: FontWeight.w600,
@@ -601,7 +619,9 @@ class _MacroDiffGroupCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
               child: Text(
-                'Вставка мезоцикла: ${ch['params']}',
+                AppLocalizations.of(context).macroPreviewMesoInsertParams(
+                  (ch['params'] ?? '').toString(),
+                ),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: instrument.deloadAura,
                   fontFeatures: const [FontFeature.tabularFigures()],

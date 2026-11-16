@@ -1,6 +1,5 @@
 {
   "appTitle": "Workout App",
-
   "missingAthleteId": "Відсутній athleteId",
   "missingChatArguments": "Відсутні аргументи чату",
   "fieldRequired": "Обовʼязково",
@@ -167,37 +166,30 @@
   "macroWorkoutPickerWorkoutsOnDate": "Тренування на цю дату",
   "macroWorkoutPickerOrSelectFromList": "Або вибрати зі списку",
   "macroWorkoutPickerList": "Список",
-
   "analyticsPlanTitle": "Аналітика плану {planName}",
   "@analyticsPlanTitle": {
     "placeholders": {
       "planName": {}
     }
   },
-
   "errorLoadingActivePlan": "Не вдалося отримати активний план",
   "selectTwoMetrics": "Оберіть дві метрики",
   "activePlanNotFound": "Активний план не знайдено",
   "errorLoadingData": "Помилка завантаження даних",
-
   "axisX": "Вісь X",
   "axisY": "Вісь Y",
   "showChart": "Показати графік",
-
   "selectRangeAndMetrics": "Оберіть діапазон і метрики",
   "noDataForSelectedMetrics": "Немає даних для вибраних метрик",
-
   "metricVolumeKg": "Обсяг (кг)",
   "metricEffortRpe": "Зусилля (RPE)",
   "metricKpsh": "КПШ",
   "metricReps": "Повтори",
   "metricOneRm": "1RM",
-
   "language": "Мова",
   "languageSystem": "Системна",
   "languageEnglish": "English",
   "languageUkrainian": "Українська",
-
   "accountTitle": "Профіль",
   "editProfileTitle": "Редагувати профіль",
   "displayName": "Імʼя",
@@ -212,7 +204,6 @@
   "unitsImperial": "Імперська",
   "timezone": "Часовий пояс",
   "notifications": "Сповіщення",
-  "cancel": "Скасувати",
   "save": "Зберегти",
   "profileUpdated": "Профіль оновлено",
   "failedToUpdateProfile": "Не вдалося оновити профіль",
@@ -230,25 +221,33 @@
   "coachingRate": "Тариф",
   "coachingCustomRate": "Індивідуальний тариф",
   "requestCoaching": "Запит на коучинг",
-
   "statsTotalWorkouts": "Всього тренувань",
   "statsVolumeKg": "Обсяг (кг)",
   "statsActiveDays": "Активні дні",
-
   "activityTitle": "Активність",
   "lastWeeks": "Останні {weeks} тижнів",
-  "@lastWeeks": {"placeholders": {"weeks": {}}},
+  "@lastWeeks": {
+    "placeholders": {
+      "weeks": {}
+    }
+  },
   "maxKgPerDay": "Макс: {value} кг/день",
-  "@maxKgPerDay": {"placeholders": {"value": {}}},
+  "@maxKgPerDay": {
+    "placeholders": {
+      "value": {}
+    }
+  },
   "sessionsCount": "{count} сесій",
-  "@sessionsCount": {"placeholders": {"count": {}}},
+  "@sessionsCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "noActivity": "Немає активності",
   "less": "Менше",
   "more": "Більше",
-
   "completedWorkoutsTitle": "Завершені тренування",
   "noCompletedWorkoutsYet": "Ще немає завершених тренувань",
-
   "exerciseFormTitleAdd": "Додати вправу",
   "exerciseFormExerciseNameLabel": "Назва вправи",
   "exerciseFormPleaseEnterName": "Будь ласка, введіть назву",
@@ -257,28 +256,30 @@
   "exerciseFormSelectGroup": "Оберіть групу",
   "exerciseFormLoadingGroups": "Завантаження груп...",
   "exerciseFormPleaseSelectMuscleGroup": "Будь ласка, оберіть групу мʼязів",
-
   "exerciseFormProgressionTemplateOptional": "Шаблон прогресії (необовʼязково)",
   "exerciseFormSelectTemplate": "Оберіть шаблон",
   "exerciseFormNoTemplate": "Без шаблону",
-
   "exerciseFormSetsTitle": "Сети",
   "exerciseFormAddSet": "Додати сет",
   "exerciseFormSaveExercise": "Зберегти вправу",
   "exerciseFormWeightKg": "Вага (кг)",
   "exerciseFormReps": "Повтори",
   "exerciseFormRequired": "Обовʼязково",
-
   "exerciseFormFailedToLoadData": "Не вдалося завантажити дані: {error}",
   "exerciseFormErrorSaving": "Помилка збереження: {error}",
-
   "exerciseDefinitionIdRequired": "Потрібен id визначення вправи",
   "exerciseFormDefaultReps": "5",
   "exerciseFormDefaultWeight": "0",
-
-  "@exerciseFormFailedToLoadData": {"placeholders": {"error": {}}},
-  "@exerciseFormErrorSaving": {"placeholders": {"error": {}}},
-
+  "@exerciseFormFailedToLoadData": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@exerciseFormErrorSaving": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "exerciseListTitle": "Вправи",
   "exerciseListAddExerciseTitle": "Додати вправу",
   "exerciseListNameLabel": "Назва",
@@ -299,13 +300,31 @@
   "exerciseListDeleteExerciseBody": "Цю дію не можна скасувати.",
   "exerciseListDelete": "Видалити",
   "exerciseListErrorDeleting": "Не вдалося видалити: {error}",
-
-  "@exerciseListErrorLoadingMuscleGroups": {"placeholders": {"error": {}}},
-  "@exerciseListErrorGeneric": {"placeholders": {"error": {}}},
-  "@exerciseListMuscleGroupPrefix": {"placeholders": {"value": {}}},
-  "@exerciseListEquipmentPrefix": {"placeholders": {"value": {}}},
-  "@exerciseListErrorDeleting": {"placeholders": {"error": {}}},
-
+  "@exerciseListErrorLoadingMuscleGroups": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@exerciseListErrorGeneric": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@exerciseListMuscleGroupPrefix": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@exerciseListEquipmentPrefix": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@exerciseListErrorDeleting": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "userMaxTitle": "Додати максимум",
   "userMaxExerciseLabel": "Вправа",
   "userMaxSelectExerciseValidator": "Оберіть вправу",
@@ -318,9 +337,11 @@
   "userMaxSaving": "Збереження...",
   "userMaxSave": "Зберегти максимум",
   "userMaxFailedToSave": "Не вдалося зберегти максимум: {error}",
-
-  "@userMaxFailedToSave": {"placeholders": {"error": {}}},
-
+  "@userMaxFailedToSave": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "yes": "Так",
   "no": "Ні",
   "massEditToolBullets": "• ",
@@ -329,45 +350,49 @@
   "massEditToolSetsToBeModified": "Сетів буде змінено: {count}",
   "planDraftMicrocycle": "Мікроцикл",
   "planDraftMesocycle": "Мезоцикл",
-
   "workoutDetailMacrosChangesFoundTitle": "Знайдено зміни по макросах",
   "workoutDetailMacrosChangesFoundBody": "Вставок мезоциклів: {injectCount}\nПатчі на тренування: {hasPatches}",
   "workoutDetailMacrosApplied": "Макроси застосовано",
   "workoutDetailFailedToApplyMacros": "Не вдалося застосувати макроси: {error}",
-
   "workoutDetailFailedToRefreshWorkoutBeforeApplyingReadiness": "Не вдалося оновити тренування перед застосуванням готовності",
   "workoutDetailWorkoutNotReadyMissingIds": "Тренування не готове до оновлення сетів (відсутні id)",
   "workoutDetailIncreaseTooltip": "Збільшити",
-
   "workoutDetailSessionActive": "Активна сесія",
   "workoutDetailSessionNone": "Немає активної сесії",
-
   "workoutDetailSelectSetTypeTitle": "Оберіть тип сета",
   "workoutDetailSetTypeNormal": "Звичайний сет",
   "workoutDetailSetTypeDrop": "Дроп-сет",
   "workoutDetailSetTypeCluster": "Кластерний сет",
   "workoutDetailSetTypeRestPause": "Rest-pause сет",
   "workoutDetailFailedToUpdateSetType": "Не вдалося оновити тип сета: {error}",
-
-  "@workoutDetailMacrosChangesFoundBody": {"placeholders": {"injectCount": {}, "hasPatches": {}}},
-  "@workoutDetailFailedToApplyMacros": {"placeholders": {"error": {}}},
-  "@workoutDetailFailedToUpdateSetType": {"placeholders": {"error": {}}},
-
+  "@workoutDetailMacrosChangesFoundBody": {
+    "placeholders": {
+      "injectCount": {},
+      "hasPatches": {}
+    }
+  },
+  "@workoutDetailFailedToApplyMacros": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@workoutDetailFailedToUpdateSetType": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "activePlanTitle": "Активний план",
   "activePlanFailedToLoad": "Не вдалося завантажити активний план: {error}",
   "activePlanNone": "Немає активного плану",
-
   "activePlanAiMassEditTitle": "AI mass edit (chat)",
   "activePlanAiMassEditHint": "Наприклад: Збільш RPE на 1 і додай по 1 підходу у всіх жимах по понеділках",
   "activePlanAiMassEditSend": "Надіслати",
   "activePlanAiMassEditStarted": "AI mass edit запущено (task: {taskId})",
   "activePlanAiMassEditFailedToSend": "Не вдалося надіслати команду AI mass edit: {error}",
-
   "activePlanMassEditTitle": "Масове редагування (з {start} по {end})",
   "activePlanRangeLabel": "Діапазон:",
   "activePlanRangeFutureFromWeek": "Майбутнє від тижня",
   "activePlanRangeByMesoMicro": "За мезо/мікро",
-
   "activePlanIntensityLabel": "Інтенсивність %",
   "activePlanRpeLabel": "RPE",
   "activePlanRepsLabel": "Повтори",
@@ -381,112 +406,242 @@
   "activePlanHintEg5": "напр. 5",
   "activePlanHintRepsOffset": "+/- повтори (напр. +1)",
   "activePlanHintFactorReps": "× коефіцієнт (напр. 0.9)",
-
   "activePlanRecalcTargetLabel": "Перерахувати:",
   "activePlanRecalcTargetAuto": "Авто",
   "activePlanRecalcTargetReps": "Повтори",
   "activePlanRecalcTargetRpe": "RPE",
   "activePlanRecalcTargetIntensity": "Інтенсивність",
-
   "activePlanValidatorLabel": "Валідатор:",
   "activePlanValidatorNone": "Немає",
   "activePlanValidatorFixReps": "Фіксувати повтори",
   "activePlanValidatorFixIntensity": "Фіксувати інтенсивність",
-
   "activePlanSelectAtLeastOneExercise": "Оберіть хоча б одну вправу",
   "activePlanSelectAtLeastOneParameter": "Оберіть хоча б один параметр",
-
   "activePlanPlanCancelled": "План скасовано",
   "activePlanFailedToCancelPlan": "Не вдалося скасувати план",
-
   "activePlanExerciseIdFallback": "Вправа {id}",
-
-  "@activePlanFailedToLoad": {"placeholders": {"error": {}}},
-  "@activePlanAiMassEditStarted": {"placeholders": {"taskId": {}}},
-  "@idPrefix": {"placeholders": {"id": {}}},
-  "@workoutsAffected": {"placeholders": {"count": {}}},
-  "@workoutsShifted": {"placeholders": {"count": {}}},
-  "@setsModified": {"placeholders": {"count": {}}},
-  "@setsToBeModified": {"placeholders": {"count": {}}},
-  "@shiftDays": {"placeholders": {"sign": {}, "days": {}}},
-  "@startingFrom": {"placeholders": {"date": {}}},
-  "@upToDate": {"placeholders": {"date": {}}},
-  "@dateNotEarlierThan": {"placeholders": {"date": {}}},
-  "@dateNotLaterThan": {"placeholders": {"date": {}}},
-  "@statuses": {"placeholders": {"statuses": {}}},
-  "@exercises": {"placeholders": {"exercises": {}}},
-  "@replaceExerciseTo": {"placeholders": {"name": {}, "id": {}}},
-  "@renameExerciseTo": {"placeholders": {"name": {}}},
-  "@addNewExercises": {"placeholders": {"count": {}}},
-  "@setIntensity": {"placeholders": {"value": {}}},
-  "@increaseIntensityBy": {"placeholders": {"value": {}}},
-  "@decreaseIntensityBy": {"placeholders": {"value": {}}},
-  "@setVolume": {"placeholders": {"value": {}}},
-  "@increaseVolumeBy": {"placeholders": {"value": {}}},
-  "@decreaseVolumeBy": {"placeholders": {"value": {}}},
-  "@setWeight": {"placeholders": {"value": {}}},
-  "@increaseWeightBy": {"placeholders": {"value": {}}},
-  "@decreaseWeightBy": {"placeholders": {"value": {}}},
-  "@setEffort": {"placeholders": {"value": {}}},
-  "@increaseEffortBy": {"placeholders": {"value": {}}},
-  "@decreaseEffortBy": {"placeholders": {"value": {}}},
-  "@macroActionLoadTemplatesError": {"placeholders": {"error": {}}},
-  "@macroActionMesoLabel": {"placeholders": {"index": {}}},
-  "@macroActionDayLabel": {"placeholders": {"index": {}, "type": {}}},
-  "@macroActionAfterAnchor": {"placeholders": {"name": {}}},
-  "@activePlanAiMassEditFailedToSend": {"placeholders": {"error": {}}},
-  "@activePlanMassEditTitle": {"placeholders": {"start": {}, "end": {}}},
-  "@activePlanExerciseIdFallback": {"placeholders": {"id": {}}},
-
+  "@activePlanFailedToLoad": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@activePlanAiMassEditStarted": {
+    "placeholders": {
+      "taskId": {}
+    }
+  },
+  "@idPrefix": {
+    "placeholders": {
+      "id": {}
+    }
+  },
+  "@workoutsAffected": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@workoutsShifted": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@setsModified": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@setsToBeModified": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@shiftDays": {
+    "placeholders": {
+      "sign": {},
+      "days": {}
+    }
+  },
+  "@startingFrom": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "@upToDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "@dateNotEarlierThan": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "@dateNotLaterThan": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "@statuses": {
+    "placeholders": {
+      "statuses": {}
+    }
+  },
+  "@exercises": {
+    "placeholders": {
+      "exercises": {}
+    }
+  },
+  "@replaceExerciseTo": {
+    "placeholders": {
+      "name": {},
+      "id": {}
+    }
+  },
+  "@renameExerciseTo": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@addNewExercises": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@setIntensity": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@increaseIntensityBy": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@decreaseIntensityBy": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@setVolume": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@increaseVolumeBy": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@decreaseVolumeBy": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@setWeight": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@increaseWeightBy": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@decreaseWeightBy": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@setEffort": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@increaseEffortBy": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@decreaseEffortBy": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@macroActionLoadTemplatesError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@macroActionMesoLabel": {
+    "placeholders": {
+      "index": {}
+    }
+  },
+  "@macroActionDayLabel": {
+    "placeholders": {
+      "index": {},
+      "type": {}
+    }
+  },
+  "@macroActionAfterAnchor": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@activePlanAiMassEditFailedToSend": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@activePlanMassEditTitle": {
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
+  },
+  "@activePlanExerciseIdFallback": {
+    "placeholders": {
+      "id": {}
+    }
+  },
   "activePlanReplaceTitle": "Заміна вправ (з {start} по {end})",
   "activePlanSelectSourceExercises": "Оберіть вправи для заміни:",
   "activePlanSelectTargetExercise": "Оберіть цільову вправу",
   "activePlanPreserveIntensity": "Зберегти інтенсивність через 1RM",
   "activePlanSelectAtLeastOneSourceExercise": "Оберіть хоча б одну вправу для заміни",
   "activePlanSelectTargetExerciseSnack": "Оберіть цільову вправу",
-
   "activePlanPreviewReplacementTitle": "Попередній перегляд заміни",
   "activePlanPreviewTarget": "Ціль: {name}",
   "activePlanPreviewExercisesToReplace": "Вправ до заміни: {count}",
   "activePlanPreviewSetsAffected": "Зачеплено сетів: {count}",
-
   "activePlanDropoutReasonNotEnjoyable": "Не сподобалось",
   "activePlanDropoutReasonOther": "Інше / не хочу відповідати",
   "activePlanDropoutSkip": "Пропустити",
   "activePlanDropoutConfirm": "Підтвердити",
-
   "activePlanUpdatedSets": "Оновлено {count} сетів",
   "activePlanFailed": "Помилка: {error}",
-
   "activePlanReplacementCancelledOneRmRequired": "Заміна скасована: потрібен 1RM",
-
   "activePlanEnterOneRmTitle": "Введіть 1RM для {exerciseName}",
   "activePlanOneRmLabel": "1RM (кг)",
   "activePlanOneRmHint": "напр. 120",
   "activePlanOneRmHelp": "Введіть ваш поточний максимум для цієї вправи.",
   "activePlanEnterNumberGtZero": "Введіть число > 0",
-
   "activePlanShiftedWorkouts": "Зміщено {count} тренувань на +{days} дн.",
   "activePlanShiftFailed": "Не вдалося змістити: {error}",
-
   "activePlanKeep": "Залишити",
   "activePlanCancelPlan": "Скасувати план",
   "activePlanWhyCancelling": "Чому ви скасовуєте?",
   "activePlanDropoutReasonNotEnoughTime": "Немає часу",
   "activePlanDropoutReasonInjury": "Травма / біль",
   "activePlanDropoutReasonTooHard": "Занадто складно",
-
   "activePlanReplaceSuccess": "Замінено {exercises} вправ, оновлено {sets} сетів",
   "activePlanReplaceFailed": "Помилка заміни: {error}",
-
   "activePlanCancelConfirmTitle": "Скасувати активний план?",
   "activePlanCancelConfirmBody": "Це припинить відстеження цього застосованого плану. Існуючі тренування залишаться.",
-
   "activePlanDroppedPrefix": "Припинено: {reason}{date}",
   "activePlanAdherencePercent": "Дотримання: {value}%",
   "activePlanFailedToLoadAnalytics": "Не вдалося завантажити аналітику: {error}",
   "activePlanStatusActive": "Активний",
-
   "coachRelationshipsTitle": "Коуч ↔ Атлети",
   "coachRelationshipsFilterAll": "Усі",
   "coachRelationshipsFilterPending": "Очікує",
@@ -532,7 +687,6 @@
   "coachRelationshipsNudgeMessageNoDays": "Привіт {athleteId}, давай скоро заплануємо наступне тренування!",
   "coachRelationshipsVolumeAndPlan": "Обсяг: {volume} | Активний план: {plan}",
   "coachRelationshipsVolumeDash": "-",
-
   "coachRelationshipsMenuAll": "Усі",
   "coachRelationshipsMenuPending": "Очікує",
   "coachRelationshipsMenuActive": "Активні",
@@ -541,25 +695,94 @@
   "coachRelationshipsMenuPauseCoaching": "Призупинити коучинг",
   "coachRelationshipsMenuResumeCoaching": "Відновити коучинг",
   "coachRelationshipsMenuEndCoaching": "Завершити коучинг",
-
-  "@coachRelationshipsError": {"placeholders": {"error": {}}},
-  "@coachRelationshipsAthletePrefix": {"placeholders": {"name": {}}},
-  "@coachRelationshipsStatusPrefix": {"placeholders": {"status": {}}},
-  "@coachRelationshipsNotePrefix": {"placeholders": {"note": {}}},
-  "@coachRelationshipsChannelPrefix": {"placeholders": {"channel": {}}},
-  "@coachRelationshipsSessions12w": {"placeholders": {"count": {}}},
-  "@coachRelationshipsLastWorkout": {"placeholders": {"date": {}, "suffix": {}}},
-  "@coachRelationshipsDaysAgoSuffix": {"placeholders": {"days": {}}},
-  "@coachRelationshipsFailedToAccept": {"placeholders": {"error": {}}},
-  "@coachRelationshipsFailedToDecline": {"placeholders": {"error": {}}},
-  "@coachRelationshipsFailedToPause": {"placeholders": {"error": {}}},
-  "@coachRelationshipsFailedToResume": {"placeholders": {"error": {}}},
-  "@coachRelationshipsFailedToEnd": {"placeholders": {"error": {}}},
-  "@coachRelationshipsFailedToSendNudge": {"placeholders": {"error": {}}},
-  "@coachRelationshipsNudgeMessageWithDays": {"placeholders": {"athleteId": {}, "days": {}}},
-  "@coachRelationshipsNudgeMessageNoDays": {"placeholders": {"athleteId": {}}},
-  "@coachRelationshipsVolumeAndPlan": {"placeholders": {"volume": {}, "plan": {}}},
-
+  "@coachRelationshipsError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachRelationshipsAthletePrefix": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@coachRelationshipsStatusPrefix": {
+    "placeholders": {
+      "status": {}
+    }
+  },
+  "@coachRelationshipsNotePrefix": {
+    "placeholders": {
+      "note": {}
+    }
+  },
+  "@coachRelationshipsChannelPrefix": {
+    "placeholders": {
+      "channel": {}
+    }
+  },
+  "@coachRelationshipsSessions12w": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@coachRelationshipsLastWorkout": {
+    "placeholders": {
+      "date": {},
+      "suffix": {}
+    }
+  },
+  "@coachRelationshipsDaysAgoSuffix": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "@coachRelationshipsFailedToAccept": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachRelationshipsFailedToDecline": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachRelationshipsFailedToPause": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachRelationshipsFailedToResume": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachRelationshipsFailedToEnd": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachRelationshipsFailedToSendNudge": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachRelationshipsNudgeMessageWithDays": {
+    "placeholders": {
+      "athleteId": {},
+      "days": {}
+    }
+  },
+  "@coachRelationshipsNudgeMessageNoDays": {
+    "placeholders": {
+      "athleteId": {}
+    }
+  },
+  "@coachRelationshipsVolumeAndPlan": {
+    "placeholders": {
+      "volume": {},
+      "plan": {}
+    }
+  },
   "planEditorTitle": "Редактор: {name}",
   "planEditorMacros": "Макроси",
   "planEditorNoPlanId": "Немає ID плану",
@@ -567,7 +790,6 @@
   "planEditorReplace": "Заміна",
   "planEditorSearchHint": "Пошук вправи за назвою...",
   "planEditorMesocycles": "Мезоцикли",
-
   "planEditorMassReplaceTitle": "Масова заміна вправ",
   "planEditorChooseTarget": "Обрати цільову вправу",
   "planEditorTargetPrefix": "Ціль: {name}",
@@ -583,7 +805,6 @@
   "planEditorPreviewTotals": "Буде замінено вправ: {exercises}, сетів зачеплено: {sets}",
   "planEditorPreviewMicroStats": "Вправ: {ex} · Сетів: {sets}",
   "planEditorApplyReplaceResult": "Заміна: успішно {success}, помилок {failed}",
-
   "planEditorDeleteMesocycleTitle": "Видалити мезоцикл",
   "planEditorDeleteMesocycleBody": "Ви впевнені, що хочете видалити мезоцикл \"{name}\" та всі його мікроцикли?",
   "planEditorDeleteMesocycle": "Видалити",
@@ -595,7 +816,6 @@
   "planEditorSelectTargetError": "Обрати цільову вправу",
   "planEditorSelectSourceError": "Оберіть хоча б одну вправу для заміни",
   "planEditorExerciseIdFallback": "Вправа {id}",
-
   "planEditorChangesSaved": "Зміни збережено",
   "planEditorMicrocycleDeleted": "Мікроцикл видалено",
   "planEditorDeleteMicrocycleTitle": "Видалити мікроцикл",
@@ -605,7 +825,6 @@
   "planEditorSkipNoRights": "Пропущено {count} мікроциклів без прав доступу",
   "planEditorRightsCheckUnavailableApplyAll": "Перевірка прав недоступна, застосовую до всіх вибраних: {error}",
   "planEditorMassEditsResult": "Масові правки: успішно {success}, помилок {failed}",
-
   "coachAthletePlanTitleFallback": "Атлет {id}",
   "coachAthletePlanLoadAnalyticsError": "Не вдалося завантажити аналітику плану: {error}",
   "coachAthletePlanMetricSets": "Сети",
@@ -641,55 +860,221 @@
   "coachAthletePlanMassEditNoChanges": "Немає змін для застосування",
   "coachAthletePlanMassEditApplied": "Mass edit застосовано для вибраного дня",
   "coachAthletePlanMassEditWorkoutHint": "Нова нотатка для всіх тренувань цього дня",
-
-  "@planEditorTitle": {"placeholders": {"name": {}}},
-  "@planEditorBulk": {"placeholders": {"count": {}}},
-  "@planEditorTargetPrefix": {"placeholders": {"name": {}}},
-  "@planEditorOccurrences": {"placeholders": {"count": {}}},
-  "@planEditorRightsCheckUnavailable": {"placeholders": {"error": {}}},
-  "@planEditorPreviewTarget": {"placeholders": {"name": {}}},
-  "@planEditorPreviewTotals": {"placeholders": {"exercises": {}, "sets": {}}},
-  "@planEditorPreviewMicroStats": {"placeholders": {"ex": {}, "sets": {}}},
-  "@planEditorApplyReplaceResult": {"placeholders": {"success": {}, "failed": {}}},
-  "@planEditorDeleteMesocycleBody": {"placeholders": {"name": {}}},
-  "@planEditorDeleteFailed": {"placeholders": {"error": {}}},
-  "@planEditorMicroDays": {"placeholders": {"count": {}}},
-  "@planEditorExerciseIdFallback": {"placeholders": {"id": {}}},
-  "@planEditorDeleteMicrocycleBody": {"placeholders": {"name": {}}},
-  "@planEditorSkipNoRights": {"placeholders": {"count": {}}},
-  "@planEditorRightsCheckUnavailableApplyAll": {"placeholders": {"error": {}}},
-  "@planEditorMassEditsResult": {"placeholders": {"success": {}, "failed": {}}},
-  "@coachAthletePlanTitleFallback": {"placeholders": {"id": {}}},
-  "@coachAthletePlanLoadAnalyticsError": {"placeholders": {"error": {}}},
-  "@coachAthletePlanSessionsCompleted": {"placeholders": {"completed": {}, "planned": {}}},
-  "@coachAthletePlanPeriod": {"placeholders": {"start": {}, "end": {}}},
-  "@coachAthletePlanNotes": {"placeholders": {"notes": {}}},
-  "@coachAthletePlanDeleteExerciseConfirmBody": {"placeholders": {"name": {}}},
-  "@coachAthletePlanDeleteError": {"placeholders": {"error": {}}},
-  "@coachAthletePlanOrder": {"placeholders": {"order": {}}},
-  "@coachAthletePlanSets": {"placeholders": {"count": {}}},
-  "@coachAthletePlanMassEditError": {"placeholders": {"error": {}}},
-
-  "@coachAthletePlanMassEditExerciseHint": {"placeholders": {}},
-  "@macroActionLoadTemplatesError": {"placeholders": {"error": {}}},
-  "@macroActionMesoLabel": {"placeholders": {"index": {}}},
-  "@macroActionDayLabel": {"placeholders": {"index": {}, "type": {}}},
-  "@macroActionAfterAnchor": {"placeholders": {"name": {}}},
-  "@activePlanPreviewTarget": {"placeholders": {"name": {}}},
-  "@activePlanPreviewExercisesToReplace": {"placeholders": {"count": {}}},
-  "@activePlanPreviewSetsAffected": {"placeholders": {"count": {}}},
-  "@activePlanUpdatedSets": {"placeholders": {"count": {}}},
-  "@activePlanFailed": {"placeholders": {"error": {}}},
-  "@activePlanReplacementCancelledOneRmRequired": {"placeholders": {}},
-  "@activePlanEnterOneRmTitle": {"placeholders": {"exerciseName": {}}},
-  "@activePlanShiftedWorkouts": {"placeholders": {"count": {}, "days": {}}},
-  "@activePlanShiftFailed": {"placeholders": {"error": {}}},
-  "@activePlanReplaceSuccess": {"placeholders": {"exercises": {}, "sets": {}}},
-  "@activePlanReplaceFailed": {"placeholders": {"error": {}}},
-  "@activePlanDroppedPrefix": {"placeholders": {"reason": {}, "date": {}}},
-  "@activePlanFailedToLoadAnalytics": {"placeholders": {"error": {}}},
-  "@activePlanAdherencePercent": {"placeholders": {"value": {}}},
-
+  "@planEditorTitle": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@planEditorBulk": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@planEditorTargetPrefix": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@planEditorOccurrences": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@planEditorRightsCheckUnavailable": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@planEditorPreviewTarget": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@planEditorPreviewTotals": {
+    "placeholders": {
+      "exercises": {},
+      "sets": {}
+    }
+  },
+  "@planEditorPreviewMicroStats": {
+    "placeholders": {
+      "ex": {},
+      "sets": {}
+    }
+  },
+  "@planEditorApplyReplaceResult": {
+    "placeholders": {
+      "success": {},
+      "failed": {}
+    }
+  },
+  "@planEditorDeleteMesocycleBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@planEditorDeleteFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@planEditorMicroDays": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@planEditorExerciseIdFallback": {
+    "placeholders": {
+      "id": {}
+    }
+  },
+  "@planEditorDeleteMicrocycleBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@planEditorSkipNoRights": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@planEditorRightsCheckUnavailableApplyAll": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@planEditorMassEditsResult": {
+    "placeholders": {
+      "success": {},
+      "failed": {}
+    }
+  },
+  "@coachAthletePlanTitleFallback": {
+    "placeholders": {
+      "id": {}
+    }
+  },
+  "@coachAthletePlanLoadAnalyticsError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachAthletePlanSessionsCompleted": {
+    "placeholders": {
+      "completed": {},
+      "planned": {}
+    }
+  },
+  "@coachAthletePlanPeriod": {
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
+  },
+  "@coachAthletePlanNotes": {
+    "placeholders": {
+      "notes": {}
+    }
+  },
+  "@coachAthletePlanDeleteExerciseConfirmBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@coachAthletePlanDeleteError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachAthletePlanOrder": {
+    "placeholders": {
+      "order": {}
+    }
+  },
+  "@coachAthletePlanSets": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@coachAthletePlanMassEditError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachAthletePlanMassEditExerciseHint": {
+    "placeholders": {}
+  },
+  "@activePlanPreviewTarget": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@activePlanPreviewExercisesToReplace": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@activePlanPreviewSetsAffected": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@activePlanUpdatedSets": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@activePlanFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@activePlanReplacementCancelledOneRmRequired": {
+    "placeholders": {}
+  },
+  "@activePlanEnterOneRmTitle": {
+    "placeholders": {
+      "exerciseName": {}
+    }
+  },
+  "@activePlanShiftedWorkouts": {
+    "placeholders": {
+      "count": {},
+      "days": {}
+    }
+  },
+  "@activePlanShiftFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@activePlanReplaceSuccess": {
+    "placeholders": {
+      "exercises": {},
+      "sets": {}
+    }
+  },
+  "@activePlanReplaceFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@activePlanDroppedPrefix": {
+    "placeholders": {
+      "reason": {},
+      "date": {}
+    }
+  },
+  "@activePlanFailedToLoadAnalytics": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@activePlanAdherencePercent": {
+    "placeholders": {
+      "value": {}
+    }
+  },
   "workoutListTitle": "Тренування",
   "workoutListAddWorkout": "Додати тренування",
   "workoutListWorkoutName": "Назва тренування",
@@ -698,7 +1083,6 @@
   "workoutListNextWorkout": "Наступне тренування",
   "workoutListEmpty": "У цій прогресії немає тренувань",
   "exerciseCount": "{count, plural, one{{count} вправа} few{{count} вправи} many{{count} вправ} other{{count} вправ}}",
-
   "nutritionSessionsTitle": "Сесії харчування",
   "nutritionSessionsEmpty": "Сесій харчування ще немає",
   "nutritionSessionsEmptyDesc": "Почніть відстежувати харчування, створивши першу сесію",
@@ -727,11 +1111,15 @@
   "nutritionNoItemsAvailable": "Немає доступних елементів",
   "updateSession": "Оновити сесію",
   "createSession": "Створити сесію",
-
   "exerciseListEmptyDesc": "Спробуйте змінити фільтр або додайте нову вправу",
-
-  "@workoutListCreateError": {"placeholders": {"error": {}}},
-  "@workoutListNextWorkout": {"placeholders": {}},
+  "@workoutListCreateError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@workoutListNextWorkout": {
+    "placeholders": {}
+  },
   "@exerciseCount": {
     "placeholders": {
       "count": {
@@ -740,8 +1128,16 @@
       }
     }
   },
-  "@nutritionSessionTitle": {"placeholders": {"id": {}}},
-  "@userIdLabel": {"placeholders": {"id": {}}},
+  "@nutritionSessionTitle": {
+    "placeholders": {
+      "id": {}
+    }
+  },
+  "@userIdLabel": {
+    "placeholders": {
+      "id": {}
+    }
+  },
   "@entriesCount": {
     "placeholders": {
       "count": {
@@ -749,5 +1145,945 @@
         "format": "compact"
       }
     }
-  }
+  },
+  "envBadgeWorkZone": "РОБОЧА ЗОНА",
+  "envBadgeLive": "НАЖИВО",
+  "envBadgeCnsStorm": "ШТОРМ ЦНС",
+  "envBadgeDeload": "РОЗВАНТАЖЕННЯ",
+  "envIdleTactical": "Система готова. Оберіть сесію або налаштуйте сітку.",
+  "envIdleSnarky": "Штанга сама себе не підніме. Обирай ціль.",
+  "envLiveTacticalPeak": "Триває сесія · Пік {peak}",
+  "envLiveTactical": "Триває активна сесія · Режим фокусу",
+  "envLiveSnarkyPeak": "Таймер тікає. Підкори {peak} і не скигли.",
+  "envLiveSnarky": "Секундомір пішов. Менше розмов, більше повторів.",
+  "envStormTacticalWithTonnage": "Пік {detail} · Обʼєм {tonnage} · Високе навантаження ЦНС",
+  "envStormTactical": "Пік {detail} · Граничне навантаження ЦНС",
+  "envStormSnarky": "Пік {detail}. ЦНС просить пощади — зроби її гучніше.",
+  "envDeloadLightZone": "легка зона",
+  "envDeloadTacticalWithTonnage": "Відновлення · {rpe} · Обʼєм {tonnage}",
+  "envDeloadTactical": "Розвантажувальна фаза · {rpe} · Адаптація",
+  "envDeloadSnarky": "Режим курорту ({rpe}). Навіть не думай додавати млинці.",
+  "envWorkTacticalPeakTonnage": "Пік {peak} · Робочий обʼєм {tonnage}",
+  "envWorkSnarkyPeak": "Робочий коридор: {peak}. Дисципліна важливіша за его.",
+  "envWorkTacticalSets": "Робоча зона · {sets} підх.",
+  "envWorkTacticalSetsWithTonnage": "Робоча зона · {sets} підх. · {tonnage}",
+  "envWorkSnarkySets": "{sets} робочих підходів. Нудно? Це називається прогрес.",
+  "envWorkTacticalReady": "{prefix}Робоча зона · Готово до запуску",
+  "envWorkSnarkyReady": "{prefix}Чистий аркуш. Навантаж його нормально.",
+  "unitKgValue": "{value} кг",
+  "unitSetsShort": "{count} підх.",
+  "unitExercisesShort": "{count} впр.",
+  "unitMinutesShort": "{count} хв",
+  "presetPowerlifter": "Сила 5/3/1",
+  "presetVolume": "Обʼєм",
+  "presetMinimalist": "Мінімалізм",
+  "presetCustom": "Свій",
+  "slotShortPeakIntensity": "ПІК %",
+  "slotShortE1rm": "E1RM",
+  "slotShortPeakRpe": "ПІК RPE",
+  "slotShortAvgRpe": "СЕР RPE",
+  "slotShortTonnage": "ТОННАЖ",
+  "slotShortKpsh": "КПШ",
+  "slotShortSetsCount": "ПІДХОДИ",
+  "slotShortDensity": "ЩІЛЬН.",
+  "slotShortDurationWeeks": "ТИЖНІ",
+  "slotShortFrequencyPerWeek": "ЧАСТОТА",
+  "slotNamePeakIntensity": "Пік % 1RM",
+  "slotNameE1rm": "Розрахунковий 1RM",
+  "slotNamePeakRpe": "Пік RPE",
+  "slotNameAvgRpe": "Середній RPE",
+  "slotNameTonnage": "Тоннаж",
+  "slotNameKpsh": "КПШ (Повтори)",
+  "slotNameSetsCount": "Робочі підходи",
+  "slotNameDensity": "Щільність",
+  "slotNameDurationWeeks": "Тривалість",
+  "slotNameFrequencyPerWeek": "Тренувань/тижд",
+  "moduleVariantOrHorizonStrip": "Стрічка пресетів / варіантів",
+  "moduleCommandBriefing": "Зведення навантаження",
+  "modulePrimaryTelemetry": "Телеметрія та графік",
+  "moduleScheduleOrLibrary": "Бібліотека / Мікроцикли",
+  "interfaceMakerTitle": "Сітка та модулі екрана",
+  "interfaceMakerReset": "Скинути",
+  "interfaceMakerPresetsSection": "ПРЕСЕТИ ДИСЦИПЛІНИ",
+  "interfaceMakerWaveChartTitle": "Графік-хвиля в картках",
+  "interfaceMakerWaveChartSubtitle": "Вимкніть для компактного режиму без графіків",
+  "interfaceMakerSnarkyTitle": "Характерний CARROT-брифінг",
+  "interfaceMakerSnarkySubtitle": "Саркастичне зведення замість сухої тактики",
+  "interfaceMakerSlotsSection": "4 СЛОТИ ТЕЛЕМЕТРІЇ (DATA POINT PICKER)",
+  "interfaceMakerSlotNumber": "Слот {index}",
+  "interfaceMakerModulesSection": "МОДУЛІ ТА ПОРЯДОК ЕКРАНА",
+  "interfaceMakerMoveUp": "Вище",
+  "interfaceMakerMoveDown": "Нижче",
+  "homeNoPlannedSessions": "Усі заплановані сесії виконано або план не обрано",
+  "homeOpenActivePlanTooltip": "Відкрити активний план",
+  "homeOpenCalendarPlanTooltip": "Відкрити календарний план",
+  "actionStart": "Почати",
+  "actionFinish": "Завершити",
+  "actionNew": "Нова",
+  "metricTimeShort": "ЧАС",
+  "metricExercisesShort": "ВПРАВИ",
+  "sessionLogHeader": "ЖУРНАЛ СЕСІЙ",
+  "sessionLogLibrary": "Бібліотека",
+  "sessionLogLoadError": "Не вдалося завантажити тренування",
+  "sessionLogEmptyTitle": "Немає ручних сесій",
+  "sessionLogEmptySubtitle": "Натисніть «Нова», щоб записати вільне тренування",
+  "sessionLogAllShown": "УСІ СЕСІЇ ПОКАЗАНО",
+  "workoutDeleteTooltip": "Видалити тренування",
+  "workoutManualSession": "Ручна сесія",
+  "workoutMarkAllCompletedTooltip": "Позначити всі як виконані",
+  "tooltipDecrease": "Зменшити",
+  "deleteExerciseTooltip": "Видалити вправу",
+  "deleteSetTooltip": "Видалити підхід",
+  "metricMicrocyclesShort": "МІКРОЦИКЛИ",
+  "metricAppliedShort": "ЗАСТОСОВАНО",
+  "planVariantOriginal": "Оригінал",
+  "planVariantAdd": "+ Варіант",
+  "planAnalyticsTitle": "Аналітика плану",
+  "tooltipCollapse": "Згорнути",
+  "tooltipExpand": "Розгорнути",
+  "navWorkouts": "Тренування",
+  "navPlans": "Плани",
+  "navFeed": "Стрічка",
+  "navCrm": "CRM",
+  "navDebug": "Дебаг",
+  "aiAssistant": "AI Асистент",
+  "profile": "Профіль",
+  "settings": "Налаштування",
+  "activePlanEmptyTitle": "Немає активного плану",
+  "activePlanEmptyDescription": "Оберіть календарний план для старту циклу",
+  "activePlanSelectPlan": "Обрати план",
+  "horizon1Week": "1 тижд",
+  "horizon2Weeks": "2 тижд",
+  "horizonMonth": "Місяць",
+  "horizonChipLabel": "Горизонт · {horizon}",
+  "gridPillLabel": "Сітка",
+  "planPillLabel": "План",
+  "activePlanMicrocycleCalendarHeader": "КАЛЕНДАР МІКРОЦИКЛІВ",
+  "activePlanDayLabel": "ДЕНЬ ПЛАНУ",
+  "actionView": "Дивитись",
+  "activePlanNoWorkoutsSelectedDay": "На обраний день тренувань немає",
+  "noWorkouts": "Немає тренувань",
+  "metricAvgIntensityShort": "ІНТЕНС. СР",
+  "metricCompletedShort": "ВИКОНАНО",
+  "metricAvgRpeShort": "RPE СР",
+  "metricRepsShort": "ПОВТОРИ",
+  "metricSetsShort": "ПІДХОДИ",
+  "metricSessionsShort": "СЕСІЇ",
+  "tooltipCollapseChart": "Згорнути графік",
+  "tooltipExpandChart": "Розгорнути графік",
+  "activePlanNoData": "Немає даних для плану",
+  "workoutListAddTitle": "Додати тренування",
+  "workoutListNameLabel": "Назва тренування",
+  "actionAdd": "Додати",
+  "workoutListNameRequired": "Введіть назву тренування",
+  "workoutListLoadError": "Помилка завантаження тренувань: {error}",
+  "workoutListEmptyTitle": "Немає тренувань",
+  "workoutListEmptyDescription": "У цій прогресії поки немає тренувань",
+  "workoutListSectionTitle": "Список тренувань",
+  "workoutsCreateTitle": "Створити тренування",
+  "actionCreate": "Створити",
+  "workoutsDeleteTitle": "Видалити тренування?",
+  "workoutsDeleteConfirm": "Ви впевнені, що хочете видалити це ручне тренування?",
+  "workoutsPlanLoadError": "Помилка завантаження плану: {error}",
+  "workoutDetailOpenError": "Не вдалося відкрити тренування",
+  "actionBack": "Назад",
+  "workoutDetailAppStateNotReady": "Не вдалося оновити підхід: стан додатку не готовий",
+  "workoutDetailDeleteExerciseTitle": "Видалити вправу",
+  "workoutDetailExerciseRemoved": "Вправу видалено з тренування",
+  "workoutDetailDeleteUnsavedExerciseError": "Помилка: неможливо видалити незбережену вправу",
+  "workoutDetailAddSetUnsavedError": "Неможливо додати підхід: вправу ще не збережено",
+  "workoutDetailSetAdded": "Підхід додано",
+  "workoutDetailUpdated": "Тренування оновлено",
+  "workoutDetailStarted": "Тренування розпочато",
+  "workoutDetailSessionCancelled": "Сесію скасовано",
+  "workoutDetailFinished": "Тренування завершено",
+  "workoutDetailAllSetsCompleted": "Усі підходи вже виконано",
+  "workoutDetailDeleteSetTitle": "Видалити підхід",
+  "workoutDetailSetDeleted": "Підхід видалено",
+  "workoutDetailExerciseAdded": "Вправу додано",
+  "workoutDetailFallbackTitle": "Деталі тренування",
+  "workoutDetailNoExercisesTitle": "Вправ поки немає",
+  "workoutDetailNoExercisesSubtitle": "Натисніть «Додати вправу» нижче, щоб зібрати сесію",
+  "metricTimerShort": "ТАЙМЕР",
+  "metricModeShort": "РЕЖИМ",
+  "tooltipEditExercise": "Редагувати вправу",
+  "actionClear": "Очистити",
+  "planEditorSelectedCount": "ОБРАНО: {count}",
+  "planEditorBulkShort": "Масово",
+  "planEditorMesocyclesCount": "МЕЗОЦИКЛИ · {count}",
+  "planEditorMicrocyclesCount": "МІКРОЦИКЛІВ: {count}",
+  "planEditorEditMicrocycleTooltip": "Редагувати мікроцикл",
+  "planEditorIntensity": "Інтенсивність",
+  "planEditorReps": "Повтори",
+  "planEditorModeSet": "Задати",
+  "planEditorModeOffset": "Зсув",
+  "planEditorModeScale": "Множник",
+  "planEditorRecalcAuto": "Перерахувати: Авто",
+  "planEditorRecalcReps": "Перерахувати: Повтори",
+  "planEditorRecalcEffort": "Перерахувати: RPE",
+  "planEditorRecalcIntensity": "Перерахувати: Інтенсивність",
+  "planEditorAutoRecalcReps": "Авто-перерахунок: Повтори (за Інтенсивністю та RPE)",
+  "planEditorAutoRecalcIntensity": "Авто-перерахунок: Інтенсивність (за Повторами та RPE)",
+  "planEditorAutoRecalcRpe": "Авто-перерахунок: RPE (за Інтенсивністю та Повторами)",
+  "planEditorAutoRecalcNone": "Авто-перерахунок: не застосовується",
+  "planEditorFilterExercisesOptional": "Фільтр: вправи (опціонально)",
+  "planEditorMassEditWarning": "Будуть змінені УСІ підходи усіх вправ у всіх обраних мікроциклах.",
+  "planEditorNoChanges": "Немає змін за обраними параметрами",
+  "planEditorMassEditPreviewTitle": "Попередній перегляд масових правок",
+  "planEditorMicrocyclesCountPlain": "Мікроциклів: {count}",
+  "planEditorMismatchesCount": "Невідповідностей: {count}",
+  "planEditorChangedSets": "Змінено підходів: {changed} з {total}",
+  "planEditorDeltaSummary": "Зміни: Int {i} · RPE {e} · Повт {v}",
+  "planEditorFixNone": "Валідатор: Без авто-виправлень",
+  "planEditorFixReps": "Валідатор: Виправити Повтори",
+  "planEditorFixIntensity": "Валідатор: Виправити Інтенсивність",
+  "planEditorPreviewMicroDiff": "Підходи: {changed}/{total} · Δ Int {i} · Δ RPE {e} · Δ Повт {v}",
+  "planDetailDeleteFailed": "Не вдалося видалити план: {error}",
+  "tooltipMoreActions": "Додаткові дії",
+  "planDetailEditPlan": "Редагувати план",
+  "planDetailRecalcSets": "Перерахувати підходи (RPE)",
+  "planDetailDeletePlan": "Видалити план",
+  "planDetailAdoptersLoadError": "Не вдалося завантажити лічильник застосувань: {error}",
+  "planDetailLoadError": "Не вдалося завантажити план: {error}",
+  "planDetailRecalculated": "План перераховано",
+  "planDetailRecalcError": "Не вдалося перерахувати план: {error}",
+  "planDetailVariantsLoadError": "Не вдалося завантажити варіанти: {error}",
+  "planDetailNewVariantTitle": "Новий варіант плану",
+  "planDetailVariantNameLabel": "Назва варіанту",
+  "errorEnterName": "Введіть назву",
+  "planDetailVariantCreated": "Варіант створено",
+  "errorWithDetails": "Помилка: {error}",
+  "metricVolumeShort": "ОБʼЄМ",
+  "unitRepsShort": "{count} повт.",
+  "unitSetsPerWorkout": "{value}/тр",
+  "planDetailAnalyticsFilters": "Фільтри аналітики",
+  "planDetailGranularity": "ГРАНУЛЯРНІСТЬ",
+  "planDetailExercisesTitle": "Вправи",
+  "loadingEllipsis": "Завантаження…",
+  "planDetailMuscleGroupsTitle": "Мʼязові групи",
+  "planDetailAxesTitle": "Вісь X / Вісь Y",
+  "planDetailFiltersPillCount": "Фільтри · {bucket} ({count})",
+  "planDetailFiltersPill": "Фільтри · {bucket}",
+  "planDetailExercisesLoadError": "Не вдалося завантажити дані вправ",
+  "planDetailAllExercises": "Усі вправи",
+  "planDetailFilterEmpty": "Фільтр не містить даних",
+  "planDetailAndMore": "{items} та ще {count}",
+  "planDetailAllMuscles": "Усі мʼязи",
+  "planDetailSelectExercises": "Оберіть вправи",
+  "planDetailSelectMuscles": "Оберіть мʼязи",
+  "planDetailSelectMetricX": "Оберіть метрику для осі X",
+  "planDetailSelectMetricY": "Оберіть метрику для осі Y",
+  "metricYRepsVolume": "Повторення (volume)",
+  "metricYIntensityPct": "Інтенсивність (%)",
+  "metricYEffortRpe": "Зусилля (RPE)",
+  "granularitySessions": "Сесії",
+  "granularityMicrocycles": "Мікроцикли",
+  "granularityWeeks": "Тижні",
+  "planDetailCurrentMax": "Поточний максимум: {weight} кг × {reps}",
+  "planDetailMaxNotSet": "Максимум не задано",
+  "planDetailMadePublic": "План зроблено публічним",
+  "planDetailMadePrivate": "План приховано (тільки для вас)",
+  "planDetailVisibilityError": "Не вдалося оновити видимість плану: {error}",
+  "metricSetShort": "ПІДХ.",
+  "metricIntShort": "ІНТ",
+  "metricRepsColShort": "ПОВТ",
+  "normRulesCount": "Індивід. правил: {count}",
+  "normNotSet": "Нормалізацію не задано",
+  "normUnitPct1rm": "% від 1RM",
+  "normUnitKg": "кг",
+  "normRulesSuffix": ", правил: {count}",
+  "normSectionHeader": "НОРМАЛІЗАЦІЯ ПІСЛЯ МІКРОЦИКЛУ",
+  "normDeltaLabel": "Зміна (напр. -2.5)",
+  "normDeltaHint": "У кг або %",
+  "normUnitLabel": "Од. виміру",
+  "normUnitPctMult": "% (мультиплікативно)",
+  "normUnitKgAbs": "кг (абсолютно)",
+  "normDescription": "Можна вказати одну загальну зміну та/або список правил для конкретних вправ, груп мʼязів або target-мʼязів.",
+  "normRulesHeader": "ПРАВИЛА НОРМАЛІЗАЦІЇ",
+  "normAddRule": "Додати правило",
+  "normNoRules": "Поки немає індивідуальних правил",
+  "normRuleHeader": "ПРАВИЛО {index}",
+  "normDeleteRuleTooltip": "Видалити правило",
+  "normExerciseIdsLabel": "ID вправ (через кому)",
+  "normExerciseIdsHint": "Напр.: 12, 45, 103",
+  "normMuscleGroupsLabel": "Групи мʼязів (через кому)",
+  "normMuscleGroupsHint": "Напр.: chest, quads",
+  "normTargetMusclesLabel": "Цільові мʼязи (через кому)",
+  "normTargetMusclesHint": "Напр.: biceps_long, lats",
+  "normDeltaValueLabel": "Δ значення",
+  "normUnitShortLabel": "Од. вим.",
+  "microcycleNameLabel": "Назва мікроцикла",
+  "planCreateEnterNameError": "Будь ласка, введіть назву плану",
+  "planCreateSuccess": "План успішно створено",
+  "microEditorMassEditTitle": "Масова зміна підходів",
+  "microEditorIntensityOpt": "Інтенсивність %1RM (опціонально)",
+  "microEditorRpeOpt": "RPE (опціонально)",
+  "microEditorRepsOpt": "Повтори (опціонально)",
+  "microEditorSaved": "Мікроцикл збережено",
+  "microEditorSaveError": "Помилка збереження: {error}",
+  "microEditorTitle": "Мікроцикл: {name}",
+  "tooltipSave": "Зберегти",
+  "microEditorUnsavedChanges": "Є незбережені зміни",
+  "microEditorWorkoutMeta": "ПОРЯДОК: {order} · ВПРАВ: {count}",
+  "microEditorSetLabel": "Підхід",
+  "plansOpenError": "Не вдалося відкрити план: {error}",
+  "plansSearchHint": "Пошук планів",
+  "plansClearSearchTooltip": "Очистити пошук",
+  "plansFiltersTooltip": "Фільтри",
+  "plansFoundCount": "Знайдено: {count}",
+  "plansLoadError": "Не вдалося завантажити плани: {error}",
+  "plansEmptyTitle": "Плани не знайдено",
+  "plansEmptyDescription": "Змініть запит або фільтри",
+  "actionLoadMore": "Показати ще",
+  "actionLoadFailedRetry": "Не вдалося завантажити. Повторити",
+  "filterDuration": "Тривалість",
+  "filterGoal": "Мета",
+  "filterFrequency": "Тренувань на тиждень",
+  "filterLevel": "Рівень",
+  "filterDurationValue": "{value} тижд.",
+  "filterFrequencyValue": "{value} / тижд.",
+  "planFiltersTitle": "Фільтри планів",
+  "tooltipClose": "Закрити",
+  "actionRetryLoad": "Повторити завантаження",
+  "roundNearest": "Найбл.",
+  "roundUp": "Вгору",
+  "roundDown": "Вниз",
+  "applyPlanGenProgress": "Генерація плану: {done} з {total} (залишилось {remaining})",
+  "applyPlanGenStage": "Генерація плану: {stage}",
+  "applyPlanGenEllipsis": "Генерація плану…",
+  "weightKgLabel": "Вага (кг)",
+  "repsLabel": "Повторення",
+  "errorValidWeight": "Введіть коректну вагу",
+  "errorValidRepsRange": "Введіть 1–12 повторень",
+  "saveMaxFailed": "Не вдалося зберегти максимум: {error}",
+  "saveMaxButton": "Зберегти максимум",
+  "maxSavedForExercise": "Максимум для {name} збережено",
+  "noSavedMaxesForPlan": "Немає збережених максимумів для цього плану",
+  "selectAtLeastOneUserMax": "Будь ласка, оберіть хоча б один User Max",
+  "applyPlanTitle": "Застосувати план",
+  "applyPlanBaseMaxesHeader": "БАЗОВІ МАКСИМУМИ · USER MAX",
+  "applyPlanSelectedCount": "Обрано: {count}",
+  "applyPlanRecentButton": "Останні",
+  "applyPlanNoMaxesHint": "Немає збережених максимумів для вправ у плані. Додайте 1RM вище.",
+  "applyPlanNoExactMatchHint": "Точного збігу вправ немає — показано всі ваші User Max:",
+  "applyPlanWorkingWeightsHeader": "РОЗРАХУНОК РОБОЧИХ ВАГ",
+  "applyPlanComputeWeights": "Обчислювати ваги",
+  "applyPlanComputeWeightsSubtitle": "Автопідбір за % від обраного максимуму",
+  "applyPlanStepKgLabel": "Крок (кг)",
+  "applyPlanRoundingHeader": "ОКРУГЛЕННЯ",
+  "userMaxDisplay": "{weight} кг × {reps}",
+  "deletePlanWithVariantsTitle": "Видалити план з варіантами?",
+  "deletePlanTitle": "Видалити план?",
+  "deletePlanCascadeBody": "Будуть безповоротно видалені план, усі його варіанти та повʼязані застосування плану.",
+  "deletePlanSingleBody": "План та повʼязані застосування плану будуть видалені. Цю дію неможливо скасувати.",
+  "untitled": "Без назви",
+  "deleteAll": "Видалити все",
+  "replaceActivePlanTitle": "Замінити активний план?",
+  "replaceActivePlanBody": "У вас вже є активний план. Новий план замінить його. Історія завершених тренувань збережеться.",
+  "replacePlanAction": "Замінити план",
+  "macroMetricReadiness": "готовність",
+  "macroMetricSessionRpe": "RPE сесії",
+  "macroMetricReps": "кількість повторень",
+  "macroMetricE1rm": "оцінка 1ПМ",
+  "macroMetricTrend": "тренд прогресу",
+  "macroMetricRpeDelta": "відхилення RPE від плану",
+  "macroMetricRepsDelta": "відхилення повторів від плану",
+  "macroMetricFallback": "метрика",
+  "macroTriggerAllExercises": "по всіх вправах",
+  "macroTriggerForExercises": "для вправ: {names}",
+  "macroOpGte": "більше або дорівнює",
+  "macroOpLte": "менше або дорівнює",
+  "macroOpEq": "дорівнює",
+  "macroOpNeq": "не дорівнює",
+  "macroOpGt": "більше",
+  "macroOpLt": "менше",
+  "macroOpInRange": "у діапазоні",
+  "macroOpOutOfRange": "поза діапазоном",
+  "macroCondNotSet": "умову не задано",
+  "macroCondInRangeValues": "значення в діапазоні {a} до {b}{unit}",
+  "macroCondOutOfRangeValues": "значення поза діапазоном {a} до {b}{unit}",
+  "macroCondInRange": "значення в діапазоні",
+  "macroCondOutOfRange": "значення поза діапазоном",
+  "macroCondStagnatesValues": "стагнація за {n} вікон у межах {eps} відсотків",
+  "macroCondStagnates": "стагнація за вікна",
+  "macroCondDirPositive": "позитивний",
+  "macroCondDirNegative": "негативний",
+  "macroCondDirSuffix": ", напрямок: {dir}",
+  "macroCondDeviatesValues": "відхилення від середнього за {n} вікон не менше {val} відсотків{dir}",
+  "macroCondDeviates": "відхилення від середнього",
+  "macroCondHoldsWorkouts": "виконується {n} тренувань поспіль: значення {rel} {val}{unit}",
+  "macroCondHoldsWorkoutsGeneric": "виконується кілька тренувань поспіль",
+  "macroCondHoldsSets": "виконується {n} підходів поспіль усередині тренування: значення {rel} {val}{unit}",
+  "macroCondHoldsSetsGeneric": "виконується кілька підходів поспіль усередині тренування",
+  "macroCondSimpleGt": "значення більше {val}{unit}",
+  "macroCondSimpleLt": "значення менше {val}{unit}",
+  "macroCondSimpleEq": "значення дорівнює {val}{unit}",
+  "macroCondSimpleNeq": "значення не дорівнює {val}{unit}",
+  "macroCondSet": "умову задано",
+  "macroActionTargetAll": "для всіх вправ",
+  "macroActionTargetExercises": "для вправ: {list}",
+  "macroActionTargetTags": "за тегами: {tags}",
+  "macroActionTargetTagsExamples": "{base}, напр.: {examples}",
+  "macroInjectMesoBase": "впровадити мезоцикл",
+  "macroInjectMesoTemplate": "{base} за шаблоном ID {id}",
+  "macroInjectWeeks": "{weeks} тижнів",
+  "macroInjectMicroDays": "мікроцикл {days} днів",
+  "macroInjectRestDays": "вихідні дні: {days}",
+  "macroInjectFocus": "фокус: {tags}",
+  "macroInjectAppendEnd": "у кінець плану",
+  "macroInjectAfterWorkoutId": "після тренування #{id}",
+  "macroInjectAfterSelectedWorkout": "після обраного тренування",
+  "macroInjectAfterMesoIdx": "після мезоцикла {idx}",
+  "macroInjectAfterSelectedMeso": "після обраного мезоцикла",
+  "macroConflictReplace": "замінювати заплановане",
+  "macroConflictShift": "зсувати вперед",
+  "macroConflictSkip": "пропускати конфліктні",
+  "macroConflictPrefix": "при конфлікті: {text}",
+  "macroActDecreaseWeightPct": "зменшити вагу на {pct} відсотків {target}",
+  "macroActIncreaseWeightPct": "збільшити вагу на {pct} відсотків {target}",
+  "macroActAdjustWeightRpe": "підігнати вагу до цільового RPE {rpe} {target}",
+  "macroActDecreaseReps": "зменшити повтори на {reps} {target}",
+  "macroActIncreaseReps": "збільшити повтори на {reps} {target}",
+  "macroActAdjustRepsRpe": "підібрати повтори до цільового RPE {rpe} {target}",
+  "macroActRemoveSets": "прибрати {sets} підходів {target}",
+  "macroActAddSets": "додати {sets} підходів {target}",
+  "macroActFallback": "виконати дію {target}",
+  "macroDurNextWorkouts": "у наступні {count} тренувань",
+  "macroDurUntilLast": "до останнього тренування",
+  "macroDurUntilEndMeso": "до кінця мезоцикла",
+  "macroDurUntilEndMicro": "до кінця мікроцикла",
+  "macroDurUntilWorkoutId": "до тренування #{id}",
+  "macroDurUntilSelectedWorkout": "до обраного тренування",
+  "macroPreviewEmpty": "Опис зʼявиться після вибору метрики, умови та дії",
+  "macroPreviewSentence": "Якщо {metric} {trigger}, і {condition}, то {action}",
+  "macroLabelMetric": "МЕТРИКА",
+  "macroLabelTrigger": "ТРИГЕР",
+  "macroLabelCondition": "УМОВА",
+  "macroLabelAction": "ДІЯ",
+  "macroLabelDuration": "ТРИВАЛІСТЬ",
+  "macroPreviewSetChangesCount": "Змін підходів: {count}",
+  "macroPreviewMesoInsertsCount": "Вставок мезоциклів: {count}",
+  "macroPreviewMissingParamsHint": "Для розрахунку ваги потрібні параметри плану.",
+  "macroPreviewDialogTitle": "Пропозиції за завершеним тренуванням",
+  "macroPreviewViewChanges": "Переглянути зміни",
+  "macroPreviewLoadError": "Не вдалося завантажити пропозиції макросів: {error}",
+  "macroPreviewAppBarTitle": "Зміни за макросами",
+  "macroPreviewConfirmNeedsNewServer": "Для підтвердження потрібна нова версія сервера.",
+  "macroPreviewObservationWorkout": "Спостереження: тренування #{id}",
+  "macroPreviewSpecifyWeightParams": "Вкажіть параметри ваги для розрахунку цього перегляду.",
+  "macroPreviewOneRmKgForExercise": "1ПМ, кг · {name}",
+  "macroPreviewWeightStepKg": "Крок ваги, кг",
+  "macroPreviewRoundNearest": "До найближчого кроку",
+  "macroPreviewRoundDown": "Округлити вниз",
+  "macroPreviewRoundUp": "Округлити вгору",
+  "macroPreviewCalcButton": "Розрахувати перегляд",
+  "macroPreviewNoSetChanges": "Змін підходів немає.",
+  "macroPreviewExercisesModified": "Змінено екземплярів вправ: {count}",
+  "macroPreviewMesoAdded": "Мезоцикл додано",
+  "macroPreviewMesoNotAdded": "Мезоцикл не додано: {reason}",
+  "macroPreviewConfirmSetsButton": "Підтвердити зміни підходів",
+  "macroPreviewApplyMesoRulesButton": "Застосувати правила вставки мезоциклів окремо",
+  "macroPreviewAppliedToActivePlan": "Застосовано до активного плану #{id}",
+  "macroPreviewInstanceNewSet": "екземпляр {id}, новий підхід",
+  "macroPreviewInstanceSet": "екземпляр {id}, підхід {setId}",
+  "macroPreviewBefore": "Було: {values}",
+  "macroPreviewRequested": "Запрошено: {values}",
+  "macroPreviewClosestOption": "Найближчий варіант: {values}",
+  "macroPreviewAfter": "Результат: {values}",
+  "macroPreviewDeleteSet": "Видалення підходу",
+  "macroPreviewMesoInsertParams": "Вставка мезоцикла: {params}",
+  "macroEditorInvalidJsonRule": "Некоректний JSON правила: {error}",
+  "macroEditorCreateTitle": "Створити макрос",
+  "macroEditorEditTitle": "Редагувати макрос",
+  "macroEditorRuleParamsTitle": "Параметри правила",
+  "macroEditorNameLabel": "Назва",
+  "macroEditorPriorityLabel": "Пріоритет",
+  "macroEditorInvalidNumber": "Некоректне число",
+  "macroEditorActiveLabel": "Активний",
+  "macroEditorTriggerTitle": "Тригер",
+  "macroEditorConditionTitle": "Умова",
+  "macroEditorActionTitle": "Дія",
+  "macroEditorDurationTitle": "Тривалість",
+  "macroEditorNaturalDescTitle": "Природний опис",
+  "macroEditorEditJson": "Редагувати JSON",
+  "macroEditorRuleJsonLabel": "Правило (перегляд JSON)",
+  "macroEditorMustBeJsonObject": "Має бути JSON-обʼєкт",
+  "macroEditorInvalidJson": "Некоректний JSON",
+  "macroTriggerHelpReadiness": "Оцінка готовності 1–10 (опціонально). За замовчуванням null; користувач може вказувати її після тренування для коефіцієнтів до ваги та правил.",
+  "macroTriggerHelpSessionRpe": "Оцінка сприйнятого навантаження всієї сесії (Session RPE). Корисно для автокорекції навантаження.",
+  "macroTriggerHelpReps": "Сумарна кількість повторень за обраний період. Використовуйте з фільтром вправ.",
+  "macroTriggerHelpE1rm": "Оцінка одноповторного максимуму за продуктивністю (estimated 1RM). Корисно для прогресу.",
+  "macroTriggerHelpTrend": "Тренд зміни показників (зростання/падіння) за останні N вікон.",
+  "macroTriggerHelpRpeDelta": "Відхилення RPE від планового за підходами (факт − план). Використовується для авторегулювання.",
+  "macroTriggerHelpRepsDelta": "Відхилення повторів від планових за підходами (факт − план). Для правил щодо недовиконання/перевиконання.",
+  "macroTriggerHintReadiness": "Числова оцінка готовності (1–10). За замовчуванням null; заповнюється після тренування. Кейс: < 6 тримається 5 тренувань поспіль — делоад мезоцикл. Для правил поспіль використовуйте holds_for.",
+  "macroTriggerHintSessionRpe": "RPE сесії: число 1–10. Для правил поспіль використовуйте оператор holds_for.",
+  "macroTriggerHintReps": "Загальне число повторень (ціле). Можна обмежити конкретними вправами нижче.",
+  "macroTriggerHintE1rm": "Оцінка 1ПМ (кг). Порівнюйте числом або використовуйте тренд-оператори в умовах.",
+  "macroTriggerHintTrend": "Для трендів використовуйте оператори: stagnates_for (n, epsilon_percent) або deviates_from_avg (n, value_percent, direction).",
+  "macroTriggerHintRpeDelta": "ΔRPE = факт − план (може бути відʼємним). Для тренувань поспіль — holds_for, для підходів поспіль — holds_for_sets.",
+  "macroTriggerHintRepsDelta": "Δповторів = факт − план (ціле, може бути відʼємним). Для перевірки всередині тренування використовуйте holds_for_sets.",
+  "macroTriggerSelectExercisesHint": "Ця метрика застосовується до обраних вправ. Оберіть одну або кілька.",
+  "macroCondHelpCompare": "Порівняння з числом. Введіть значення (ціле або дробове), напр. 10 або -2.5.",
+  "macroCondHelpInRange": "Перевіряє, що значення УСЕРЕДИНІ діапазону (включно). Введіть два числа; порядок не важливий.",
+  "macroCondHelpOutOfRange": "Перевіряє, що значення ПОЗА діапазоном (включно з межами). Введіть два числа.",
+  "macroCondHelpStagnates": "Стагнація: останні n вікон вкладаються в коридор шириною epsilon_percent (%). Вкажіть n та epsilon_percent.",
+  "macroCondHelpDeviates": "Відхилення від середнього за n вікон. value_percent — поріг у %, direction — напрямок (опціонально).",
+  "macroCondHelpHoldsWorkouts": "Поспіль N тренувань: relation (>, <, >=, <=, ==, !=, у діапазоні, поза діапазоном) застосовується N разів поспіль.",
+  "macroCondHelpHoldsSets": "Поспіль N підходів усередині тренування: для кожної пари план/факт за підходом застосовується relation до дельти.",
+  "macroCondNoteStagnates": "Тренд (стагнація): беруться останні n значень метрики та порівнюється ширина діапазону з epsilon_percent (%).\nФормат: n — ціле (вікна), epsilon_percent — число у відсотках.\nПриклад: n=5, epsilon_percent=1.0 (зміна ≤ 1% за 5 вікон).",
+  "macroCondNoteDeviates": "Тренд (відхилення): порівнюється останнє значення із середнім за n вікон.\nФормат: n — ціле, value_percent — поріг у %, direction — positive/negative (опціонально).\nПриклад: n=5, value_percent=3, direction=\"negative\" (падіння ≥ 3%).",
+  "macroActHelpAdjustWeight": "Змінює вагу та/або інтенсивність на заданий %: позитивне — збільшити, негативне — зменшити. Приклад: -2.5 знизить вагу на 2.5%.",
+  "macroActHelpAdjustReps": "Змінює кількість повторень на ±N: позитивне — додати повтор(и), негативне — прибрати.",
+  "macroActHelpAdjustWeightRpe": "Підганяє інтенсивність/вагу до цільового RPE (1–10), зберігаючи поточні повтори. Використовує RPE-таблицю.",
+  "macroActHelpAdjustRepsRpe": "Підбирає повтори під цільовий RPE (1–10) при фіксованій інтенсивності (якщо задано). Використовує RPE-таблицю.",
+  "macroActHelpAdjustSets": "Додає або видаляє підходи: позитивне — додати (клонується останній сет), негативне — видалити з кінця.",
+  "macroActHelpInjectTemplate": "Впроваджує мезоцикл з наявного шаблону за його ID. Можна вказати розміщення та стратегію конфліктів.",
+  "macroActHelpInjectExisting": "Впроваджує вже наявний мезоцикл за його ID з бази. Вкажіть ідентифікатор та розміщення.",
+  "macroActHelpInjectCustom": "Створює мезоцикл вручну: тривалість у тижнях, довжина мікроцикла в днях, вихідні дні та теги фокусу.",
+  "macroActErrPct": "Зміна має бути більшою за -100%.",
+  "macroActErrRpe": "Вкажіть RPE від 1 до 10.",
+  "macroActErrInt": "Вкажіть ціле число.",
+  "workoutPickerActivePlanNotFound": "Активний план не знайдено",
+  "userMaxWeakMusclesTitle": "Аналіз слабких мʼязів",
+  "userMaxLlmEnriched": "LLM збагачення увімкнено",
+  "userMaxTopWeakMuscles": "Топ слабких мʼязів",
+  "noData": "Немає даних",
+  "userMaxStrengthByMuscle": "Сила за мʼязами",
+  "userMaxTrends": "Тренди",
+  "userMaxAnomalies": "Аномалії",
+  "userMaxNoneDetected": "Не виявлено",
+  "userMaxAnalysisError": "Помилка аналізу: {error}",
+  "userMaxExerciseFallback": "Вправа {id}",
+  "userMaxDeleteTitle": "Видалити максимум?",
+  "userMaxDeleteBody": "{exercise}\n{weight} кг × {reps} повторень",
+  "userMaxDeleted": "Максимум видалено",
+  "userMaxDeleteError": "Не вдалося видалити максимум: {error}",
+  "userMaxDeleteTooltip": "Видалити максимум",
+  "chatPlanGenTitle": "Генерація плану (FSM)",
+  "chatPlanGenDesc": "Запускає діалог finite state machine для складання тренувального плану.",
+  "chatMassEditDesc": "Масове редагування плану за допомогою AI.",
+  "chatAssistantTitle": "Чат асистента",
+  "chatInputHint": "Введіть повідомлення...",
+  "chatSendTooltip": "Надіслати",
+  "chatNoConnectionTooltip": "Немає зʼєднання",
+  "chatStatusConnected": "Підключено",
+  "chatStatusConnecting": "Підключення...",
+  "chatStatusReconnecting": "Перепідключення...",
+  "chatStatusError": "Помилка зʼєднання",
+  "chatStatusDisconnected": "Відключено",
+  "chatWorkoutLinkDesc": "Посилання на тренування в активному плані",
+  "chatExerciseLinkDesc": "Посилання на вправу",
+  "chatSessionLabel": "Сесія: {id}",
+  "chatTypingStatus": "Асистент друкує...{session}",
+  "chatTypingSessionSuffix": " (сесія {id})",
+  "loadErrorWithDetails": "Помилка завантаження: {error}",
+  "listLoadErrorWithDetails": "Помилка завантаження списку: {error}",
+  "chartMetricRepsTotal": "КПШ",
+  "chartMetricRepsPerSetAvg": "Повт. у підході (сер.)",
+  "chartMetricKgAvg": "Кілограми (сер.)",
+  "chartMetricTonnage": "Тоннаж",
+  "chartMetricE1rm": "Разовий максимум (розр.)",
+  "noOptions": "Немає опцій",
+  "yAxisLabel": "Вісь Y",
+  "musclesTitle": "Мʼязи",
+  "statusCompleted": "Завершена",
+  "statusInProgress": "У процесі",
+  "statusPlanned": "Запланована",
+  "exerciseLoadError": "Помилка завантаження вправ: {error}",
+  "exerciseSelectTitle": "Оберіть вправу",
+  "exerciseSearchLabel": "Пошук вправ",
+  "filterAll": "Усі",
+  "exerciseEmptyTitle": "Вправи не знайдено",
+  "exerciseEmptyDescription": "Спробуйте змінити пошуковий запит або групу мʼязів.",
+  "exerciseMuscleGroupMeta": "Група мʼязів: {group}",
+  "exerciseEquipmentMeta": "Обладнання: {equipment}",
+  "signInTitle": "Увійдіть, щоб продовжити",
+  "signInWelcomeBack": "Ласкаво просимо! Увійдіть у свій акаунт.",
+  "signInCreateAccount": "Створіть акаунт, щоб почати тренування.",
+  "signInLegalConsent": "Продовжуючи, ви погоджуєтесь з Умовами використання та підтверджуєте ознайомлення з Політикою конфіденційності:",
+  "legalTermsOfService": "Умови використання",
+  "legalPrivacyPolicy": "Політика конфіденційності",
+  "legalMedicalDisclaimer": "Мед. дисклеймер",
+  "templateLoadError": "Помилка завантаження шаблона: {error}",
+  "templateDetailsTitle": "Деталі шаблона",
+  "descriptionSectionHeader": "ОПИС",
+  "signOutTitle": "Вийти з акаунта?",
+  "signOutConfirmBody": "Ви впевнені, що хочете вийти?",
+  "signOutAction": "Вийти",
+  "signOutError": "Помилка виходу: {error}",
+  "noDisplayDataTitle": "Немає даних для відображення",
+  "workoutHistoryEmptyDesc": "Завершені сесії за цим тренуванням зʼявляться тут.",
+  "settingsGeneral": "Загальні",
+  "settingsImportWorkouts": "Імпорт тренувань",
+  "settingsImportWorkoutsSubtitle": "Імпортуйте історію тренувань з CSV-файлу Hevy",
+  "settingsAmplitudeTest": "Amplitude Тест",
+  "settingsAmplitudeTestSubtitle": "Діагностика та телеметрія подій воронки",
+  "settingsGeneralTitle": "Загальні налаштування",
+  "settingsThemeMode": "Режим теми",
+  "settingsThemeSystem": "Системна",
+  "settingsThemeLight": "Світла",
+  "settingsThemeDark": "Темна",
+  "settingsInterfaceSize": "Розмір інтерфейсу",
+  "settingsDensityCompact": "Компактний",
+  "settingsDensityCompactSubtitle": "Менше відступів між елементами",
+  "settingsDensityComfortable": "Комфортний",
+  "settingsDensityComfortableSubtitle": "Більше відступів між елементами",
+  "settingsDeleteAccountTitle": "Видалити акаунт",
+  "settingsInterfaceConfig": "Конфігурація інтерфейсу",
+  "settingsTheme": "Тема",
+  "settingsShowActivityChart": "Показувати графік активності",
+  "settingsShowWorkoutHistory": "Показувати історію тренувань",
+  "settingsShowWorkoutAnalytics": "Показувати аналітику тренувань",
+  "settingsShowAllTime": "Показувати за весь час",
+  "settingsUseHorizontalScroll": "Горизонтальна прокрутка",
+  "settingsTrainerControls": "Керування тренера",
+  "settingsEnableCoaching": "Увімкнути тренерство",
+  "settingsConnectStripe": "Підключити виплати Stripe",
+  "settingsConnectStripeSubtitle": "Налаштуйте прийом оплат за тренерство",
+  "settingsStripeConnected": "Stripe підключено",
+  "settingsStripeConnectedSubtitle": "Прийом оплат налаштовано",
+  "settingsEnableCoachingFeatures": "Увімкнути функції тренера",
+  "settingsTaglineLabel": "Слоган",
+  "settingsDescriptionLabel": "Опис",
+  "settingsSpecializationsHeader": "СПЕЦІАЛІЗАЦІЇ",
+  "settingsLanguagesHeader": "МОВИ",
+  "settingsRatePerMonthUsd": "Ставка на місяць (USD)",
+  "settingsTimezoneHint": "напр. Europe/Kyiv",
+  "importCreatedWorkouts": "Створено тренувань",
+  "importTotalRows": "Усього рядків у файлі",
+  "importRowErrors": "Помилок у рядках",
+  "amplitudeSendTestEvent": "Надіслати тестову подію",
+  "amplitudeSendCustomEvent": "Надіслати кастомну подію",
+  "amplitudeShowDebugInfo": "Показати Debug Info",
+  "amplitudeTestFunnel": "Тест воронки Time-to-First-Dollar",
+  "debugScreenTitle": "Екран налагодження",
+  "debugCoachChatTitle": "Дебаг чату тренера",
+  "debugChatEmbeddedTitle": "Чат (вбудований)",
+  "statusCancelled": "Скасовано",
+  "statusPlannedLabel": "Заплановано",
+  "reviewRatingHeader": "ОЦІНКА",
+  "reviewCommentHeader": "КОМЕНТАР (ОПЦІОНАЛЬНО)",
+  "reviewShareExperienceHint": "Поділіться враженнями...",
+  "actionSubmit": "Надіслати",
+  "reviewSubmittedSuccess": "Відгук успішно надіслано",
+  "sessionStartedHeader": "ПОЧАТОК",
+  "sessionFinishedHeader": "ЗАВЕРШЕННЯ",
+  "sessionDurationHeader": "ТРИВАЛІСТЬ",
+  "sessionCompletedSetsHeader": "ВИКОНАНІ ПІДХОДИ",
+  "planCardTargetSessionLength": "Цільова тривалість сесії",
+  "avatarTooltip": "Аватар",
+  "profileLoadErrorEyebrow": "ПОМИЛКА ЗАВАНТАЖЕННЯ ПРОФІЛЮ",
+  "failedToLoadProfile": "Не вдалося завантажити профіль: {error}",
+  "appearanceEyebrow": "ЗОВНІШНІЙ ВИГЛЯД",
+  "layoutScaleEyebrow": "МАСШТАБ ІНТЕРФЕЙСУ",
+  "sessionAccessEyebrow": "ДОСТУП ДО СЕСІЇ",
+  "irreversibleActionEyebrow": "НЕЗВОРОТНА ДІЯ",
+  "deleteAccountConfirmMessage": "Це запланує видалення даних вашого акаунта. Продовжити?",
+  "appearanceAndLocaleEyebrow": "ЗОВНІШНІЙ ВИГЛЯД І МОВА",
+  "profileTelemetryEyebrow": "ТЕЛЕМЕТРІЯ ПРОФІЛЮ",
+  "visibilityAndCharts": "Видимість і графіки",
+  "coachingAndPayoutsEyebrow": "ТРЕНЕРСТВО ТА ВИПЛАТИ",
+  "notAvailableForAccount": "Недоступно для цього акаунта",
+  "accountZoneEyebrow": "ЗОНА АКАУНТА",
+  "sessionAndDataTitle": "Сесія та дані",
+  "notSetLabel": "Не задано",
+  "ratePerMonthHelper": "Сума вводиться в доларах (напр. 120 = $120.00).",
+  "addMuscleTagLabel": "Додати тег м'яза",
+  "typeToSearchHint": "Введіть для пошуку...",
+  "failedToReadFileBytes": "Не вдалося прочитати вибраний файл",
+  "gifUploaded": "GIF завантажено",
+  "imageUploaded": "Зображення завантажено",
+  "uploadFailed": "Помилка завантаження: {error}",
+  "editExerciseTitle": "Редагувати вправу",
+  "createExerciseTitle": "Створити вправу",
+  "nameLabel": "Назва",
+  "muscleGroupLabel": "Група м'язів",
+  "selectGroupHint": "Виберіть групу",
+  "movementTypeLabel": "Тип руху",
+  "movementTypeCompound": "Базова",
+  "movementTypeIsolation": "Ізольована",
+  "regionLabel": "Регіон",
+  "regionUpper": "Верх тіла",
+  "regionLower": "Низ тіла",
+  "failedToUpdateExercise": "Не вдалося оновити вправу: {error}",
+  "failedToCreateExercise": "Не вдалося створити вправу: {error}",
+  "create": "Створити",
+  "exercisesTitle": "Вправи",
+  "errorLoadingExercises": "Помилка завантаження вправ: {error}",
+  "noExercisesTitle": "Немає вправ",
+  "noExercisesDescription": "Вправ не знайдено. Додайте свою першу вправу!",
+  "noMuscleGroup": "Без групи м'язів",
+  "noEquipment": "Без обладнання",
+  "uploadImageTooltip": "Завантажити зображення",
+  "deleteExerciseQuestion": "Видалити вправу?",
+  "failedToDeleteExercise": "Не вдалося видалити вправу: {error}",
+  "exerciseTitle": "Вправа",
+  "failedToLoadExercise": "Не вдалося завантажити вправу: {error}",
+  "exerciseNotFoundTitle": "Вправу не знайдено",
+  "muscleGroupHeader": "ГРУПА М'ЯЗІВ",
+  "equipmentHeader": "ОБЛАДНАННЯ",
+  "movementTypeHeader": "ТИП РУХУ",
+  "regionHeader": "РЕГІОН",
+  "targetMusclesHeader": "ЦІЛЬОВІ М'ЯЗИ",
+  "synergistMusclesHeader": "М'ЯЗИ-СИНЕРГІСТИ",
+  "parentExerciseEyebrow": "БАЗОВА ВПРАВА",
+  "baseMovementTitle": "Базовий рух",
+  "directVariantsTitle": "Прямі варіанти",
+  "relatedSiblingsTitle": "Пов'язані варіанти",
+  "failedToLoadData": "Не вдалося завантажити дані: {error}",
+  "errorSaving": "Помилка збереження: {error}",
+  "progressionTemplateOptionalLabel": "Шаблон прогресії (необов'язково)",
+  "selectTemplateHint": "Виберіть шаблон",
+  "noTemplateOption": "Без шаблону",
+  "saveExercise": "Зберегти вправу",
+  "exerciseDetailsTitle": "Деталі вправи",
+  "exerciseNameLabel": "Назва вправи",
+  "sets": "Підходи",
+  "addSet": "Додати підхід",
+  "removeSetTooltip": "Видалити підхід",
+  "catalogEntryEyebrow": "ЗАПИС КАТАЛОГУ",
+  "destructiveActionEyebrow": "НЕЗВОРОТНА ДІЯ",
+  "allLabel": "Усі",
+  "tryChangingFilterOrAddExercise": "Спробуйте змінити фільтр або додайте нову вправу",
+  "sexLabel": "Стать",
+  "sexMale": "Чоловік",
+  "sexFemale": "Жінка",
+  "experienceLevelLabel": "Рівень досвіду",
+  "experienceBeginner": "Початківець",
+  "experienceIntermediate": "Середній",
+  "experienceAdvanced": "Просунутий",
+  "primaryGoalLabel": "Головна ціль",
+  "goalStrength": "Сила",
+  "goalHypertrophy": "Гіпертрофія",
+  "goalFatLoss": "Схуднення",
+  "goalGeneralFitness": "Загальний фітнес",
+  "trainingEnvironmentLabel": "Місце тренувань",
+  "envCommercialGym": "Тренажерний зал",
+  "envHome": "Дім",
+  "envGarage": "Гараж",
+  "failedToApply": "Не вдалося застосувати: {error}",
+  "useAsProfilePicture": "Використати як фото профілю",
+  "describeYourAvatarHint": "Опишіть свій аватар",
+  "failedWithError": "Помилка: {error}",
+  "generate": "Згенерувати",
+  "failedToLoadAnalytics": "Не вдалося завантажити аналітику: {error}",
+  "addSeriesTooltip": "Додати серію",
+  "clearTooltip": "Очистити",
+  "failedToApplyReadiness": "Не вдалося застосувати готовність: {error}",
+  "failedToUpdateSetNotReady": "Не вдалося оновити підхід: стан застосунку ще не готовий",
+  "failedToUpdateSet": "Не вдалося оновити підхід: {error}",
+  "deleteExerciseTitle": "Видалити вправу",
+  "exerciseRemovedFromWorkout": "Вправу видалено з тренування",
+  "errorCannotDeleteUnsavedExercise": "Помилка: не можна видалити незбережену вправу",
+  "failedToRemoveExercise": "Не вдалося видалити вправу: {error}",
+  "cannotAddSetUnsavedExercise": "Не можна додати підхід: вправа ще не збережена",
+  "setAddedSuccessfully": "Підхід успішно додано",
+  "failedToAddSet": "Не вдалося додати підхід: {error}",
+  "failedToLoadExercises": "Не вдалося завантажити вправи: {error}",
+  "workoutUpdated": "Тренування оновлено",
+  "failedToUpdateWorkout": "Не вдалося оновити тренування: {error}",
+  "workoutStarted": "Тренування розпочато",
+  "failedToStartSession": "Не вдалося розпочати сесію: {error}",
+  "sessionCancelled": "Сесію скасовано",
+  "workoutFinished": "Тренування завершено",
+  "failedToFinishSession": "Не вдалося завершити сесію: {error}",
+  "allSetsAlreadyCompleted": "Усі підходи вже виконано",
+  "failedToCompleteAllSets": "Не вдалося завершити всі підходи: {error}",
+  "failedToUpdateSetCompletion": "Не вдалося оновити статус підходу: {error}",
+  "deleteSetTitle": "Видалити підхід",
+  "deleteSetConfirmMessage": "Ви впевнені, що хочете видалити цей підхід? Цю дію не можна скасувати.",
+  "setDeletedSuccessfully": "Підхід успішно видалено",
+  "failedToDeleteSet": "Не вдалося видалити підхід: {error}",
+  "exerciseAddedSuccessfully": "Вправу успішно додано",
+  "failedToAddExercise": "Не вдалося додати вправу: {error}",
+  "exerciseUpdatedSuccessfully": "Вправу успішно оновлено",
+  "errorUpdatingExercise": "Помилка оновлення вправи: {error}",
+  "setCountLabel": "{count, plural, one{1 ПІДХІД} few{{count} ПІДХОДИ} many{{count} ПІДХОДІВ} other{{count} ПІДХОДІВ}}",
+  "userMaxesTitle": "Рекорди користувача",
+  "noMaxesSavedTitle": "Рекордів ще немає",
+  "addFirstMaxWeightDescription": "Додайте свою першу максимальну вагу",
+  "allSessionsLabel": "Усі сесії",
+  "resetDatesTooltip": "Скинути дати",
+  "collapseCalendarTooltip": "Згорнути календар",
+  "selectDateRangeTooltip": "Вибрати діапазон дат",
+  "calendarMonthLabel": "Місяць",
+  "primaryMetricTrendHeader": "ОСНОВНА МЕТРИКА (ТРЕНД)",
+  "trendLabel": "Тренд",
+  "exerciseDetailNotFoundDescription": "Не вдалося знайти вказане визначення вправи.",
+  "variantsCountEyebrow": "ВАРІАНТИ · {count}",
+  "otherVariantsCountEyebrow": "ІНШІ ВАРІАНТИ · {count}",
+  "failedToLoadGroups": "Не вдалося завантажити групи: {error}",
+  "deleteExerciseConfirmBody": "Ви впевнені, що хочете видалити \"{name}\"?",
+  "exerciseSpecEyebrow": "01 · ХАРАКТЕРИСТИКИ ВПРАВИ",
+  "pleaseEnterNameValidation": "Будь ласка, введіть назву",
+  "prescribedSetsEyebrow": "02 · ЗАПЛАНОВАНІ ПІДХОДИ ({count})",
+  "requiredField": "Обов'язково",
+  "setNumberLabel": "ПІДХІД #{number}",
+  "removeExerciseConfirmBody": "Ви впевнені, що хочете видалити цю вправу з тренування?",
+  "allSetsMarkedCompleted": "Усі підходи позначено як виконані ({count})",
+  "markedSetsPartial": "Позначено підходів: {success}, помилок: {failed}",
+  "myAthletesTitle": "Мої атлети",
+  "thresholdsAndFiltersTooltip": "Пороги та фільтри",
+  "allSegmentsLabel": "Усі сегменти",
+  "recentlyActiveLabel": "Нещодавно активні",
+  "sessionsPerWeekLabel": "Сесій / тижд.",
+  "adherenceLabel": "Дотримання",
+  "visibleMetricLabel": "ВИДИМО",
+  "linksMetricLabel": "ЗВ'ЯЗКИ",
+  "avgSessionsPerWeekMetricLabel": "СЕР. С / ТИЖД.",
+  "atRiskMetricLabel": "У ЗОНІ РИЗИКУ",
+  "rosterFiltersEyebrow": "ФІЛЬТРИ СКЛАДУ",
+  "thresholdsFilterTitle": "Пороги та фільтри",
+  "resetLabel": "Скинути",
+  "doneLabel": "Готово",
+  "viewDetailedAnalyticsLabel": "Детальна аналітика",
+  "sessionsUpperLabel": "СЕСІЇ",
+  "sessionsPerWeekUpperLabel": "С / ТИЖД.",
+  "planPercentUpperLabel": "ПЛАН %",
+  "rpeDistributionUpperLabel": "РОЗПОДІЛ RPE",
+  "allUsersTitle": "Усі користувачі",
+  "filterCoachesLabel": "Фільтр тренерів",
+  "coachDirectoryEyebrow": "КАТАЛОГ ТРЕНЕРІВ",
+  "filterCoachesTitle": "Фільтр тренерів",
+  "allUsersPillLabel": "Усі користувачі",
+  "coachesOnlyPillLabel": "Лише тренери",
+  "filtersActiveLabel": "Фільтри · Активні",
+  "showingUpperLabel": "ПОКАЗАНО",
+  "publicUpperLabel": "ПУБЛІЧНІ",
+  "coachesUpperLabel": "ТРЕНЕРИ",
+  "sortUpperLabel": "СОРТУВАННЯ",
+  "minRateUsdLabel": "Мін. ставка ($)",
+  "maxRateUsdLabel": "Макс. ставка ($)",
+  "sortByLabel": "Сортувати за",
+  "sortCreatedAt": "Датою створення",
+  "sortRating": "Рейтингом",
+  "sortLastActive": "Останньою активністю",
+  "applyFiltersLabel": "Застосувати фільтри",
+  "volumeUpperLabel": "ОБСЯГ",
+  "sessPerWeekUpperLabel": "СЕСІЙ / ТИЖД.",
+  "intensityUpperLabel": "ІНТЕНСИВНІСТЬ",
+  "avgRpeUpperLabel": "СЕР. RPE",
+  "lastDayUpperLabel": "ОСТ. ДЕНЬ",
+  "daysGapUpperLabel": "ПЕРЕРВА (ДН.)",
+  "crmTitle": "CRM",
+  "activeUpperLabel": "АКТИВНІ",
+  "engagedUpperLabel": "ЗАЛУЧЕНІ",
+  "inactiveUpperLabel": "НЕАКТИВНІ",
+  "viewAthletesListLabel": "Список атлетів",
+  "relationshipsAndChatLabel": "Зв'язки та чат",
+  "lastUpperLabel": "ОСТ.",
+  "planUpperLabel": "ПЛАН",
+  "relationshipEyebrow": "ЗВ'ЯЗОК",
+  "failedToSendError": "Не вдалося надіслати: {error}",
+  "typeMessageHint": "Введіть повідомлення...",
+  "sendMessageTooltip": "Надіслати повідомлення",
+  "adherenceUpperLabel": "ДОТРИМАННЯ",
+  "startUpperLabel": "ПОЧАТОК",
+  "endUpperLabel": "КІНЕЦЬ",
+  "workoutNotesEyebrow": "НОТАТКИ ТРЕНУВАННЯ",
+  "removeExerciseEyebrow": "ВИДАЛЕННЯ ВПРАВИ",
+  "exerciseEditorEyebrow": "РЕДАКТОР ВПРАВИ",
+  "massEditLabel": "Масове редагування",
+  "myCoachesTitle": "Мої тренери",
+  "analyticsLabel": "Аналітика",
+  "chatLabel": "Чат",
+  "subscribeLabel": "Підписатися",
+  "invalidCheckoutUrl": "Некоректне посилання для оплати",
+  "cannotOpenCheckoutUrl": "Не вдалося відкрити посилання для оплати",
+  "profileTitle": "Профіль",
+  "coachingRequestEyebrow": "ЗАПИТ НА ТРЕНЕРСТВО",
+  "requestCoachingFromTitle": "Запит на тренерство до {name}",
+  "messageOptionalLabel": "Повідомлення (необов'язково)",
+  "sendLabel": "Надіслати",
+  "requestSentMessage": "Запит надіслано",
+  "writeReviewLabel": "Написати відгук",
+  "cannotReviewError": "Не вдалося залишити відгук: {error}",
+  "workoutFeedTitle": "Стрічка тренувань",
+  "allPostsLabel": "Усі дописи",
+  "withStatsLabel": "Зі статистикою",
+  "likedLabel": "Уподобані",
+  "createPostLabel": "Створити допис",
+  "socialFeedEyebrow": "СОЦІАЛЬНА СТРІЧКА",
+  "visibilityUpperLabel": "ВИДИМІСТЬ",
+  "visibilityPublic": "Публічний",
+  "visibilityFollowers": "Підписники",
+  "visibilityPrivate": "Приватний",
+  "postLabel": "Опублікувати",
+  "likeLabel": "Подобається",
+  "errorLoadingItems": "Помилка завантаження елементів: {error}",
+  "addItemTitle": "Додати {name}",
+  "itemGenericName": "Елемент",
+  "dosageWithUnitLabel": "Дозування ({unit})",
+  "addLabel": "Додати",
+  "genericError": "Помилка: {error}",
+  "sessionConfigurationTitle": "Налаштування сесії",
+  "sessionIdLabel": "ID сесії",
+  "workoutIdOptionalLabel": "ID тренування (необов'язково)",
+  "appliedPlanWorkoutIdOptionalLabel": "ID тренування плану (необов'язково)",
+  "selectedEntriesTitle": "Вибрані записи",
+  "availableItemsTitle": "Доступні елементи",
+  "removeEntryTooltip": "Видалити запис",
+  "addEntryTooltip": "Додати запис",
+  "deleteSessionTitle": "Видалити сесію",
+  "deleteSessionConfirm": "Ви впевнені, що хочете видалити цю сесію?",
+  "sessionDeletedSuccess": "Сесію успішно видалено",
+  "editSessionTooltip": "Редагувати сесію",
+  "deleteSessionTooltip": "Видалити сесію",
+  "kcalUpperLabel": "ККАЛ",
+  "proteinUpperLabel": "БІЛКИ",
+  "fatUpperLabel": "ЖИРИ",
+  "carbUpperLabel": "ВУГЛЕВОДИ",
+  "activeNutritionPlanTitle": "Активний план харчування",
+  "noActiveCalendarPlan": "Немає активного календарного плану",
+  "noNutritionPlanConfigured": "План харчування не налаштовано",
+  "createSessionTooltip": "Створити сесію",
+  "failedToLoadNutritionSessions": "Не вдалося завантажити сесії харчування: {error}",
+  "createSessionButton": "Створити сесію",
+  "pleaseEnterPlanName": "Введіть назву плану",
+  "planCreatedSuccess": "План успішно створено",
+  "failedToCreatePlan": "Не вдалося створити план: {error}",
+  "createCalendarPlanTitle": "Створити календарний план",
+  "planNameLabel": "Назва плану",
+  "addMesocycleLabel": "Додати мезоцикл",
+  "removeMesocycleTooltip": "Видалити мезоцикл",
+  "mesocycleNameLabel": "Назва мезоциклу",
+  "microcyclesLabel": "Мікроцикли",
+  "microcycleLengthDaysLabel": "Тривалість мікроциклу (дні)",
+  "addExerciseLabel": "Додати вправу",
+  "planAppliedSuccess": "План успішно застосовано",
+  "applyPlanButton": "Застосувати план",
+  "noPlanWorkoutsAvailable": "Немає доступних тренувань плану",
+  "removeRuleEyebrow": "ВИДАЛИТИ ПРАВИЛО",
+  "deleteMacroTitle": "Видалити макрос",
+  "planMacrosTitle": "Макроси плану",
+  "previewApplyTooltip": "Перегляд / Застосування",
+  "addMacroLabel": "Додати макрос",
+  "noMacrosYet": "Макросів ще немає",
+  "allCountLabel": "Усі ({count})",
+  "noMatchingMacros": "Немає відповідних макросів",
+  "switchFilterToViewRules": "Перемкніть фільтр вище, щоб переглянути правила.",
+  "macroSuggestionsEyebrow": "РЕКОМЕНДАЦІЇ МАКРОСІВ",
+  "sessionHistoryTitle": "Історія сесій",
+  "loadSessionsLabel": "Завантажити сесії",
+  "clearFilterLabel": "Очистити фільтр",
+  "errorLoadingHistory": "Помилка завантаження історії: {error}",
+  "noSessionsFound": "Сесій не знайдено",
+  "tryChangingYourFilter": "Спробуйте змінити фільтр",
+  "sessionNumberTitle": "Сесія #{id}",
+  "workoutIdUpperLabel": "ID ТРЕНУВАННЯ",
+  "statusUpperLabel": "СТАТУС",
+  "startedUpperLabel": "ПОЧАТО",
+  "finishedUpperLabel": "ЗАВЕРШЕНО",
+  "durationUpperLabel": "ТРИВАЛІСТЬ",
+  "noExerciseDataForWorkout": "Немає даних про вправи для цього тренування",
+  "repsUpperLabel": "ПОВТОРИ",
+  "plannedUpperLabel": "ПЛАН",
+  "actualUpperLabel": "ФАКТ",
+  "thresholdsLabel": "Пороги",
+  "rosterTelemetryEyebrow": "ТЕЛЕМЕТРІЯ СКЛАДУ",
+  "minSessionsPerWeekSliderLabel": "Мін. сесій / тижд.: {value}",
+  "minAdherenceSliderLabel": "Мін. дотримання: {percent}%",
+  "workflowsChannelsEyebrow": "ПРОЦЕСИ · КАНАЛИ",
+  "userIdFieldLabel": "ID користувача"
 }

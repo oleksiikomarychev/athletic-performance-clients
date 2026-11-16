@@ -176,6 +176,8 @@ void main() {
 
             await tester.pumpWidget(
               MaterialApp(
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
                 theme: appTheme,
                 home: MediaQuery(
                   data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
@@ -301,6 +303,8 @@ void main() {
 
       Widget buildRow(String? derivedField) {
         return MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.darkTheme(density: UiDensity.compact),
           home: Scaffold(
             body: SetCapsuleRow(
@@ -349,6 +353,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.darkTheme(density: UiDensity.compact),
           home: Scaffold(
             body: ListView(
@@ -413,9 +419,9 @@ void main() {
               matching: find.byWidgetPredicate((w) => w is ButtonStyleButton),
             )
             .first,
-        'Применить': find
+        'Apply': find
             .ancestor(
-              of: find.text('Применить'),
+              of: find.text('Apply'),
               matching: find.byWidgetPredicate((w) => w is ButtonStyleButton),
             )
             .first,
@@ -458,6 +464,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.darkTheme(density: UiDensity.compact),
           home: Scaffold(
             body: Column(
@@ -502,6 +510,8 @@ void main() {
 
             await tester.pumpWidget(
               MaterialApp(
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
                 theme: appTheme,
                 home: MediaQuery(
                   data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
@@ -610,6 +620,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             theme: AppTheme.darkTheme(density: UiDensity.compact),
             home: const Scaffold(
               body: SizedBox(
@@ -660,6 +672,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             theme: AppTheme.lightTheme(density: UiDensity.compact),
             home: const Scaffold(
               body: SizedBox(
@@ -763,6 +777,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             theme: AppTheme.lightTheme(density: UiDensity.compact),
             home: MediaQuery(
               data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
@@ -831,6 +847,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             theme: AppTheme.darkTheme(density: UiDensity.compact),
             home: MediaQuery(
               data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
@@ -846,9 +864,9 @@ void main() {
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         expect(find.text('Bench Press Competition Pause'), findsOneWidget);
-        expect(find.text('Заменить'), findsOneWidget);
-        expect(find.text('Подход'), findsOneWidget);
-        expect(find.text('Массово'), findsOneWidget);
+        expect(find.text('Replace'), findsOneWidget);
+        expect(find.text('Set'), findsOneWidget);
+        expect(find.text('Bulk'), findsOneWidget);
       },
     );
 
@@ -861,6 +879,8 @@ void main() {
               : AppTheme.lightTheme(density: UiDensity.compact);
           await tester.pumpWidget(
             MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
               theme: theme,
               home: Scaffold(
                 appBar: PrimaryAppBar.main(
@@ -920,6 +940,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             theme: AppTheme.darkTheme(density: UiDensity.compact),
             home: MediaQuery(
               data: const MediaQueryData(
@@ -1001,10 +1023,10 @@ void main() {
         expect(libBorders.length, 1);
 
         // Tapping a matrix cell switches the spark wave immediately.
-        await tester.tap(find.text('КПШ'));
+        await tester.tap(find.text('REPS'));
         await tester.pump(const Duration(milliseconds: 450));
         expect(tappedSlot, MetricSlot.kpsh);
-        expect(find.text('SESSION WAVE · КПШ'), findsOneWidget);
+        expect(find.text('SESSION WAVE · REPS'), findsOneWidget);
         expect(tester.takeException(), isNull);
       },
     );
@@ -1027,6 +1049,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             theme: AppTheme.darkTheme(density: UiDensity.compact),
             home: MediaQuery(
               data: const MediaQueryData(

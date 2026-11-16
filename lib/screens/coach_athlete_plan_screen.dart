@@ -74,7 +74,7 @@ class _CoachAthletePlanScreenState
 
     return AssistantChatHost(
       initialMessage:
-          'Открываю ассистента из CoachAthletePlanScreen. Используй контекст v1, чтобы понимать текущего атлета, его активный план и выбранный день.',
+          'Opening assistant from CoachAthletePlanScreen. Use v1 context to understand the current athlete, their active plan, and selected day.',
       contextBuilder: _buildChatContext,
       builder: (context, openChat) {
         return AmbientScaffoldShell(
@@ -209,15 +209,15 @@ class _CoachAthletePlanScreenState
       case 'sets_count':
         return l10n.coachAthletePlanMetricSets;
       case 'volume_sum':
-        return 'КПШ';
+        return l10n.chartMetricRepsTotal;
       case 'reps_per_set_avg':
-        return 'Повт. в подходе (ср.)';
+        return l10n.chartMetricRepsPerSetAvg;
       case 'kilograms_avg':
-        return 'Килограммы (ср.)';
+        return l10n.chartMetricKgAvg;
       case 'tonnage_sum':
-        return 'Тоннаж';
+        return l10n.chartMetricTonnage;
       case 'one_rm_est_avg':
-        return 'Разовый максимум (расч.)';
+        return l10n.chartMetricE1rm;
       case 'intensity_avg':
         return l10n.coachAthletePlanMetricIntensity;
       case 'effort_avg':
@@ -520,25 +520,25 @@ class _CoachAthletePlanScreenState
                 cells: [
                   InstrumentMetricCellData(
                     slot: MetricSlot.setsCount,
-                    label: 'SESSIONS',
+                    label: AppLocalizations.of(context).sessionsUpperLabel,
                     value: planned > 0 ? '$completed/$planned' : '$completed',
                     valueColor: statusColor,
                   ),
                   InstrumentMetricCellData(
                     slot: MetricSlot.density,
-                    label: 'ADHERENCE',
+                    label: AppLocalizations.of(context).adherenceUpperLabel,
                     value: adherence != null
                         ? '${adherence.toStringAsFixed(1)}%'
                         : '—',
                   ),
                   InstrumentMetricCellData(
                     slot: MetricSlot.durationWeeks,
-                    label: 'START',
+                    label: AppLocalizations.of(context).startUpperLabel,
                     value: _formatDate(plan.startDate),
                   ),
                   InstrumentMetricCellData(
                     slot: MetricSlot.kpsh,
-                    label: 'END',
+                    label: AppLocalizations.of(context).endUpperLabel,
                     value: _formatDate(plan.endDate),
                   ),
                 ],
@@ -734,7 +734,7 @@ class _CoachAthletePlanScreenState
               ),
               IconButton(
                 icon: const Icon(Icons.refresh),
-                tooltip: 'Refresh',
+                tooltip: AppLocalizations.of(context).refresh,
                 constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 onPressed: () {
                   ref.invalidate(
@@ -914,7 +914,7 @@ class _CoachAthletePlanScreenState
     final controller = TextEditingController(text: workout.notes ?? '');
     final String? newNotes = await showInstrumentDialog<String>(
       context: context,
-      eyebrow: 'WORKOUT NOTES',
+      eyebrow: l10n.workoutNotesEyebrow,
       title: '${l10n.coachAthletePlanNotes('')} ${workout.name}',
       content: TextField(
         controller: controller,
@@ -1139,7 +1139,7 @@ class _CoachAthletePlanScreenState
     final instrument = InstrumentTheme.of(context);
     final confirm = await showInstrumentDialog<bool>(
       context: context,
-      eyebrow: 'REMOVE EXERCISE',
+      eyebrow: l10n.removeExerciseEyebrow,
       title: l10n.coachAthletePlanDeleteExerciseConfirmTitle,
       message: l10n.coachAthletePlanDeleteExerciseConfirmBody(
         instance.exerciseDefinition?.name ?? '',
@@ -1229,7 +1229,7 @@ class _CoachAthletePlanScreenState
 
     await showInstrumentDialog<void>(
       context: context,
-      eyebrow: 'EXERCISE EDITOR',
+      eyebrow: outerL10n.exerciseEditorEyebrow,
       title: isEdit
           ? outerL10n.coachAthletePlanEditExercise
           : outerL10n.coachAthletePlanAddExercise,
@@ -1560,7 +1560,7 @@ class _CoachAthletePlanScreenState
     final confirmed = await showInstrumentDialog<bool>(
       context: context,
       eyebrow: DateFormat('dd MMM yyyy').format(_selectedDay).toUpperCase(),
-      title: 'Mass edit',
+      title: l10n.massEditLabel,
       content: StatefulBuilder(
         builder: (ctx, setState) {
           return Column(
@@ -1688,21 +1688,22 @@ class _CoachAthletePlanScreenState
 
   String _timeOrDate(Workout w) {
     final dt = w.scheduledFor;
-    if (dt == null) return 'Без даты';
+    if (dt == null) return AppLocalizations.of(context).noDate;
     return DateFormat('MMM d, HH:mm').format(dt.toLocal());
   }
 
   _StatusView _statusView(Workout w) {
+    final l10n = AppLocalizations.of(context);
     final instrument = InstrumentTheme.of(context);
     final completed =
         (w.status?.toLowerCase() == 'completed') || (w.completedAt != null);
     final inProgress = (w.startedAt != null) && (w.completedAt == null);
     if (completed) {
-      return _StatusView('Завершена', instrument.successColor);
+      return _StatusView(l10n.statusCompleted, instrument.successColor);
     } else if (inProgress) {
-      return _StatusView('В процессе', instrument.workingAura);
+      return _StatusView(l10n.statusInProgress, instrument.workingAura);
     } else {
-      return _StatusView('Запланирована', instrument.peakEffortColor);
+      return _StatusView(l10n.statusPlanned, instrument.peakEffortColor);
     }
   }
 

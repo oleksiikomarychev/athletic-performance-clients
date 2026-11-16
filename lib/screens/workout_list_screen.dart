@@ -121,33 +121,34 @@ class _WorkoutListScreenState extends ConsumerState<WorkoutListScreen> {
   }
 
   Future<void> _showAddWorkoutDialog() async {
+    final l10n = AppLocalizations.of(context);
     _nameController.clear();
     final created = await showInstrumentDialog<bool>(
       context: context,
       eyebrow: 'NEW WORKOUT',
-      title: 'Добавить тренировку',
+      title: l10n.workoutListAddTitle,
       content: TextField(
         controller: _nameController,
         autofocus: true,
         decoration: InstrumentTheme.inputDecoration(
           context,
-          labelText: 'Название тренировки',
+          labelText: l10n.workoutListNameLabel,
         ),
       ),
       actions: [
         InstrumentActionButton(
-          label: 'Отмена',
+          label: l10n.cancel,
           variant: InstrumentActionVariant.secondary,
           onPressed: () => Navigator.pop(context, false),
         ),
         InstrumentActionButton(
-          label: 'Добавить',
+          label: l10n.actionAdd,
           icon: Icons.add_rounded,
           onPressed: () {
             if (_nameController.text.trim().isEmpty) {
               showAppSnackBar(
                 context,
-                'Введите название тренировки',
+                l10n.workoutListNameRequired,
                 isError: true,
               );
               return;
@@ -174,7 +175,7 @@ class _WorkoutListScreenState extends ConsumerState<WorkoutListScreen> {
       if (mounted) {
         showAppSnackBar(
           context,
-          'Ошибка при создании тренировки: $e',
+          l10n.workoutListCreateError(e.toString()),
           isError: true,
         );
       }
@@ -195,16 +196,17 @@ class _WorkoutListScreenState extends ConsumerState<WorkoutListScreen> {
         'entities': {'progression_id': widget.progressionId},
       },
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return AmbientScaffoldShell(
           appBar: PrimaryAppBar(
-            title: 'Тренировки',
+            title: l10n.workoutListTitle,
             onTitleTap: openChat,
             showBack: true,
             actions: [
               IconButton(
                 onPressed: _showAddWorkoutDialog,
                 icon: const Icon(Icons.add_rounded),
-                tooltip: 'Добавить тренировку',
+                tooltip: l10n.workoutListAddTitle,
               ),
             ],
           ),
@@ -232,7 +234,7 @@ class _WorkoutListScreenState extends ConsumerState<WorkoutListScreen> {
       return Padding(
         padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
         child: ErrorMessage(
-          message: 'Ошибка загрузки тренировок: $_errorMessage',
+          message: AppLocalizations.of(context).workoutListLoadError(_errorMessage!),
           onRetry: _loadData,
         ),
       );
@@ -252,7 +254,9 @@ class _WorkoutListScreenState extends ConsumerState<WorkoutListScreen> {
           return Padding(
             padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
             child: ErrorMessage(
-              message: 'Ошибка загрузки тренировок: ${snapshot.error}',
+              message: AppLocalizations.of(context).workoutListLoadError(
+                snapshot.error.toString(),
+              ),
               onRetry: _loadData,
             ),
           );
@@ -261,6 +265,7 @@ class _WorkoutListScreenState extends ConsumerState<WorkoutListScreen> {
         final workouts = snapshot.data ?? [];
 
         if (workouts.isEmpty) {
+          final l10n = AppLocalizations.of(context);
           return ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.fromLTRB(
@@ -272,10 +277,10 @@ class _WorkoutListScreenState extends ConsumerState<WorkoutListScreen> {
             children: [
               EmptyState(
                 icon: Icons.fitness_center_rounded,
-                title: 'Нет тренировок',
-                description: 'В этой прогрессии пока нет тренировок',
+                title: l10n.workoutListEmptyTitle,
+                description: l10n.workoutListEmptyDescription,
                 action: InstrumentActionButton(
-                  label: 'Добавить тренировку',
+                  label: l10n.workoutListAddTitle,
                   icon: Icons.add_rounded,
                   onPressed: _showAddWorkoutDialog,
                 ),
@@ -465,7 +470,7 @@ class _WorkoutCatalogModule extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Список тренировок',
+                  AppLocalizations.of(context).workoutListSectionTitle,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),

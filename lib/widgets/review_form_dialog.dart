@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/widgets/instrument_modal.dart';
 
 class ReviewFormDialog extends StatefulWidget {
@@ -31,6 +32,7 @@ class _ReviewFormDialogState extends State<ReviewFormDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final instrument = InstrumentTheme.of(context);
     final scheme = Theme.of(context).colorScheme;
 
@@ -42,7 +44,7 @@ class _ReviewFormDialogState extends State<ReviewFormDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('RATING', style: InstrumentTheme.microLabel(context)),
+          Text(l10n.reviewRatingHeader, style: InstrumentTheme.microLabel(context)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 2,
@@ -72,7 +74,7 @@ class _ReviewFormDialogState extends State<ReviewFormDialog> {
             }),
           ),
           const SizedBox(height: 16),
-          Text('COMMENT (OPTIONAL)', style: InstrumentTheme.microLabel(context)),
+          Text(l10n.reviewCommentHeader, style: InstrumentTheme.microLabel(context)),
           const SizedBox(height: 8),
           TextField(
             controller: _commentController,
@@ -81,7 +83,7 @@ class _ReviewFormDialogState extends State<ReviewFormDialog> {
             maxLength: 5000,
             decoration: InstrumentTheme.inputDecoration(
               context,
-              hintText: 'Share your experience...',
+              hintText: l10n.reviewShareExperienceHint,
               radius: 12,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
@@ -93,12 +95,12 @@ class _ReviewFormDialogState extends State<ReviewFormDialog> {
       ),
       actions: [
         InstrumentActionButton(
-          label: 'Cancel',
+          label: l10n.cancel,
           variant: InstrumentActionVariant.secondary,
           onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
         ),
         InstrumentActionButton(
-          label: 'Submit',
+          label: l10n.actionSubmit,
           variant: InstrumentActionVariant.primary,
           accentColor: instrument.stormAura,
           loading: _isSubmitting,
@@ -124,7 +126,7 @@ class _ReviewFormDialogState extends State<ReviewFormDialog> {
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Review submitted successfully')),
+          SnackBar(content: Text(AppLocalizations.of(context).reviewSubmittedSuccess)),
         );
       }
     } catch (e) {

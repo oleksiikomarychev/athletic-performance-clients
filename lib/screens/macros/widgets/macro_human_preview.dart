@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/exercise_definition.dart';
 import 'package:workout_app/providers/target_data_providers.dart';
 
@@ -30,8 +31,9 @@ class MacroHumanPreview extends ConsumerWidget {
       for (final e in defs)
         if (e.id != null) e.id!: e.name,
     };
-    final main = _mainSentence(nameMap, defs);
-    final details = _detailsEntries(nameMap, defs);
+    final l10n = AppLocalizations.of(context);
+    final main = _mainSentence(nameMap, defs, l10n);
+    final details = _detailsEntries(nameMap, defs, l10n);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -75,27 +77,27 @@ class MacroHumanPreview extends ConsumerWidget {
     );
   }
 
-  String _metricName(String? m) {
+  String _metricName(String? m, AppLocalizations l10n) {
     switch (m) {
       case 'Readiness_Score':
-        return 'готовность';
+        return l10n.macroMetricReadiness;
       case 'RPE_Session':
-        return 'RPE сессии';
+        return l10n.macroMetricSessionRpe;
       case 'Total_Reps':
-        return 'количество повторений';
+        return l10n.macroMetricReps;
       case 'e1RM':
-        return 'оценка 1ПМ';
+        return l10n.macroMetricE1rm;
       case 'Performance_Trend':
-        return 'тренд прогресса';
+        return l10n.macroMetricTrend;
       case 'RPE_Delta_From_Plan':
-        return 'отклонение RPE от плана';
+        return l10n.macroMetricRpeDelta;
       case 'Reps_Delta_From_Plan':
-        return 'отклонение повторов от плана';
+        return l10n.macroMetricRepsDelta;
     }
-    return 'метрика';
+    return l10n.macroMetricFallback;
   }
 
-  String _targetFromTrigger(Map<int, String> names) {
+  String _targetFromTrigger(Map<int, String> names, AppLocalizations l10n) {
     final ids = <int>[];
     final src = trigger['exercise_ids'];
     if (src is List) {
@@ -107,43 +109,43 @@ class MacroHumanPreview extends ConsumerWidget {
       final id = int.tryParse(trigger['exercise_id'].toString());
       if (id != null) ids.add(id);
     }
-    if (ids.isEmpty) return 'по всем упражнениям';
+    if (ids.isEmpty) return l10n.macroTriggerAllExercises;
     final namesList = ids.map((id) => names[id] ?? 'ID $id').toList();
-    return 'для упражнений: ${namesList.join(', ')}';
+    return l10n.macroTriggerForExercises(namesList.join(', '));
   }
 
-  String _relationWord(String r) {
+  String _relationWord(String r, AppLocalizations l10n) {
     switch (r) {
       case '>=':
-        return 'больше или равно';
+        return l10n.macroOpGte;
       case '<=':
-        return 'меньше или равно';
+        return l10n.macroOpLte;
       case '==':
-        return 'равно';
+        return l10n.macroOpEq;
       case '!=':
-        return 'не равно';
+        return l10n.macroOpNeq;
       case '>':
-        return 'больше';
+        return l10n.macroOpGt;
       case '<':
-        return 'меньше';
+        return l10n.macroOpLt;
       case 'in_range':
-        return 'в диапазоне';
+        return l10n.macroOpInRange;
       case 'not_in_range':
-        return 'вне диапазона';
+        return l10n.macroOpOutOfRange;
     }
     return r;
   }
 
-  String _unitForMetric(String? m) {
-    if (m == 'e1RM') return 'кг';
+  String _unitForMetric(String? m, AppLocalizations l10n) {
+    if (m == 'e1RM') return l10n.normUnitKg;
     return '';
   }
 
-  String _conditionPhrase() {
+  String _conditionPhrase(AppLocalizations l10n) {
     final op = (condition['op'] ?? '').toString();
-    if (op.isEmpty) return 'условие не задано';
+    if (op.isEmpty) return l10n.macroCondNotSet;
     final metric = trigger['metric']?.toString();
-    final unit = _unitForMetric(metric);
+    final unit = _unitForMetric(metric, l10n);
     if (op == 'in_range' || op == 'not_in_range') {
       final vals =
           (condition['range'] as List?) ??
@@ -154,33 +156,39 @@ class MacroHumanPreview extends ConsumerWidget {
         final b = vals[1].toString();
         final su = unit.isEmpty ? '' : ' $unit';
         return op == 'in_range'
-            ? 'значение в диапазоне $a до $b$su'
-            : 'значение вне диапазона $a до $b$su';
+            ? l10n.macroCondInRangeValues(a, b, su)
+            : l10n.macroCondOutOfRangeValues(a, b, su);
       }
-      return op == 'in_range' ? 'значение в диапазоне' : 'значение вне диапазона';
+      return op == 'in_range' ? l10n.macroCondInRange : l10n.macroCondOutOfRange;
     }
     if (op == 'stagnates_for') {
       final n = condition['n']?.toString();
       final e = condition['epsilon_percent']?.toString();
       if (n != null && e != null) {
-        return 'стагнация за $n окон в пределах $e процентов';
+        return l10n.macroCondStagnatesValues(e, n);
       }
-      return 'стагнация за окна';
+      return l10n.macroCondStagnates;
     }
     if (op == 'deviates_from_avg') {
       final n = condition['n']?.toString();
       final v = condition['value_percent']?.toString();
       final d = (condition['direction'] ?? '').toString();
-      final dir = d.isEmpty
-          ? ''
-          : ', направление: ${d == 'positive' ? 'положительное' : d == 'negative' ? 'отрицательное' : d}';
+      final dirLabel = d == 'positive'
+          ? l10n.macroCondDirPositive
+          : d == 'negative'
+              ? l10n.macroCondDirNegative
+              : d;
+      final dir = d.isEmpty ? '' : l10n.macroCondDirSuffix(dirLabel);
       if (n != null && v != null) {
-        return 'отклонение от среднего за $n окон не менее $v процентов$dir';
+        return l10n.macroCondDeviatesValues(dir, n, v);
       }
-      return 'отклонение от среднего';
+      return l10n.macroCondDeviates;
     }
     if (op == 'holds_for') {
-      final rel = _relationWord((condition['relation'] ?? '').toString());
+      final rel = _relationWord(
+        (condition['relation'] ?? '').toString(),
+        l10n,
+      );
       final values =
           (condition['range'] as List?) ??
           (condition['values'] as List?) ??
@@ -191,41 +199,48 @@ class MacroHumanPreview extends ConsumerWidget {
       final su = unit.isEmpty ? '' : ' $unit';
       final n = (condition['n'] ?? '').toString();
       if (rel.isNotEmpty && val.isNotEmpty && n.isNotEmpty) {
-        return 'выполняется $n тренировок подряд: значение $rel $val$su';
+        return l10n.macroCondHoldsWorkouts(n, rel, su, val);
       }
-      return 'выполняется несколько тренировок подряд';
+      return l10n.macroCondHoldsWorkoutsGeneric;
     }
     if (op == 'holds_for_sets') {
-      final rel = _relationWord((condition['relation'] ?? '').toString());
+      final rel = _relationWord(
+        (condition['relation'] ?? '').toString(),
+        l10n,
+      );
       final val = (condition['value'] ?? '').toString();
       final su = unit.isEmpty ? '' : ' $unit';
       final n = (condition['n_sets'] ?? '').toString();
       if (rel.isNotEmpty && val.isNotEmpty && n.isNotEmpty) {
-        return 'выполняется $n подходов подряд внутри тренировки: значение $rel $val$su';
+        return l10n.macroCondHoldsSets(n, rel, su, val);
       }
-      return 'выполняется несколько подходов подряд внутри тренировки';
+      return l10n.macroCondHoldsSetsGeneric;
     }
     final v = (condition['value'] ?? '').toString();
     final su = unit.isEmpty ? '' : ' $unit';
-    if (op == '>') return 'значение больше $v$su';
-    if (op == '<') return 'значение меньше $v$su';
-    if (op == '=') return 'значение равно $v$su';
-    if (op == '!=') return 'значение не равно $v$su';
-    return 'условие задано';
+    if (op == '>') return l10n.macroCondSimpleGt(su, v);
+    if (op == '<') return l10n.macroCondSimpleLt(su, v);
+    if (op == '=') return l10n.macroCondSimpleEq(su, v);
+    if (op == '!=') return l10n.macroCondSimpleNeq(su, v);
+    return l10n.macroCondSet;
   }
 
-  String _actionTarget(Map<int, String> names, List<ExerciseDefinition> defs) {
+  String _actionTarget(
+    Map<int, String> names,
+    List<ExerciseDefinition> defs,
+    AppLocalizations l10n,
+  ) {
     final t = (action['target'] as Map?)?.cast<String, dynamic>();
-    if (t == null) return 'для всех упражнений';
+    if (t == null) return l10n.macroActionTargetAll;
     if (t['exercise_ids'] is List) {
       final ids = <int>[];
       for (final e in (t['exercise_ids'] as List)) {
         final id = int.tryParse(e.toString());
         if (id != null) ids.add(id);
       }
-      if (ids.isEmpty) return 'для всех упражнений';
+      if (ids.isEmpty) return l10n.macroActionTargetAll;
       final list = ids.map((id) => names[id] ?? 'ID $id').toList();
-      return 'для упражнений: ${list.join(', ')}';
+      return l10n.macroActionTargetExercises(list.join(', '));
     }
     if (t['selector'] is Map) {
       final sel = (t['selector'] as Map).cast<String, dynamic>();
@@ -241,7 +256,7 @@ class MacroHumanPreview extends ConsumerWidget {
       add('region');
       add('muscle_group');
       add('equipment');
-      if (parts.isEmpty) return 'для всех упражнений';
+      if (parts.isEmpty) return l10n.macroActionTargetAll;
       final examples = <String>[];
       bool matches(ExerciseDefinition d) {
         bool ok = true;
@@ -281,14 +296,18 @@ class MacroHumanPreview extends ConsumerWidget {
           if (nm.isNotEmpty) examples.add(nm);
         }
       }
-      final base = 'по тегам: ${parts.join(', ')}';
+      final base = l10n.macroActionTargetTags(parts.join(', '));
       if (examples.isEmpty) return base;
-      return '$base, например: ${examples.join(', ')}';
+      return l10n.macroActionTargetTagsExamples(base, examples.join(', '));
     }
-    return 'для всех упражнений';
+    return l10n.macroActionTargetAll;
   }
 
-  String _actionPhrase(Map<int, String> names, List<ExerciseDefinition> defs) {
+  String _actionPhrase(
+    Map<int, String> names,
+    List<ExerciseDefinition> defs,
+    AppLocalizations l10n,
+  ) {
     final type = (action['type'] ?? '').toString();
     final params =
         (action['params'] as Map?)?.cast<String, dynamic>() ?? const {};
@@ -297,11 +316,11 @@ class MacroHumanPreview extends ConsumerWidget {
     final v = double.tryParse(valStr);
     if (type == 'Inject_Mesocycle') {
       final buf = <String>[];
-      String base = 'внедрить мезоцикл';
+      String base = l10n.macroInjectMesoBase;
       if (mode == 'by_Template') {
         final tid = params['template_id'];
         if (tid != null && tid.toString().isNotEmpty) {
-          base = '$base по шаблону ID $tid';
+          base = l10n.macroInjectMesoTemplate(base, tid.toString());
         }
       } else if (mode == 'Create_Inline') {
         final weeks = params['duration_weeks'];
@@ -315,10 +334,10 @@ class MacroHumanPreview extends ConsumerWidget {
             (params['default_focus_tags'] as Map?)?.cast<String, dynamic>() ??
                 const {};
         final parts = <String>[];
-        if (weeks != null) parts.add('$weeks недель');
-        if (dim != null) parts.add('микроцикл $dim дней');
+        if (weeks != null) parts.add(l10n.macroInjectWeeks(weeks.toString()));
+        if (dim != null) parts.add(l10n.macroInjectMicroDays(dim.toString()));
         if (restDays.isNotEmpty) {
-          parts.add('выходные дни: ${restDays.join(', ')}');
+          parts.add(l10n.macroInjectRestDays(restDays.join(', ')));
         }
         if (focus.isNotEmpty) {
           final tagParts = <String>[];
@@ -332,97 +351,104 @@ class MacroHumanPreview extends ConsumerWidget {
           add('region');
           add('muscle_group');
           add('equipment');
-          if (tagParts.isNotEmpty) parts.add('фокус: ${tagParts.join(', ')}');
+          if (tagParts.isNotEmpty) {
+            parts.add(l10n.macroInjectFocus(tagParts.join(', ')));
+          }
         }
         if (parts.isNotEmpty) base = '$base (${parts.join('; ')})';
       }
       final placement =
           (params['placement'] as Map?)?.cast<String, dynamic>() ?? const {};
       final pmode = (placement['mode'] ?? '').toString();
-      if (pmode == 'Append_To_End') buf.add('в конец плана');
+      if (pmode == 'Append_To_End') buf.add(l10n.macroInjectAppendEnd);
       if (pmode == 'Insert_After_Workout') {
         final wid = placement['workout_id'];
         if (wid != null) {
-          buf.add('после тренировки #$wid');
+          buf.add(l10n.macroInjectAfterWorkoutId(wid.toString()));
         } else {
-          buf.add('после выбранной тренировки');
+          buf.add(l10n.macroInjectAfterSelectedWorkout);
         }
       }
       if (pmode == 'Insert_After_Mesocycle') {
         final midx = placement['mesocycle_index'];
         if (midx != null) {
-          buf.add('после мезоцикла $midx');
+          buf.add(l10n.macroInjectAfterMesoIdx(midx.toString()));
         } else {
-          buf.add('после выбранного мезоцикла');
+          buf.add(l10n.macroInjectAfterSelectedMeso);
         }
       }
       final conflict = (params['on_conflict'] ?? '').toString();
       if (conflict.isNotEmpty) {
         final ctext = conflict == 'Replace_Planned'
-            ? 'заменять запланированное'
+            ? l10n.macroConflictReplace
             : conflict == 'Shift_Forward'
-                ? 'сдвигать вперёд'
+                ? l10n.macroConflictShift
                 : conflict == 'Skip_On_Conflict'
-                    ? 'пропускать конфликтующие'
+                    ? l10n.macroConflictSkip
                     : conflict;
-        buf.add('при конфликте: $ctext');
+        buf.add(l10n.macroConflictPrefix(ctext));
       }
       final tail = buf.isEmpty ? '' : ' ${buf.join(', ')}';
       return base + tail;
     }
+    final target = _actionTarget(names, defs, l10n);
     if (type == 'Adjust_Load' && mode == 'by_Percent' && v != null) {
       final abs = v.abs().toString().replaceAll('-', '');
       return v < 0
-          ? 'уменьшить вес на $abs процентов ${_actionTarget(names, defs)}'
-          : 'увеличить вес на $abs процентов ${_actionTarget(names, defs)}';
+          ? l10n.macroActDecreaseWeightPct(abs, target)
+          : l10n.macroActIncreaseWeightPct(abs, target);
     }
     if (type == 'Adjust_Load' && mode == 'to_Target' && valStr.isNotEmpty) {
-      return 'подогнать вес к целевому RPE $valStr ${_actionTarget(names, defs)}';
+      return l10n.macroActAdjustWeightRpe(valStr, target);
     }
     if (type == 'Adjust_Reps' && mode == 'by_Value' && v != null) {
       final abs = v.abs().toString().replaceAll('-', '');
       return v < 0
-          ? 'уменьшить повторы на $abs ${_actionTarget(names, defs)}'
-          : 'увеличить повторы на $abs ${_actionTarget(names, defs)}';
+          ? l10n.macroActDecreaseReps(abs, target)
+          : l10n.macroActIncreaseReps(abs, target);
     }
     if (type == 'Adjust_Reps' && mode == 'to_Target' && valStr.isNotEmpty) {
-      return 'подобрать повторы к целевому RPE $valStr ${_actionTarget(names, defs)}';
+      return l10n.macroActAdjustRepsRpe(valStr, target);
     }
     if (type == 'Adjust_Sets' && mode == 'by_Value' && v != null) {
       final abs = v.abs().toString().replaceAll('-', '');
       return v < 0
-          ? 'убрать $abs подходов ${_actionTarget(names, defs)}'
-          : 'добавить $abs подходов ${_actionTarget(names, defs)}';
+          ? l10n.macroActRemoveSets(abs, target)
+          : l10n.macroActAddSets(abs, target);
     }
-    return 'выполнить действие ${_actionTarget(names, defs)}';
+    return l10n.macroActFallback(target);
   }
 
-  String _durationPhrase() {
+  String _durationPhrase(AppLocalizations l10n) {
     final scope = (duration['scope'] ?? '').toString();
     final count = int.tryParse((duration['count'] ?? '1').toString()) ?? 1;
-    if (scope == 'Next_N_Workouts') return 'в следующие $count тренировок';
-    if (scope == 'Until_Last_Workout') return 'до последней тренировки';
-    if (scope == 'Until_End_Of_Mesocycle') return 'до конца мезоцикла';
-    if (scope == 'Until_End_Of_Microcycle') return 'до конца микроцикла';
+    if (scope == 'Next_N_Workouts') return l10n.macroDurNextWorkouts(count);
+    if (scope == 'Until_Last_Workout') return l10n.macroDurUntilLast;
+    if (scope == 'Until_End_Of_Mesocycle') return l10n.macroDurUntilEndMeso;
+    if (scope == 'Until_End_Of_Microcycle') return l10n.macroDurUntilEndMicro;
     if (scope == 'Until_Workout') {
       final wid = duration['workout_id'];
-      if (wid != null) return 'до тренировки #$wid';
-      return 'до выбранной тренировки';
+      if (wid != null) return l10n.macroDurUntilWorkoutId(wid.toString());
+      return l10n.macroDurUntilSelectedWorkout;
     }
     return '';
   }
 
-  String _mainSentence(Map<int, String> names, List<ExerciseDefinition> defs) {
-    final metric = _metricName(trigger['metric']?.toString());
-    final trg = _targetFromTrigger(names);
-    final cond = _conditionPhrase();
-    final act = _actionPhrase(names, defs);
-    final dur = _durationPhrase();
+  String _mainSentence(
+    Map<int, String> names,
+    List<ExerciseDefinition> defs,
+    AppLocalizations l10n,
+  ) {
+    final metric = _metricName(trigger['metric']?.toString(), l10n);
+    final trg = _targetFromTrigger(names, l10n);
+    final cond = _conditionPhrase(l10n);
+    final act = _actionPhrase(names, defs, l10n);
+    final dur = _durationPhrase(l10n);
     if (trigger.isEmpty && condition.isEmpty && action.isEmpty) {
-      return 'Описание появится после выбора метрики, условия и действия';
+      return l10n.macroPreviewEmpty;
     }
     final parts = <String>[];
-    parts.add('Если $metric $trg, и $cond, то $act');
+    parts.add(l10n.macroPreviewSentence(metric, trg, cond, act));
     if (dur.isNotEmpty) parts.add(dur);
     return '${parts.join(' ')}.';
   }
@@ -430,18 +456,19 @@ class MacroHumanPreview extends ConsumerWidget {
   List<MapEntry<String, String>> _detailsEntries(
     Map<int, String> names,
     List<ExerciseDefinition> defs,
+    AppLocalizations l10n,
   ) {
-    final metric = _metricName(trigger['metric']?.toString());
-    final trg = _targetFromTrigger(names);
-    final cond = _conditionPhrase();
-    final act = _actionPhrase(names, defs);
-    final dur = _durationPhrase();
+    final metric = _metricName(trigger['metric']?.toString(), l10n);
+    final trg = _targetFromTrigger(names, l10n);
+    final cond = _conditionPhrase(l10n);
+    final act = _actionPhrase(names, defs, l10n);
+    final dur = _durationPhrase(l10n);
     return [
-      MapEntry('МЕТРИКА', metric),
-      MapEntry('ТРИГГЕР', trg),
-      MapEntry('УСЛОВИЕ', cond),
-      MapEntry('ДЕЙСТВИЕ', act),
-      if (dur.isNotEmpty) MapEntry('ДЛИТЕЛЬНОСТЬ', dur),
+      MapEntry(l10n.macroLabelMetric, metric),
+      MapEntry(l10n.macroLabelTrigger, trg),
+      MapEntry(l10n.macroLabelCondition, cond),
+      MapEntry(l10n.macroLabelAction, act),
+      if (dur.isNotEmpty) MapEntry(l10n.macroLabelDuration, dur),
     ];
   }
 }

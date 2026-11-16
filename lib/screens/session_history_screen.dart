@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/providers/providers.dart';
 import 'package:workout_app/screens/session_log_screen.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
@@ -51,9 +52,10 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
         'entities': {'filter_workout_id': _filterWorkoutId},
       },
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return Scaffold(
           appBar: PrimaryAppBar(
-            title: 'Session History',
+            title: l10n.sessionHistoryTitle,
             onTitleTap: openChat,
             showBack: true,
           ),
@@ -73,7 +75,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
                         ),
                         decoration: InstrumentTheme.inputDecoration(
                           context,
-                          labelText: 'Workout ID',
+                          labelText: l10n.workoutIdLabel,
                           prefixIcon: const Icon(Icons.tag),
                         ),
                         inputFormatters: [
@@ -87,7 +89,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
                       width: 48,
                       height: 48,
                       child: IconButton.filledTonal(
-                        tooltip: 'Load sessions',
+                        tooltip: l10n.loadSessionsLabel,
                         style: IconButton.styleFrom(
                           minimumSize: const Size(48, 48),
                           tapTargetSize: MaterialTapTargetSize.padded,
@@ -101,7 +103,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
                       width: 48,
                       height: 48,
                       child: IconButton(
-                        tooltip: 'Clear filter',
+                        tooltip: l10n.clearFilterLabel,
                         style: IconButton.styleFrom(
                           minimumSize: const Size(48, 48),
                           tapTargetSize: MaterialTapTargetSize.padded,
@@ -120,17 +122,17 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
                 child: sessionsAsync.when(
                   loading: () => const LoadingIndicator(),
                   error: (err, _) => ErrorMessage(
-                    message: 'Error loading history: $err',
+                    message: l10n.errorLoadingHistory('$err'),
                     onRetry: () => ref.invalidate(
                       completedSessionsProviderFamily(_filterWorkoutId),
                     ),
                   ),
                   data: (sessions) {
                     if (sessions.isEmpty) {
-                      return const EmptyState(
+                      return EmptyState(
                         icon: Icons.history,
-                        title: 'No sessions found',
-                        description: 'Try changing your filter',
+                        title: l10n.noSessionsFound,
+                        description: l10n.tryChangingYourFilter,
                       );
                     }
                     return ListView.separated(

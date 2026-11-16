@@ -5,6 +5,7 @@ import 'package:workout_app/config/constants/route_names.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/crm_analytics.dart';
 import 'package:workout_app/providers/ambient_environment_provider.dart';
 import 'package:workout_app/providers/interface_maker_provider.dart';
@@ -66,18 +67,19 @@ class CoachAthletesScreen extends ConsumerWidget {
 
     return AssistantChatHost(
       initialMessage:
-          'Открываю ассистента из CoachAthletesScreen. Используй переданный контекст v1, чтобы понимать выбранные фильтры и приоритетных атлетов.',
+          'Opening assistant from CoachAthletesScreen. Use the provided v1 context to understand selected filters and priority athletes.',
       contextBuilder: () => _buildCoachAthletesChatContext(ref),
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return AmbientScaffoldShell(
           environment: env,
           appBar: PrimaryAppBar(
-            title: 'My Athletes',
+            title: l10n.myAthletesTitle,
             onTitleTap: openChat,
             actions: [
               IconButton(
                 icon: const Icon(Icons.tune),
-                tooltip: 'Thresholds & filters',
+                tooltip: l10n.thresholdsAndFiltersTooltip,
                 onPressed: () => _openThresholdSheet(context),
               ),
             ],
@@ -165,7 +167,7 @@ class CoachAthletesScreen extends ConsumerWidget {
                         items: [
                           CanvasPillItem(
                             key: const ValueKey('seg_all'),
-                            label: 'All segments',
+                            label: l10n.allSegmentsLabel,
                             selected: segmentFilter == null,
                             onTap: () =>
                                 ref.read(segmentFilterProvider.notifier).state =
@@ -195,7 +197,7 @@ class CoachAthletesScreen extends ConsumerWidget {
                         items: [
                           CanvasPillItem(
                             key: const ValueKey('sort_recent'),
-                            label: 'Recently active',
+                            label: l10n.recentlyActiveLabel,
                             icon: Icons.schedule,
                             selected:
                                 sortOption == _CoachAthleteSort.recentlyActive,
@@ -205,7 +207,7 @@ class CoachAthletesScreen extends ConsumerWidget {
                           ),
                           CanvasPillItem(
                             key: const ValueKey('sort_sess'),
-                            label: 'Sessions / wk',
+                            label: l10n.sessionsPerWeekLabel,
                             icon: Icons.repeat,
                             selected:
                                 sortOption == _CoachAthleteSort.sessionsPerWeek,
@@ -215,7 +217,7 @@ class CoachAthletesScreen extends ConsumerWidget {
                           ),
                           CanvasPillItem(
                             key: const ValueKey('sort_adh'),
-                            label: 'Adherence',
+                            label: l10n.adherenceLabel,
                             icon: Icons.check_circle_outline,
                             selected:
                                 sortOption == _CoachAthleteSort.planAdherence,
@@ -227,7 +229,7 @@ class CoachAthletesScreen extends ConsumerWidget {
                             key: const ValueKey('thresholds'),
                             label: hasThresholds
                                 ? 'Min ${minSessions.toStringAsFixed(1)}s · ${(minAdherence * 100).round()}%'
-                                : 'Thresholds',
+                                : l10n.thresholdsLabel,
                             icon: Icons.tune,
                             selected: hasThresholds,
                             accentColor: instrument.moderateEffortColor,
@@ -250,7 +252,7 @@ class CoachAthletesScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'ROSTER TELEMETRY',
+                                l10n.rosterTelemetryEyebrow,
                                 style: InstrumentTheme.microLabel(context),
                               ),
                               const SizedBox(height: 10),
@@ -258,24 +260,24 @@ class CoachAthletesScreen extends ConsumerWidget {
                                 cells: [
                                   InstrumentMetricCellData(
                                     slot: MetricSlot.setsCount,
-                                    label: 'VISIBLE',
+                                    label: l10n.visibleMetricLabel,
                                     value:
                                         '${filtered.length}/${analytics.athletes.length}',
                                     valueColor: instrument.workingAura,
                                   ),
                                   InstrumentMetricCellData(
                                     slot: MetricSlot.kpsh,
-                                    label: 'LINKS',
+                                    label: l10n.linksMetricLabel,
                                     value: '${analytics.activeLinks}',
                                   ),
                                   InstrumentMetricCellData(
                                     slot: MetricSlot.frequencyPerWeek,
-                                    label: 'AVG S / WK',
+                                    label: l10n.avgSessionsPerWeekMetricLabel,
                                     value: avgSess.toStringAsFixed(1),
                                   ),
                                   InstrumentMetricCellData(
                                     slot: MetricSlot.density,
-                                    label: 'AT RISK',
+                                    label: l10n.atRiskMetricLabel,
                                     value: '$atRiskCount',
                                     valueColor: atRiskCount > 0
                                         ? instrument.moderateEffortColor
@@ -314,10 +316,11 @@ class CoachAthletesScreen extends ConsumerWidget {
   }
 
   Future<void> _openThresholdSheet(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return showInstrumentBottomSheet<void>(
       context: context,
-      eyebrow: 'ROSTER FILTERS',
-      title: 'Thresholds & thresholds reset',
+      eyebrow: l10n.rosterFiltersEyebrow,
+      title: l10n.thresholdsFilterTitle,
       builder: (sheetCtx) {
         return Consumer(
           builder: (context, ref, _) {
@@ -330,7 +333,9 @@ class CoachAthletesScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Min sessions / week: ${minSessions.toStringAsFixed(1)}',
+                  l10n.minSessionsPerWeekSliderLabel(
+                    minSessions.toStringAsFixed(1),
+                  ),
                   style: InstrumentTheme.tabular(
                     theme.textTheme.titleSmall ?? const TextStyle(),
                   ),
@@ -348,7 +353,7 @@ class CoachAthletesScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Min adherence: ${(minAdherence * 100).round()}%',
+                  l10n.minAdherenceSliderLabel((minAdherence * 100).round()),
                   style: InstrumentTheme.tabular(
                     theme.textTheme.titleSmall ?? const TextStyle(),
                   ),
@@ -370,7 +375,7 @@ class CoachAthletesScreen extends ConsumerWidget {
                   alignment: WrapAlignment.end,
                   children: [
                     InstrumentActionButton(
-                      label: 'Reset',
+                      label: l10n.resetLabel,
                       variant: InstrumentActionVariant.secondary,
                       onPressed: () {
                         ref.read(minSessionsPerWeekProvider.notifier).state = 0;
@@ -378,7 +383,7 @@ class CoachAthletesScreen extends ConsumerWidget {
                       },
                     ),
                     InstrumentActionButton(
-                      label: 'Done',
+                      label: l10n.doneLabel,
                       variant: InstrumentActionVariant.primary,
                       onPressed: () => Navigator.of(sheetCtx).pop(),
                     ),
@@ -481,7 +486,7 @@ class _AthleteCard extends ConsumerWidget {
                       Icons.insights_outlined,
                       color: instrument.workingAura,
                     ),
-                    tooltip: 'View detailed analytics',
+                    tooltip: AppLocalizations.of(context).viewDetailedAnalyticsLabel,
                     constraints: const BoxConstraints(
                       minWidth: 48,
                       minHeight: 48,
@@ -506,19 +511,19 @@ class _AthleteCard extends ConsumerWidget {
                     cells: [
                       InstrumentMetricCellData(
                         slot: MetricSlot.setsCount,
-                        label: 'SESSIONS',
+                        label: AppLocalizations.of(context).sessionsUpperLabel,
                         value: '${athlete.sessionsCount}',
                       ),
                       InstrumentMetricCellData(
                         slot: MetricSlot.frequencyPerWeek,
-                        label: 'S / WK',
+                        label: AppLocalizations.of(context).sessionsPerWeekUpperLabel,
                         value: (athlete.sessionsPerWeek ?? 0).toStringAsFixed(
                           1,
                         ),
                       ),
                       InstrumentMetricCellData(
                         slot: MetricSlot.density,
-                        label: 'PLAN %',
+                        label: AppLocalizations.of(context).planPercentUpperLabel,
                         value: adherence != null
                             ? '${(adherence * 100).round()}%'
                             : '—',
@@ -659,7 +664,10 @@ class _RpeMiniChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('RPE DISTRIBUTION', style: InstrumentTheme.microLabel(context)),
+        Text(
+          AppLocalizations.of(context).rpeDistributionUpperLabel,
+          style: InstrumentTheme.microLabel(context),
+        ),
         const SizedBox(height: 8),
         SizedBox(
           height: 132,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:workout_app/models/calendar_plan.dart';
@@ -55,7 +56,7 @@ class CalendarPlanCard extends StatelessWidget {
         ),
       if ((plan.sessionDurationTargetMin ?? 0) > 0)
         Tooltip(
-          message: 'Target session length',
+          message: AppLocalizations.of(context).planCardTargetSessionLength,
           child: _PlanMetric(
             icon: Icons.schedule_outlined,
             label: '${plan.sessionDurationTargetMin} min/session',

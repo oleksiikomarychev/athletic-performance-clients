@@ -6,6 +6,7 @@ import 'package:workout_app/config/constants/theme_constants.dart';
 import 'package:workout_app/config/theme/app_theme.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/exercise_instance.dart';
 import 'package:workout_app/models/exercise_set_dto.dart';
 import 'package:workout_app/models/workout.dart';
@@ -66,7 +67,7 @@ void main() {
       );
       final storm = TrainingEnvironmentData.fromWorkout(stormWorkout);
       expect(storm.state, TrainingEnvironmentState.cnsStorm);
-      expect(storm.tacticalBriefing, contains('160 кг × 8'));
+      expect(storm.tacticalBriefing, contains('160 kg × 8'));
       expect(storm.tacticalBriefing, contains('RPE 10'));
 
       final live = TrainingEnvironmentData.fromWorkout(
@@ -80,6 +81,8 @@ void main() {
       final storm = TrainingEnvironmentData.evaluate(peakRpe: 9.5);
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.darkTheme(),
           home: MediaQuery(
             data: const MediaQueryData(disableAnimations: true),
@@ -99,6 +102,8 @@ void main() {
       );
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.darkTheme(),
           home: AmbientScaffoldShell(
             environment: live,
@@ -115,6 +120,8 @@ void main() {
       final storm = TrainingEnvironmentData.evaluate(peakRpe: 9.5);
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.darkTheme(),
           home: AmbientScaffoldShell(
             environment: storm,
@@ -161,6 +168,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.darkTheme(),
           builder: (context, child) => GlobalAmbientStage(child: child!),
           home: Builder(
@@ -278,6 +287,8 @@ void main() {
     testWidgets('PrimaryAppBar, FloatingHeaderBar, and CustomBottomNavBar eliminate darkChrome bricks', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.darkTheme(density: UiDensity.compact),
           home: Scaffold(
             extendBody: true,
@@ -322,6 +333,8 @@ void main() {
       // FloatingHeaderBar also uses detached orbs and center capsule.
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.darkTheme(density: UiDensity.compact),
           home: Scaffold(
             body: FloatingHeaderBar(
@@ -378,6 +391,8 @@ void main() {
       MetricSlot selected = MetricSlot.peakIntensity;
 
       Widget buildMatrix(double textScale) => MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.darkTheme(density: UiDensity.compact),
         builder: (context, child) => MediaQuery(
           data: MediaQuery.of(context).copyWith(
@@ -437,6 +452,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             theme: AppTheme.darkTheme(density: UiDensity.compact),
             builder: (context, child) => MediaQuery(
               data: MediaQuery.of(context).copyWith(
@@ -450,12 +467,12 @@ void main() {
                   CanvasPillStrip(
                     items: [
                       CanvasPillItem(
-                        label: 'Сила 5/3/1',
+                        label: 'Strength 5/3/1',
                         selected: true,
                         onTap: () {},
                       ),
                       CanvasPillItem(
-                        label: 'Объём',
+                        label: 'Volume',
                         onTap: () {},
                       ),
                     ],

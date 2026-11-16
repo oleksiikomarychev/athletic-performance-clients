@@ -46,42 +46,42 @@ class _TriggerBuilderState extends ConsumerState<TriggerBuilder> {
     widget.onChanged(map);
   }
 
-  String? _metricTooltip(String metric) {
+  String? _metricTooltip(String metric, AppLocalizations l10n) {
     switch (metric) {
       case 'Readiness_Score':
-        return 'Оценка готовности 1–10 (опционально). По умолчанию null; пользователь может указывать её после тренировки для применения коэффициентов к весам и правил.';
+        return l10n.macroTriggerHelpReadiness;
       case 'RPE_Session':
-        return 'Оценка воспринимаемой нагрузки всей сессии (Session RPE). Полезно для авто-коррекции нагрузки.';
+        return l10n.macroTriggerHelpSessionRpe;
       case 'Total_Reps':
-        return 'Суммарное количество повторений за выбранный период. Используйте с фильтром упражнений.';
+        return l10n.macroTriggerHelpReps;
       case 'e1RM':
-        return 'Оценка одно-повторного максимума по производительности (estimated 1RM). Полезно для прогресса.';
+        return l10n.macroTriggerHelpE1rm;
       case 'Performance_Trend':
-        return 'Тренд изменения показателей (рост/падение) за последние N окон.';
+        return l10n.macroTriggerHelpTrend;
       case 'RPE_Delta_From_Plan':
-        return 'Отклонение RPE от планового по сетам (факт − план). Используется для авторегулировки.';
+        return l10n.macroTriggerHelpRpeDelta;
       case 'Reps_Delta_From_Plan':
-        return 'Отклонение повторов от плановых по сетам (факт − план). Для правил по недовыполнению/перевыполнению.';
+        return l10n.macroTriggerHelpRepsDelta;
     }
     return null;
   }
 
-  String _metricHelp(String metric) {
+  String _metricHelp(String metric, AppLocalizations l10n) {
     switch (metric) {
       case 'Readiness_Score':
-        return 'Числовая оценка готовности (1–10). По умолчанию отсутствует (null); заполняется пользователем после тренировки. Кейс: значение < 6 держится 5 тренировок подряд — делоад мезоцикл. Для правил “подряд” используйте оператор holds_for.';
+        return l10n.macroTriggerHintReadiness;
       case 'RPE_Session':
-        return 'RPE сессии: число 1–10. Для правил “подряд” используйте оператор holds_for.';
+        return l10n.macroTriggerHintSessionRpe;
       case 'Total_Reps':
-        return 'Общее число повторений (целое). Можно ограничить конкретными упражнениями через выбор ниже.';
+        return l10n.macroTriggerHintReps;
       case 'e1RM':
-        return 'Оценка 1ПМ (кг). Сравнивайте числом или используйте тренд-операторы в условиях.';
+        return l10n.macroTriggerHintE1rm;
       case 'Performance_Trend':
-        return 'Для трендов используйте операторы: stagnates_for (n, epsilon_percent) или deviates_from_avg (n, value_percent, direction).';
+        return l10n.macroTriggerHintTrend;
       case 'RPE_Delta_From_Plan':
-        return 'ΔRPE = факт − план (может быть отрицательным). Для “подряд тренировок” — holds_for, для “подряд подходов” — holds_for_sets.';
+        return l10n.macroTriggerHintRpeDelta;
       case 'Reps_Delta_From_Plan':
-        return 'Δповторов = факт − план (целое, может быть отрицательным). Для проверки внутри тренировки используйте holds_for_sets.';
+        return l10n.macroTriggerHintRepsDelta;
     }
     return '';
   }
@@ -104,7 +104,7 @@ class _TriggerBuilderState extends ConsumerState<TriggerBuilder> {
     final confirmed = await showInstrumentBottomSheet<bool>(
       context: context,
       eyebrow: 'TRIGGER SCOPE',
-      title: 'Выбор упражнений',
+      title: l10n.planDetailSelectExercises,
       heightFactor: 0.85,
       builder: (ctx) {
         return StatefulBuilder(
@@ -319,7 +319,7 @@ class _TriggerBuilderState extends ConsumerState<TriggerBuilder> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  _metricTooltip(_metric) ?? '',
+                  _metricTooltip(_metric, l10n) ?? '',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -329,7 +329,7 @@ class _TriggerBuilderState extends ConsumerState<TriggerBuilder> {
           ),
           const SizedBox(height: 6),
           Text(
-            _metricHelp(_metric),
+            _metricHelp(_metric, l10n),
             style: theme.textTheme.bodySmall?.copyWith(
               color: scheme.onSurfaceVariant,
             ),
@@ -338,7 +338,7 @@ class _TriggerBuilderState extends ConsumerState<TriggerBuilder> {
         if (_metricNeedsExercises) ...[
           const SizedBox(height: 12),
           Text(
-            'Эта метрика применяется к выбранным упражнениям. Выберите одно или несколько.',
+            l10n.macroTriggerSelectExercisesHint,
             style: theme.textTheme.bodySmall?.copyWith(
               color: scheme.onSurfaceVariant,
             ),
@@ -350,7 +350,7 @@ class _TriggerBuilderState extends ConsumerState<TriggerBuilder> {
             runSpacing: 8,
             children: [
               InstrumentActionButton(
-                label: 'Выбрать упражнения',
+                label: l10n.planDetailSelectExercises,
                 icon: Icons.list_alt_rounded,
                 variant: InstrumentActionVariant.secondary,
                 loading: defsAsync.isLoading,

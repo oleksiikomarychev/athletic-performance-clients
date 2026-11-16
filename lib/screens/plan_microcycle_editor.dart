@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'dart:async';
 import 'package:workout_app/models/microcycle.dart';
 import 'package:workout_app/models/plan_schedule.dart';
@@ -64,24 +65,25 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
     await showDialog<void>(
       context: context,
       builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx);
         return AlertDialog(
-          title: const Text('Массовое изменение сетов'),
+          title: Text(l10n.microEditorMassEditTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: intensityCtrl,
-                decoration: const InputDecoration(labelText: 'Интенсивность %1RM (опционально)'),
+                decoration: InputDecoration(labelText: l10n.microEditorIntensityOpt),
                 keyboardType: TextInputType.number,
               ),
               TextField(
                 controller: effortCtrl,
-                decoration: const InputDecoration(labelText: 'RPE (опционально)'),
+                decoration: InputDecoration(labelText: l10n.microEditorRpeOpt),
                 keyboardType: TextInputType.number,
               ),
               TextField(
                 controller: volumeCtrl,
-                decoration: const InputDecoration(labelText: 'Повторы (опционально)'),
+                decoration: InputDecoration(labelText: l10n.microEditorRepsOpt),
                 keyboardType: TextInputType.number,
               ),
             ],
@@ -89,7 +91,7 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Отмена'),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: () {
@@ -121,7 +123,7 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
                 });
                 Navigator.of(ctx).pop();
               },
-              child: const Text('Применить'),
+              child: Text(l10n.apply),
             ),
           ],
         );
@@ -147,13 +149,15 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
         ),
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Микроцикл сохранён')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).microEditorSaved)),
+      );
       setState(() {
         _dirty = false;
       });
     } catch (e) {
       setState(() {
-        _error = 'Ошибка сохранения: $e';
+        _error = AppLocalizations.of(context).microEditorSaveError(e.toString());
       });
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -214,16 +218,17 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
         },
       },
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return Scaffold(
           appBar: PrimaryAppBar(
-            title: 'Микроцикл: ${_editing.name}',
+            title: l10n.microEditorTitle(_editing.name),
             onTitleTap: openChat,
             actions: [
               SizedBox(
                 width: 48,
                 height: 48,
                 child: IconButton(
-                  tooltip: 'Удалить микроцикл',
+                  tooltip: l10n.planEditorDeleteMicrocycleTooltip,
                   style: IconButton.styleFrom(
                     minimumSize: const Size(48, 48),
                     tapTargetSize: MaterialTapTargetSize.padded,
@@ -236,7 +241,7 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
                 width: 48,
                 height: 48,
                 child: IconButton(
-                  tooltip: 'Сохранить',
+                  tooltip: l10n.tooltipSave,
                   style: IconButton.styleFrom(
                     minimumSize: const Size(48, 48),
                     tapTargetSize: MaterialTapTargetSize.padded,
@@ -286,7 +291,7 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Есть несохранённые изменения',
+                            l10n.microEditorUnsavedChanges,
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: instrument.moderateEffortColor,
                               fontWeight: FontWeight.w700,
@@ -355,7 +360,10 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
           ),
         ),
         subtitle: Text(
-          'ПОРЯДОК: ${pw.orderIndex} · УПРАЖНЕНИЙ: ${pw.exercises.length}',
+          AppLocalizations.of(context).microEditorWorkoutMeta(
+            pw.exercises.length.toString(),
+            pw.orderIndex.toString(),
+          ),
           style: InstrumentTheme.tabular(InstrumentTheme.microLabel(context)),
         ),
         children: [
@@ -406,7 +414,7 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
                 ),
                 onPressed: () => _replaceExercise(wIdx, eIdx, ex),
                 icon: const Icon(Icons.swap_horiz, size: 18),
-                label: const Text('Заменить'),
+                label: Text(AppLocalizations.of(context).planEditorReplace),
               ),
               TextButton.icon(
                 style: TextButton.styleFrom(
@@ -415,7 +423,7 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
                 ),
                 onPressed: () => _addSet(wIdx, eIdx, ex),
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Подход'),
+                label: Text(AppLocalizations.of(context).microEditorSetLabel),
               ),
               TextButton.icon(
                 style: TextButton.styleFrom(
@@ -425,7 +433,7 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
                 onPressed: () =>
                     _bulkEditExerciseSets(workoutIdx: wIdx, exerciseIdx: eIdx),
                 icon: const Icon(Icons.tune, size: 18),
-                label: const Text('Массово'),
+                label: Text(AppLocalizations.of(context).planEditorBulkShort),
               ),
             ],
           ),
@@ -511,7 +519,7 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
             context,
             key: ValueKey('pm-$wIdx-$eIdx-$sIdx-vol'),
             initialValue: set.volume?.toString() ?? '',
-            labelText: 'Повторы',
+            labelText: AppLocalizations.of(context).planEditorReps,
             onChanged: (val) => _updateSet(
               wIdx,
               eIdx,
@@ -525,7 +533,7 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
           width: 48,
           height: 48,
           child: IconButton(
-            tooltip: 'Удалить подход',
+            tooltip: AppLocalizations.of(context).deleteSetTooltip,
             style: IconButton.styleFrom(
               minimumSize: const Size(48, 48),
               tapTargetSize: MaterialTapTargetSize.padded,
@@ -659,23 +667,24 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
   }
 
   Future<void> _confirmDeleteMicrocycle() async {
+    final l10n = AppLocalizations.of(context);
     final colors = Theme.of(context).colorScheme;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Удалить микроцикл'),
+        title: Text(l10n.planEditorDeleteMicrocycleTitle),
         content: Text(
-          'Вы уверены, что хотите удалить микроцикл "${_editing.name}"?',
+          l10n.planEditorDeleteMicrocycleBody(_editing.name),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Отмена'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(backgroundColor: colors.error),
-            child: const Text('Удалить'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -686,14 +695,14 @@ class _PlanMicrocycleEditorState extends State<PlanMicrocycleEditor> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Микроцикл удалён')));
+        ).showSnackBar(SnackBar(content: Text(l10n.planEditorMicrocycleDeleted)));
         Navigator.of(context).pop({'deletedId': _editing.id});
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Ошибка удаления: $e')));
+        ).showSnackBar(SnackBar(content: Text(l10n.planEditorDeleteFailed(e.toString()))));
       }
     }
   }

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 
 const _kInterfaceMakerPrefsKey = 'carrot_interface_maker_config_v1';
 
@@ -16,13 +17,26 @@ enum InterfacePreset {
   String get label {
     switch (this) {
       case InterfacePreset.powerlifter:
-        return 'Сила 5/3/1';
+        return 'Strength 5/3/1';
       case InterfacePreset.volume:
-        return 'Объём';
+        return 'Volume';
       case InterfacePreset.minimalist:
-        return 'Минимализм';
+        return 'Minimalist';
       case InterfacePreset.custom:
-        return 'Свой';
+        return 'Custom';
+    }
+  }
+
+  String localizedLabel(AppLocalizations l10n) {
+    switch (this) {
+      case InterfacePreset.powerlifter:
+        return l10n.presetPowerlifter;
+      case InterfacePreset.volume:
+        return l10n.presetVolume;
+      case InterfacePreset.minimalist:
+        return l10n.presetMinimalist;
+      case InterfacePreset.custom:
+        return l10n.presetCustom;
     }
   }
 
@@ -57,42 +71,92 @@ enum MetricSlot {
       case MetricSlot.avgRpe:
         return 'AVG RPE';
       case MetricSlot.tonnage:
-        return 'ТОННАЖ';
+        return 'TONNAGE';
       case MetricSlot.kpsh:
-        return 'КПШ';
+        return 'REPS';
       case MetricSlot.setsCount:
-        return 'ПОДХОДЫ';
+        return 'SETS';
       case MetricSlot.density:
-        return 'ПЛОТН.';
+        return 'DENSITY';
       case MetricSlot.durationWeeks:
-        return 'НЕДЕЛИ';
+        return 'WEEKS';
       case MetricSlot.frequencyPerWeek:
-        return 'ЧАСТОТА';
+        return 'FREQ';
+    }
+  }
+
+  String localizedShortLabel(AppLocalizations l10n) {
+    switch (this) {
+      case MetricSlot.peakIntensity:
+        return l10n.slotShortPeakIntensity;
+      case MetricSlot.e1rm:
+        return l10n.slotShortE1rm;
+      case MetricSlot.peakRpe:
+        return l10n.slotShortPeakRpe;
+      case MetricSlot.avgRpe:
+        return l10n.slotShortAvgRpe;
+      case MetricSlot.tonnage:
+        return l10n.slotShortTonnage;
+      case MetricSlot.kpsh:
+        return l10n.slotShortKpsh;
+      case MetricSlot.setsCount:
+        return l10n.slotShortSetsCount;
+      case MetricSlot.density:
+        return l10n.slotShortDensity;
+      case MetricSlot.durationWeeks:
+        return l10n.slotShortDurationWeeks;
+      case MetricSlot.frequencyPerWeek:
+        return l10n.slotShortFrequencyPerWeek;
     }
   }
 
   String get displayName {
     switch (this) {
       case MetricSlot.peakIntensity:
-        return 'Пик % 1RM';
+        return 'Peak % 1RM';
       case MetricSlot.e1rm:
-        return 'Расчётный 1RM';
+        return 'Estimated 1RM';
       case MetricSlot.peakRpe:
-        return 'Пик RPE';
+        return 'Peak RPE';
       case MetricSlot.avgRpe:
-        return 'Средний RPE';
+        return 'Average RPE';
       case MetricSlot.tonnage:
-        return 'Тоннаж';
+        return 'Tonnage';
       case MetricSlot.kpsh:
-        return 'КПШ (Повторы)';
+        return 'Total Reps';
       case MetricSlot.setsCount:
-        return 'Рабочие подходы';
+        return 'Working Sets';
       case MetricSlot.density:
-        return 'Плотность';
+        return 'Density';
       case MetricSlot.durationWeeks:
-        return 'Длительность';
+        return 'Duration';
       case MetricSlot.frequencyPerWeek:
-        return 'Тренировок/нед';
+        return 'Workouts/week';
+    }
+  }
+
+  String localizedDisplayName(AppLocalizations l10n) {
+    switch (this) {
+      case MetricSlot.peakIntensity:
+        return l10n.slotNamePeakIntensity;
+      case MetricSlot.e1rm:
+        return l10n.slotNameE1rm;
+      case MetricSlot.peakRpe:
+        return l10n.slotNamePeakRpe;
+      case MetricSlot.avgRpe:
+        return l10n.slotNameAvgRpe;
+      case MetricSlot.tonnage:
+        return l10n.slotNameTonnage;
+      case MetricSlot.kpsh:
+        return l10n.slotNameKpsh;
+      case MetricSlot.setsCount:
+        return l10n.slotNameSetsCount;
+      case MetricSlot.density:
+        return l10n.slotNameDensity;
+      case MetricSlot.durationWeeks:
+        return l10n.slotNameDurationWeeks;
+      case MetricSlot.frequencyPerWeek:
+        return l10n.slotNameFrequencyPerWeek;
     }
   }
 
@@ -134,13 +198,26 @@ enum LayoutModule {
   String get displayName {
     switch (this) {
       case LayoutModule.variantOrHorizonStrip:
-        return 'Лента пресетов / вариантов';
+        return 'Presets / Variants strip';
       case LayoutModule.commandBriefing:
-        return 'Сводка нагрузки (Briefing)';
+        return 'Load Briefing';
       case LayoutModule.primaryTelemetry:
-        return 'Телеметрия и график';
+        return 'Telemetry & Chart';
       case LayoutModule.scheduleOrLibrary:
-        return 'Библиотека / Микроциклы';
+        return 'Library / Microcycles';
+    }
+  }
+
+  String localizedDisplayName(AppLocalizations l10n) {
+    switch (this) {
+      case LayoutModule.variantOrHorizonStrip:
+        return l10n.moduleVariantOrHorizonStrip;
+      case LayoutModule.commandBriefing:
+        return l10n.moduleCommandBriefing;
+      case LayoutModule.primaryTelemetry:
+        return l10n.modulePrimaryTelemetry;
+      case LayoutModule.scheduleOrLibrary:
+        return l10n.moduleScheduleOrLibrary;
     }
   }
 

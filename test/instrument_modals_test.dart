@@ -157,7 +157,7 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
       expect(find.byType(InstrumentDialog), findsOneWidget);
       expect(tester.takeException(), isNull);
-      await tester.tap(find.text('Отмена'));
+      await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Delete'));
@@ -165,7 +165,7 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
       expect(find.byType(InstrumentDialog), findsOneWidget);
       expect(tester.takeException(), isNull);
-      await tester.tap(find.text('Отмена'));
+      await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Review'));

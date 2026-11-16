@@ -72,7 +72,7 @@ class _WorkoutPickerSheetState extends ConsumerState<_WorkoutPickerSheet> {
         setState(() {
           _loading = false;
           _workouts = const [];
-          _error = 'Активный план не найден';
+          _error = AppLocalizations.of(context).workoutPickerActivePlanNotFound;
         });
         return;
       }

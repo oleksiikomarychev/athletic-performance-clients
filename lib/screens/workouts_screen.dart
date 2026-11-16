@@ -6,6 +6,7 @@ import 'package:workout_app/config/api_config.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/workout.dart';
 import 'package:workout_app/providers/ambient_environment_provider.dart';
 import 'package:workout_app/providers/interface_maker_provider.dart';
@@ -325,8 +326,9 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setStateDialog) {
+          final l10n = AppLocalizations.of(ctx);
           return AlertDialog(
-            title: const Text('Create Workout'),
+            title: Text(l10n.workoutsCreateTitle),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -359,7 +361,7 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
+                child: Text(l10n.cancel),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -421,7 +423,7 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
                     );
                   }
                 },
-                child: const Text('Create'),
+                child: Text(l10n.actionCreate),
               ),
             ],
           );
@@ -465,21 +467,20 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
   Future<void> _deleteManualWorkout(Workout workout) async {
     final workoutId = workout.id;
     if (workoutId == null) return;
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Удалить тренировку?'),
-        content: const Text(
-          'Вы уверены, что хотите удалить эту ручную тренировку?',
-        ),
+        title: Text(l10n.workoutsDeleteTitle),
+        content: Text(l10n.workoutsDeleteConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Отмена'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Удалить'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -526,7 +527,9 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
                   ),
                   items: [
                     CanvasPillItem(
-                      label: InterfacePreset.powerlifter.label,
+                      label: InterfacePreset.powerlifter.localizedLabel(
+                        AppLocalizations.of(context),
+                      ),
                       selected:
                           interfaceConfig.preset == InterfacePreset.powerlifter,
                       accentColor: accent,
@@ -535,7 +538,9 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
                           .applyPreset(InterfacePreset.powerlifter),
                     ),
                     CanvasPillItem(
-                      label: InterfacePreset.volume.label,
+                      label: InterfacePreset.volume.localizedLabel(
+                        AppLocalizations.of(context),
+                      ),
                       selected:
                           interfaceConfig.preset == InterfacePreset.volume,
                       accentColor: accent,
@@ -544,7 +549,9 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
                           .applyPreset(InterfacePreset.volume),
                     ),
                     CanvasPillItem(
-                      label: InterfacePreset.minimalist.label,
+                      label: InterfacePreset.minimalist.localizedLabel(
+                        AppLocalizations.of(context),
+                      ),
                       selected:
                           interfaceConfig.preset == InterfacePreset.minimalist,
                       accentColor: accent,
@@ -553,12 +560,12 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
                           .applyPreset(InterfacePreset.minimalist),
                     ),
                     CanvasPillItem(
-                      label: 'Сетка',
+                      label: AppLocalizations.of(context).gridPillLabel,
                       icon: Icons.grid_view_rounded,
                       onTap: () => InterfaceMakerSheet.show(context),
                     ),
                     CanvasPillItem(
-                      label: 'План',
+                      label: AppLocalizations.of(context).planPillLabel,
                       icon: Icons.calendar_today_outlined,
                       onTap: _openActivePlan,
                     ),
@@ -594,7 +601,9 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
                       radius: 22,
                     ),
                     child: Text(
-                      'Ошибка загрузки плана: $err',
+                      AppLocalizations.of(context).workoutsPlanLoadError(
+                        err.toString(),
+                      ),
                       style: TextStyle(color: scheme.error),
                     ),
                   ),
@@ -666,11 +675,11 @@ class _WorkoutsScreenState extends ConsumerState<WorkoutsScreen> {
         return AmbientScaffoldShell(
           environment: env,
           appBar: PrimaryAppBar.main(
-            title: 'Тренировки',
+            title: AppLocalizations.of(context).workoutListTitle,
             onTitleTap: openChat,
             actions: [
               IconButton(
-                tooltip: 'Профиль',
+                tooltip: AppLocalizations.of(context).profile,
                 icon: const Icon(Icons.account_circle_outlined),
                 onPressed: () async {
                   await Navigator.of(context).push(

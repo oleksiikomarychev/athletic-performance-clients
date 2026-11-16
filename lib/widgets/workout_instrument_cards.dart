@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:workout_app/config/rpe_table.dart' as rpe_table;
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/exercise_instance.dart';
 import 'package:workout_app/models/exercise_set_dto.dart';
 import 'package:workout_app/models/workout.dart';
@@ -130,7 +131,7 @@ class _WorkoutHeroInstrumentCardState extends State<WorkoutHeroInstrumentCard> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Все запланированные сессии выполнены или план не выбран',
+                      AppLocalizations.of(context).homeNoPlannedSessions,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
@@ -143,7 +144,7 @@ class _WorkoutHeroInstrumentCardState extends State<WorkoutHeroInstrumentCard> {
                 width: 48,
                 height: 48,
                 child: IconButton(
-                  tooltip: 'Открыть активный план',
+                  tooltip: AppLocalizations.of(context).homeOpenActivePlanTooltip,
                   style: IconButton.styleFrom(
                     minimumSize: const Size(48, 48),
                     tapTargetSize: MaterialTapTargetSize.padded,
@@ -246,7 +247,7 @@ class _WorkoutHeroInstrumentCardState extends State<WorkoutHeroInstrumentCard> {
                           const SizedBox(width: 5),
                           Flexible(
                             child: Text(
-                              env.badgeLabel,
+                              env.localizedBadgeLabel(AppLocalizations.of(context)),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: InstrumentTheme.microLabel(
@@ -260,7 +261,7 @@ class _WorkoutHeroInstrumentCardState extends State<WorkoutHeroInstrumentCard> {
                             width: 48,
                             height: 48,
                             child: IconButton(
-                              tooltip: 'Открыть календарный план',
+                              tooltip: AppLocalizations.of(context).homeOpenCalendarPlanTooltip,
                               style: IconButton.styleFrom(
                                 minimumSize: const Size(48, 48),
                                 tapTargetSize: MaterialTapTargetSize.padded,
@@ -295,7 +296,7 @@ class _WorkoutHeroInstrumentCardState extends State<WorkoutHeroInstrumentCard> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                '${w.exerciseInstances.length} упр.'
+                                '${AppLocalizations.of(context).unitExercisesShort(w.exerciseInstances.length.toString())}'
                                 '${w.notes?.trim().isNotEmpty == true ? ' · ${w.notes!.trim()}' : ''}',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -323,7 +324,7 @@ class _WorkoutHeroInstrumentCardState extends State<WorkoutHeroInstrumentCard> {
                               ),
                             ),
                             icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                            label: const Text('Начать'),
+                            label: Text(AppLocalizations.of(context).actionStart),
                           );
 
                           if (narrowOrScaled) {
@@ -350,7 +351,10 @@ class _WorkoutHeroInstrumentCardState extends State<WorkoutHeroInstrumentCard> {
                       if (widget.showBriefing) ...[
                         const SizedBox(height: 8),
                         Text(
-                          env.briefing(snarky: widget.snarkyVoice),
+                          env.localizedBriefing(
+                            AppLocalizations.of(context),
+                            snarky: widget.snarkyVoice,
+                          ),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: scheme.onSurfaceVariant,
                             height: 1.35,
@@ -472,13 +476,13 @@ class _WorkoutHeroInstrumentCardState extends State<WorkoutHeroInstrumentCard> {
               : null;
           return InstrumentMetricCellData(
             slot: slot,
-            label: 'ВРЕМЯ',
+            label: AppLocalizations.of(context).metricTimeShort,
             value: minutes != null ? '${minutes}m' : '—',
           );
         case MetricSlot.frequencyPerWeek:
           return InstrumentMetricCellData(
             slot: slot,
-            label: 'УПР.',
+            label: AppLocalizations.of(context).metricExercisesShort,
             value: '${workout.exerciseInstances.length}',
           );
       }
@@ -735,7 +739,7 @@ class _WorkoutSparkWave extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'SESSION WAVE · ${slot.shortLabel}',
+                  'SESSION WAVE · ${slot.localizedShortLabel(AppLocalizations.of(context))}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: InstrumentTheme.microLabel(
@@ -880,6 +884,7 @@ class WorkoutLibraryInstrumentModule extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final instrument = InstrumentTheme.of(context);
@@ -905,7 +910,7 @@ class WorkoutLibraryInstrumentModule extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'ЖУРНАЛ СЕССИЙ',
+                          l10n.sessionLogHeader,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: InstrumentTheme.microLabel(
@@ -915,7 +920,7 @@ class WorkoutLibraryInstrumentModule extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Библиотека',
+                          l10n.sessionLogLibrary,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleMedium?.copyWith(
@@ -940,7 +945,7 @@ class WorkoutLibraryInstrumentModule extends StatelessWidget {
                       ),
                     ),
                     icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('Новая'),
+                    label: Text(l10n.actionNew),
                   ),
                 ],
               ),
@@ -958,7 +963,7 @@ class WorkoutLibraryInstrumentModule extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Не удалось загрузить тренировки',
+                      l10n.sessionLogLoadError,
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: scheme.error,
                         fontWeight: FontWeight.w700,
@@ -978,7 +983,7 @@ class WorkoutLibraryInstrumentModule extends StatelessWidget {
                         minimumSize: const Size(48, 48),
                       ),
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Повторить'),
+                      label: Text(l10n.retry),
                     ),
                   ],
                 ),
@@ -1007,14 +1012,14 @@ class WorkoutLibraryInstrumentModule extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Нет ручных сессий',
+                            l10n.sessionLogEmptyTitle,
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Нажмите «Новая», чтобы записать свободную тренировку',
+                            l10n.sessionLogEmptySubtitle,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: scheme.onSurfaceVariant,
                             ),
@@ -1046,7 +1051,7 @@ class WorkoutLibraryInstrumentModule extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Center(
                     child: Text(
-                      'ВСЕ СЕССИИ ПОКАЗАНЫ',
+                      l10n.sessionLogAllShown,
                       style: InstrumentTheme.microLabel(
                         context,
                         color: scheme.onSurfaceVariant,
@@ -1080,10 +1085,11 @@ class _SessionInstrumentRow extends StatelessWidget {
     final scheme = theme.colorScheme;
     final instrument = InstrumentTheme.of(context);
 
+    final l10n = AppLocalizations.of(context);
     final status = (workout.status ?? '').toLowerCase();
     final isDone = status == 'completed' || workout.completedAt != null;
     final accent = isDone ? instrument.successColor : scheme.primary;
-    final subtitle = _buildWorkoutSubtitle(workout);
+    final subtitle = _buildWorkoutSubtitle(workout, l10n);
 
     return InkWell(
       onTap: onTap,
@@ -1138,7 +1144,7 @@ class _SessionInstrumentRow extends StatelessWidget {
               width: 48,
               height: 48,
               child: IconButton(
-                tooltip: 'Удалить тренировку',
+                tooltip: AppLocalizations.of(context).workoutDeleteTooltip,
                 style: IconButton.styleFrom(
                   minimumSize: const Size(48, 48),
                   tapTargetSize: MaterialTapTargetSize.padded,
@@ -1163,7 +1169,7 @@ class _SessionInstrumentRow extends StatelessWidget {
   }
 }
 
-String _buildWorkoutSubtitle(Workout workout) {
+String _buildWorkoutSubtitle(Workout workout, AppLocalizations l10n) {
   final int exerciseCount = workout.exerciseInstances.length;
   final int setCount = workout.exerciseInstances.fold<int>(
     0,
@@ -1172,15 +1178,15 @@ String _buildWorkoutSubtitle(Workout workout) {
   final double vol = workout.totalVolume;
 
   final metaParts = <String>[
-    if (exerciseCount > 0) '$exerciseCount упр.',
-    if (setCount > 0) '$setCount подх.',
-    if (vol > 0) '${vol.round()} кг',
+    if (exerciseCount > 0) l10n.unitExercisesShort(exerciseCount.toString()),
+    if (setCount > 0) l10n.unitSetsShort(setCount.toString()),
+    if (vol > 0) l10n.unitKgValue(vol.round().toString()),
     if (exerciseCount == 0 && workout.durationSeconds != null)
-      '${(workout.durationSeconds! / 60).round()} мин',
+      l10n.unitMinutesShort((workout.durationSeconds! / 60).round().toString()),
     if (workout.scheduledFor != null)
       DateFormat('MMM d').format(workout.scheduledFor!.toLocal()),
   ];
-  return metaParts.isNotEmpty ? metaParts.join(' · ') : 'Ручная сессия';
+  return metaParts.isNotEmpty ? metaParts.join(' · ') : l10n.workoutManualSession;
 }
 
 /// Standalone single-contour workout library card kept for component reuse and

@@ -87,8 +87,6 @@ class _SettingsLegalScreenState extends State<SettingsLegalScreen>
 
   String _screenTitle(String lang) {
     switch (lang) {
-      case 'ru':
-        return 'Правовая информация';
       case 'uk':
         return 'Правова інформація';
       default:
@@ -98,8 +96,6 @@ class _SettingsLegalScreenState extends State<SettingsLegalScreen>
 
   String _placeholderBannerText(String lang) {
     switch (lang) {
-      case 'ru':
-        return 'Режим без чувствительных данных: реквизиты оператора/ИП и адрес вынесены в константы LegalConfig (legal_constants.dart) и заменены безопасными плейсхолдерами.';
       case 'uk':
         return 'Режим без чутливих даних: реквізити оператора/ФОП та адресу винесено в константи LegalConfig (legal_constants.dart) і замінено безпечними плейсхолдерами.';
       default:
@@ -109,8 +105,6 @@ class _SettingsLegalScreenState extends State<SettingsLegalScreen>
 
   String _copyTooltip(String lang) {
     switch (lang) {
-      case 'ru':
-        return 'Скопировать текст документа';
       case 'uk':
         return 'Скопіювати текст документа';
       default:
@@ -120,8 +114,6 @@ class _SettingsLegalScreenState extends State<SettingsLegalScreen>
 
   String _copiedSnackText(String lang) {
     switch (lang) {
-      case 'ru':
-        return 'Текст документа скопирован в буфер обмена';
       case 'uk':
         return 'Текст документа скопійовано до буфера обміну';
       default:
@@ -192,7 +184,7 @@ class _SettingsLegalScreenState extends State<SettingsLegalScreen>
         title: _screenTitle(lang),
         actions: [
           PopupMenuButton<String>(
-            tooltip: 'Language / Мова / Язык',
+            tooltip: 'Language / Мова',
             initialValue: lang,
             onSelected: (value) {
               setState(() {
@@ -200,7 +192,6 @@ class _SettingsLegalScreenState extends State<SettingsLegalScreen>
               });
             },
             itemBuilder: (context) => const [
-              PopupMenuItem(value: 'ru', child: Text('Русский (RU)')),
               PopupMenuItem(value: 'uk', child: Text('Українська (UK)')),
               PopupMenuItem(value: 'en', child: Text('English (EN)')),
             ],
@@ -297,8 +288,6 @@ class _LegalDocumentBody extends StatelessWidget {
 
   String _privacySettingsButtonLabel() {
     switch (languageCode) {
-      case 'ru':
-        return 'Управление профилем и удаление аккаунта (Настройки → Общие)';
       case 'uk':
         return 'Керування профілем і видалення акаунта (Налаштування → Загальні)';
       default:

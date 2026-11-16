@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 import 'package:workout_app/models/microcycle.dart';
 import 'package:workout_app/models/user_max.dart';
@@ -34,11 +35,14 @@ class ApplyPlanWidget extends StatefulWidget {
 
 class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
   static const String _prefsKeyPrefix = 'apply_plan_last_user_max_ids';
-  static const List<({String code, String label})> _roundingModes = [
-    (code: 'nearest', label: 'Ближ.'),
-    (code: 'ceil', label: 'Вверх'),
-    (code: 'floor', label: 'Вниз'),
-  ];
+  static const List<String> _roundingModeCodes = ['nearest', 'ceil', 'floor'];
+
+  String _roundingModeLabel(String code, AppLocalizations l10n) => switch (code) {
+    'nearest' => l10n.roundNearest,
+    'ceil' => l10n.roundUp,
+    'floor' => l10n.roundDown,
+    _ => code,
+  };
 
   final _formKey = GlobalKey<FormState>();
 
@@ -62,17 +66,17 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
     });
   }
 
-  String _buildProgressText() {
+  String _buildProgressText(AppLocalizations l10n) {
     final done = _workoutsDone;
     final total = _workoutsTotal;
     if (done != null && total != null && total > 0) {
       final remaining = (total - done).clamp(0, total);
-      return 'Генерация плана: $done из $total (осталось $remaining)';
+      return l10n.applyPlanGenProgress(done, remaining, total);
     }
     if ((_progressStage ?? '').trim().isNotEmpty) {
-      return 'Генерация плана: ${_progressStage!}';
+      return l10n.applyPlanGenStage(_progressStage!);
     }
-    return 'Генерация плана…';
+    return l10n.applyPlanGenEllipsis;
   }
 
   @override
@@ -241,7 +245,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                             theme.textTheme.bodyLarge ?? const TextStyle(),
                           ),
                           decoration: InputDecoration(
-                            labelText: 'Вес (кг)',
+                            labelText: AppLocalizations.of(sheetContext).weightKgLabel,
                             filled: true,
                             fillColor: isDark
                                 ? InstrumentPalette.obsidianSlotHigh
@@ -258,7 +262,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                             theme.textTheme.bodyLarge ?? const TextStyle(),
                           ),
                           decoration: InputDecoration(
-                            labelText: 'Повторения',
+                            labelText: AppLocalizations.of(sheetContext).repsLabel,
                             filled: true,
                             fillColor: isDark
                                 ? InstrumentPalette.obsidianSlotHigh
@@ -293,17 +297,18 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                     onPressed: isSubmitting
                         ? null
                         : () async {
+                            final sheetL10n = AppLocalizations.of(sheetContext);
                             final weight = int.tryParse(weightController.text);
                             final reps = int.tryParse(repsController.text);
                             if (weight == null || weight <= 0) {
                               setModalState(() {
-                                errorMessage = 'Введите корректный вес';
+                                errorMessage = sheetL10n.errorValidWeight;
                               });
                               return;
                             }
                             if (reps == null || reps <= 0 || reps > 12) {
                               setModalState(() {
-                                errorMessage = 'Введите 1–12 повторений';
+                                errorMessage = sheetL10n.errorValidRepsRange;
                               });
                               return;
                             }
@@ -330,7 +335,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                             } catch (e) {
                               setModalState(() {
                                 errorMessage =
-                                    'Не удалось сохранить максимум: $e';
+                                    sheetL10n.saveMaxFailed(e.toString());
                                 isSubmitting = false;
                               });
                             }
@@ -341,7 +346,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Сохранить максимум'),
+                        : Text(AppLocalizations.of(sheetContext).saveMaxButton),
                   ),
                 ],
               );
@@ -359,7 +364,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
       if (!mounted) return;
       showAppSnackBar(
         context,
-        'Максимум для ${exercise.exerciseName} сохранён',
+        AppLocalizations.of(context).maxSavedForExercise(exercise.exerciseName),
       );
     }
   }
@@ -471,7 +476,10 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
     ).where(availableUserMaxIds.contains).toList();
 
     if (latestIds.isEmpty) {
-      showAppSnackBar(context, 'Нет сохранённых максимумов для этого плана');
+      showAppSnackBar(
+        context,
+        AppLocalizations.of(context).noSavedMaxesForPlan,
+      );
       return;
     }
 
@@ -486,7 +494,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
     if (validSelection.isEmpty) {
       showAppSnackBar(
         context,
-        'Пожалуйста, выберите хотя бы один User Max',
+        AppLocalizations.of(context).selectAtLeastOneUserMax,
         isError: true,
       );
       return;
@@ -614,7 +622,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Применить план',
+                            AppLocalizations.of(context).applyPlanTitle,
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.3,
@@ -635,7 +643,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Закрыть',
+                      tooltip: AppLocalizations.of(context).tooltipClose,
                       style: IconButton.styleFrom(
                         minimumSize: const Size(48, 48),
                         tapTargetSize: MaterialTapTargetSize.padded,
@@ -670,7 +678,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          _buildProgressText(),
+                          _buildProgressText(AppLocalizations.of(context)),
                           style: InstrumentTheme.tabular(
                             theme.textTheme.bodySmall?.copyWith(
                                   color: accent,
@@ -704,12 +712,16 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'БАЗОВЫЕ МАКСИМУМЫ · USER MAX',
+                                AppLocalizations.of(context).applyPlanBaseMaxesHeader,
                                 style: InstrumentTheme.microLabel(context),
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Выбрано: ${_selectedUserMaxIds.where(availableUserMaxIds.contains).length}',
+                                AppLocalizations.of(context).applyPlanSelectedCount(
+                                  _selectedUserMaxIds
+                                      .where(availableUserMaxIds.contains)
+                                      .length,
+                                ),
                                 style: InstrumentTheme.tabular(
                                   theme.textTheme.titleSmall?.copyWith(
                                         fontWeight: FontWeight.w700,
@@ -733,7 +745,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                                 availableUserMaxIds,
                               ),
                               icon: const Icon(Icons.history, size: 18),
-                              label: const Text('Последние'),
+                              label: Text(AppLocalizations.of(context).applyPlanRecentButton),
                             ),
                         ],
                       ),
@@ -756,7 +768,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Text(
-                            'Нет сохранённых максимумов для упражнений в плане. Добавьте 1RM выше.',
+                            AppLocalizations.of(context).applyPlanNoMaxesHint,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: scheme.onSurfaceVariant,
                             ),
@@ -765,7 +777,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                       else ...[
                         if (useFallback) ...[
                           Text(
-                            'Точного совпадения упражнений нет — показаны все ваши User Max:',
+                            AppLocalizations.of(context).applyPlanNoExactMatchHint,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: accent,
                               fontWeight: FontWeight.w600,
@@ -801,7 +813,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'РАСЧЁТ РАБОЧИХ ВЕСОВ',
+                        AppLocalizations.of(context).applyPlanWorkingWeightsHeader,
                         style: InstrumentTheme.microLabel(context),
                       ),
                       const SizedBox(height: 8),
@@ -812,13 +824,13 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Вычислять веса',
+                                  AppLocalizations.of(context).applyPlanComputeWeights,
                                   style: theme.textTheme.bodyLarge?.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 Text(
-                                  'Автоподбор по % от выбранного максимума',
+                                  AppLocalizations.of(context).applyPlanComputeWeightsSubtitle,
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: scheme.onSurfaceVariant,
                                   ),
@@ -857,7 +869,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                                     ),
                               ),
                               decoration: InputDecoration(
-                                labelText: 'Шаг (кг)',
+                                labelText: AppLocalizations.of(context).applyPlanStepKgLabel,
                                 filled: true,
                                 fillColor: isDark
                                     ? InstrumentPalette.obsidianSlotHigh
@@ -872,23 +884,24 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'ОКРУГЛЕНИЕ',
+                                AppLocalizations.of(context).applyPlanRoundingHeader,
                                 style: InstrumentTheme.microLabel(context),
                               ),
                               const SizedBox(height: 6),
                               Wrap(
                                 spacing: 6,
                                 runSpacing: 6,
-                                children: _roundingModes.map((mode) {
-                                  final selected = _roundingMode == mode.code;
+                                children: _roundingModeCodes.map((code) {
+                                  final selected = _roundingMode == code;
+                                  final l10n = AppLocalizations.of(context);
                                   return _InstrumentSelectPill(
-                                    label: mode.label,
+                                    label: _roundingModeLabel(code, l10n),
                                     selected: selected,
                                     accent: accent,
                                     isDark: isDark,
                                     onTap: () {
                                       setState(() {
-                                        _roundingMode = mode.code;
+                                        _roundingMode = code;
                                       });
                                     },
                                   );
@@ -940,7 +953,7 @@ class _ApplyPlanWidgetState extends State<ApplyPlanWidget> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : Text(
-                          'Применить план',
+                          AppLocalizations.of(context).applyPlanTitle,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w800,
                             color: isDark
@@ -992,7 +1005,10 @@ class _PlanExerciseMaxRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 if (latestUserMax != null)
                   Text(
-                    '${latestUserMax!.maxWeight} кг × ${latestUserMax!.repMax}',
+                    AppLocalizations.of(context).userMaxDisplay(
+                      latestUserMax!.repMax.toString(),
+                      latestUserMax!.maxWeight.toString(),
+                    ),
                     style: InstrumentTheme.tabular(
                       theme.textTheme.labelSmall?.copyWith(
                             color: instrument.successColor,
@@ -1006,7 +1022,7 @@ class _PlanExerciseMaxRow extends StatelessWidget {
                   )
                 else
                   Text(
-                    'Максимум не задан',
+                    AppLocalizations.of(context).planDetailMaxNotSet,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
@@ -1021,7 +1037,7 @@ class _PlanExerciseMaxRow extends StatelessWidget {
             ),
             onPressed: onAddTap,
             icon: const Icon(Icons.add, size: 16),
-            label: const Text('Добавить'),
+            label: Text(AppLocalizations.of(context).actionAdd),
           ),
         ],
       ),
@@ -1068,7 +1084,10 @@ class _UserMaxGroupSelector extends StatelessWidget {
           children: userMaxes.map((userMax) {
             final selected = selectedIds.contains(userMax.id);
             return _InstrumentSelectPill(
-              label: '${userMax.maxWeight} кг × ${userMax.repMax}',
+              label: AppLocalizations.of(context).userMaxDisplay(
+                userMax.repMax.toString(),
+                userMax.maxWeight.toString(),
+              ),
               selected: selected,
               accent: accent,
               isDark: isDark,

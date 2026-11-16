@@ -14,6 +14,7 @@ import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/api_config.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 
 class HomeScreenNew extends ConsumerStatefulWidget {
   const HomeScreenNew({super.key});
@@ -69,37 +70,37 @@ class _HomeScreenNewState extends ConsumerState<HomeScreenNew> {
     );
   }
 
-  BottomNavBarItem _navItemFor(HomeTab tab) {
+  BottomNavBarItem _navItemFor(HomeTab tab, AppLocalizations l10n) {
     switch (tab) {
       case HomeTab.workouts:
-        return const BottomNavBarItem(
+        return BottomNavBarItem(
           icon: Icons.fitness_center,
-          label: 'Тренировки',
-          activeLabel: 'Тренировки',
+          label: l10n.navWorkouts,
+          activeLabel: l10n.navWorkouts,
         );
       case HomeTab.plans:
-        return const BottomNavBarItem(
+        return BottomNavBarItem(
           icon: Icons.schedule,
-          label: 'Планы',
-          activeLabel: 'Планы',
+          label: l10n.navPlans,
+          activeLabel: l10n.navPlans,
         );
       case HomeTab.social:
-        return const BottomNavBarItem(
+        return BottomNavBarItem(
           icon: Icons.dynamic_feed_outlined,
-          label: 'Лента',
-          activeLabel: 'Лента',
+          label: l10n.navFeed,
+          activeLabel: l10n.navFeed,
         );
       case HomeTab.crm:
-        return const BottomNavBarItem(
+        return BottomNavBarItem(
           icon: Icons.analytics_outlined,
-          label: 'CRM',
-          activeLabel: 'CRM',
+          label: l10n.navCrm,
+          activeLabel: l10n.navCrm,
         );
       case HomeTab.debug:
-        return const BottomNavBarItem(
+        return BottomNavBarItem(
           icon: Icons.bug_report_outlined,
-          label: 'Дебаг',
-          activeLabel: 'Дебаг',
+          label: l10n.navDebug,
+          activeLabel: l10n.navDebug,
         );
     }
   }
@@ -207,12 +208,12 @@ class _HomeScreenNewState extends ConsumerState<HomeScreenNew> {
                             child: FilledButton.tonalIcon(
                               onPressed: openChat,
                               icon: const Icon(Icons.auto_awesome_outlined, size: 18),
-                              label: const Text('AI Ассистент'),
+                              label: Text(AppLocalizations.of(context).aiAssistant),
                             ),
                           )
                         else
                           IconButton.filledTonal(
-                            tooltip: 'AI Ассистент',
+                            tooltip: AppLocalizations.of(context).aiAssistant,
                             onPressed: openChat,
                             icon: const Icon(Icons.auto_awesome_outlined),
                           ),
@@ -221,7 +222,7 @@ class _HomeScreenNewState extends ConsumerState<HomeScreenNew> {
                   ),
                   destinations: tabs
                       .map((tab) {
-                        final item = _navItemFor(tab);
+                        final item = _navItemFor(tab, AppLocalizations.of(context));
                         return NavigationRailDestination(
                           icon: Icon(item.icon),
                           label: Text(item.label),
@@ -248,9 +249,9 @@ class _HomeScreenNewState extends ConsumerState<HomeScreenNew> {
                                     );
                                   },
                                   icon: const Icon(Icons.account_circle_outlined),
-                                  label: const Align(
+                                  label: Align(
                                     alignment: Alignment.centerLeft,
-                                    child: Text('Профиль'),
+                                    child: Text(AppLocalizations.of(context).profile),
                                   ),
                                 ),
                               ),
@@ -265,15 +266,15 @@ class _HomeScreenNewState extends ConsumerState<HomeScreenNew> {
                                     );
                                   },
                                   icon: const Icon(Icons.settings_outlined),
-                                  label: const Align(
+                                  label: Align(
                                     alignment: Alignment.centerLeft,
-                                    child: Text('Настройки'),
+                                    child: Text(AppLocalizations.of(context).settings),
                                   ),
                                 ),
                               ),
                             ] else ...[
                               IconButton(
-                                tooltip: 'Профиль',
+                                tooltip: AppLocalizations.of(context).profile,
                                 onPressed: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
@@ -284,7 +285,7 @@ class _HomeScreenNewState extends ConsumerState<HomeScreenNew> {
                                 icon: const Icon(Icons.account_circle_outlined),
                               ),
                               IconButton(
-                                tooltip: 'Настройки',
+                                tooltip: AppLocalizations.of(context).settings,
                                 onPressed: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
@@ -378,7 +379,9 @@ class _HomeScreenNewState extends ConsumerState<HomeScreenNew> {
               if (index < 0 || index >= tabs.length) return;
               _onItemTapped(tabs[index], tabs);
             },
-            items: tabs.map(_navItemFor).toList(),
+            items: tabs
+                .map((tab) => _navItemFor(tab, AppLocalizations.of(context)))
+                .toList(),
           ),
         );
       },

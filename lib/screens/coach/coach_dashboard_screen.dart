@@ -4,6 +4,7 @@ import 'package:workout_app/config/constants/route_names.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/crm_analytics.dart';
 import 'package:workout_app/providers/ambient_environment_provider.dart';
 import 'package:workout_app/providers/interface_maker_provider.dart';
@@ -59,18 +60,19 @@ class CoachDashboardScreen extends ConsumerWidget {
 
     return AssistantChatHost(
       initialMessage:
-          'Открываю ассистента из CRM CoachDashboardScreen. Используй контекст v1 для обзора активных атлетов и вовлеченности.',
+          'Opening assistant from CRM CoachDashboardScreen. Use v1 context for an overview of active athletes and engagement.',
       contextBuilder: buildChatContext,
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return AmbientScaffoldShell(
           environment: env,
           appBar: PrimaryAppBar(
-            title: 'CRM',
+            title: l10n.crmTitle,
             onTitleTap: openChat,
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh),
-                tooltip: 'Refresh',
+                tooltip: l10n.refresh,
                 onPressed: () => ref.invalidate(coachSummaryAnalyticsProvider),
               ),
             ],
@@ -178,25 +180,25 @@ class CoachDashboardScreen extends ConsumerWidget {
                                     cells: [
                                       InstrumentMetricCellData(
                                         slot: MetricSlot.setsCount,
-                                        label: 'ACTIVE',
+                                        label: l10n.activeUpperLabel,
                                         value: summary.activeLinks.toString(),
                                         valueColor: instrument.workingAura,
                                       ),
                                       InstrumentMetricCellData(
                                         slot: MetricSlot.frequencyPerWeek,
-                                        label: 'SESS / WK',
+                                        label: l10n.sessPerWeekUpperLabel,
                                         value: summary.avgSessionsPerWeek
                                             .toStringAsFixed(1),
                                       ),
                                       InstrumentMetricCellData(
                                         slot: MetricSlot.kpsh,
-                                        label: 'ENGAGED',
+                                        label: l10n.engagedUpperLabel,
                                         value: engagedCount.toString(),
                                         valueColor: instrument.successColor,
                                       ),
                                       InstrumentMetricCellData(
                                         slot: MetricSlot.density,
-                                        label: 'INACTIVE',
+                                        label: l10n.inactiveUpperLabel,
                                         value: summary.inactiveAthletesCount
                                             .toString(),
                                         valueColor:
@@ -221,12 +223,12 @@ class CoachDashboardScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Text(
-                                  'WORKFLOWS · CHANNELS',
+                                  l10n.workflowsChannelsEyebrow,
                                   style: InstrumentTheme.microLabel(context),
                                 ),
                                 const SizedBox(height: 12),
                                 InstrumentActionButton(
-                                  label: 'View athletes list',
+                                  label: l10n.viewAthletesListLabel,
                                   icon: Icons.groups_outlined,
                                   variant: InstrumentActionVariant.primary,
                                   expanded: true,
@@ -238,7 +240,7 @@ class CoachDashboardScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 10),
                                 InstrumentActionButton(
-                                  label: 'Relationships & chat',
+                                  label: l10n.relationshipsAndChatLabel,
                                   icon: Icons.chat_bubble_outline,
                                   variant: InstrumentActionVariant.secondary,
                                   expanded: true,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
 
@@ -66,13 +67,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   _CommandTriggerInfo? _activeTrigger;
 
-  static const List<_ChatCommand> _availableCommands = [
+  List<_ChatCommand> _availableCommands(AppLocalizations l10n) => [
     _ChatCommand(
       trigger: '@',
       keyword: 'fsm_plan_generator',
       display: '@fsm_plan_generator',
-      title: 'Генерация плана (FSM)',
-      description: 'Запускает диалог finite state machine для составления тренировочного плана.',
+      title: l10n.chatPlanGenTitle,
+      description: l10n.chatPlanGenDesc,
       icon: Icons.auto_awesome_motion_rounded,
     ),
     _ChatCommand(
@@ -80,7 +81,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       keyword: 'mass_edit',
       display: '/mass_edit',
       title: 'Mass edit',
-      description: 'Массовое редактирование плана с помощью AI.',
+      description: l10n.chatMassEditDesc,
       icon: Icons.edit_note_rounded,
     ),
   ];
@@ -103,7 +104,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final chatState = ref.watch(chatControllerProvider);
-    final connectionLabel = _mapConnectionLabel(chatState.connectionState);
+    final l10n = AppLocalizations.of(context);
+    final connectionLabel = _mapConnectionLabel(chatState.connectionState, l10n);
     final canSend = chatState.connectionState == ChatConnectionState.connected ||
         chatState.connectionState == ChatConnectionState.reconnecting;
 
@@ -184,7 +186,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       builder: (context, openChat) {
         return Scaffold(
           appBar: PrimaryAppBar(
-            title: 'Чат ассистента',
+            title: AppLocalizations.of(context).chatAssistantTitle,
             onTitleTap: openChat,
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(72),
@@ -335,7 +337,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _handleSend(),
                     decoration: InputDecoration(
-                      hintText: 'Введите сообщение...',
+                      hintText: AppLocalizations.of(context).chatInputHint,
                       hintStyle: TextStyle(color: colors.onSurfaceVariant),
                       filled: false,
                       border: InputBorder.none,
@@ -355,7 +357,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   onSubmitted: (_) => _handleSend(),
                   decoration: InstrumentTheme.inputDecoration(
                     context,
-                    hintText: 'Введите сообщение...',
+                    hintText: AppLocalizations.of(context).chatInputHint,
                     radius: 16,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -376,7 +378,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                   icon: const Icon(Icons.send_rounded),
                   onPressed: canSend ? _handleSend : null,
-                  tooltip: canSend ? 'Отправить' : 'Нет соединения',
+                  tooltip: canSend
+                      ? AppLocalizations.of(context).chatSendTooltip
+                      : AppLocalizations.of(context).chatNoConnectionTooltip,
                 )
               : IconButton(
                   style: IconButton.styleFrom(
@@ -386,7 +390,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   icon: const Icon(Icons.send_rounded),
                   onPressed: canSend ? _handleSend : null,
                   color: colors.primary,
-                  tooltip: canSend ? 'Отправить' : 'Нет соединения',
+                  tooltip: canSend
+                      ? AppLocalizations.of(context).chatSendTooltip
+                      : AppLocalizations.of(context).chatNoConnectionTooltip,
                 ),
         ),
       ],
@@ -440,18 +446,18 @@ void _scrollToBottom() {
     return '$hours:$minutes';
   }
 
-  String _mapConnectionLabel(ChatConnectionState state) {
+  String _mapConnectionLabel(ChatConnectionState state, AppLocalizations l10n) {
     switch (state) {
       case ChatConnectionState.connected:
-        return 'Подключено';
+        return l10n.chatStatusConnected;
       case ChatConnectionState.connecting:
-        return 'Подключение...';
+        return l10n.chatStatusConnecting;
       case ChatConnectionState.reconnecting:
-        return 'Переподключение...';
+        return l10n.chatStatusReconnecting;
       case ChatConnectionState.error:
-        return 'Ошибка соединения';
+        return l10n.chatStatusError;
       case ChatConnectionState.disconnected:
-        return 'Отключено';
+        return l10n.chatStatusDisconnected;
     }
   }
 
@@ -577,7 +583,8 @@ void _scrollToBottom() {
     final List<dynamic> exerciseItems =
         autocomplete['exercises'] is List ? autocomplete['exercises'] as List<dynamic> : const [];
 
-    final List<_ChatCommand> base = _availableCommands
+    final l10n = AppLocalizations.of(context);
+    final List<_ChatCommand> base = _availableCommands(l10n)
         .where((command) => command.trigger == trigger.trigger)
         .toList();
 
@@ -604,7 +611,7 @@ void _scrollToBottom() {
             keyword: keyword,
             display: alias,
             title: title,
-            description: 'Ссылка на тренировку в активном плане',
+            description: AppLocalizations.of(context).chatWorkoutLinkDesc,
             icon: Icons.fitness_center_rounded,
           ),
         );
@@ -631,7 +638,7 @@ void _scrollToBottom() {
             keyword: keyword,
             display: alias,
             title: title,
-            description: 'Ссылка на упражнение',
+            description: AppLocalizations.of(context).chatExerciseLinkDesc,
             icon: Icons.fitness_center_outlined,
           ),
         );
@@ -744,7 +751,7 @@ class _ConnectionBanner extends StatelessWidget {
                 ),
                 if (sessionId != null && sessionId!.isNotEmpty)
                   Text(
-                    'Сессия: $sessionId',
+                    AppLocalizations.of(context).chatSessionLabel(sessionId!),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: foreground.withValues(alpha: 0.8),
                     ),
@@ -760,7 +767,7 @@ class _ConnectionBanner extends StatelessWidget {
                   ref.read(chatControllerProvider.notifier).reconnect();
                 },
                 icon: const Icon(Icons.refresh),
-                label: const Text('Повторить'),
+                label: Text(AppLocalizations.of(context).retry),
                 style: TextButton.styleFrom(foregroundColor: foreground),
               ),
             )
@@ -813,7 +820,13 @@ class _TypingIndicator extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            'Ассистент печатает...${sessionId?.isNotEmpty == true ? ' (сессия ${sessionId!})' : ''}',
+            AppLocalizations.of(context).chatTypingStatus(
+              sessionId?.isNotEmpty == true
+                  ? AppLocalizations.of(context).chatTypingSessionSuffix(
+                      sessionId!,
+                    )
+                  : '',
+            ),
             style: theme.textTheme.bodySmall,
           ),
         ),

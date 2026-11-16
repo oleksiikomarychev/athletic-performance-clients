@@ -8,6 +8,7 @@ import 'package:workout_app/config/constants/theme_constants.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/applied_calendar_plan.dart';
 import 'package:workout_app/models/plan_analytics.dart';
 import 'package:workout_app/models/workout.dart';
@@ -152,17 +153,18 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
 
     return AssistantChatHost(
       initialMessage:
-          'Открываю ассистента из ActivePlanScreen. Используй переданный структурированный контекст v1 для понимания текущего плана и выбранного дня.',
+          'Opening assistant from ActivePlanScreen. Use the provided structured v1 context to understand the current plan and selected day.',
       contextBuilder: _buildChatContext,
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return AmbientScaffoldShell(
           environment: env,
           appBar: PrimaryAppBar.main(
-            title: 'Активный план',
+            title: l10n.activePlanTitle,
             onTitleTap: openChat,
             actions: [
               IconButton(
-                tooltip: 'Профиль',
+                tooltip: l10n.profile,
                 icon: const Icon(Icons.account_circle_outlined),
                 onPressed: () async {
                   await Navigator.of(context).push(
@@ -199,8 +201,8 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
                     ),
                     child: EmptyState(
                       icon: Icons.fitness_center,
-                      title: 'Нет активного плана',
-                      description: 'Выберите календарный план для старта цикла',
+                      title: l10n.activePlanEmptyTitle,
+                      description: l10n.activePlanEmptyDescription,
                       action: ElevatedButton(
                         onPressed: () {
                           Navigator.of(context).push(
@@ -209,7 +211,7 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
                             ),
                           );
                         },
-                        child: const Text('Выбрать план'),
+                        child: Text(l10n.activePlanSelectPlan),
                       ),
                     ),
                   );
@@ -223,11 +225,11 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
                 String calendarHorizonLabel() {
                   switch (_calendarFormat) {
                     case CalendarFormat.week:
-                      return '1 нед';
+                      return l10n.horizon1Week;
                     case CalendarFormat.twoWeeks:
-                      return '2 нед';
+                      return l10n.horizon2Weeks;
                     case CalendarFormat.month:
-                      return 'Месяц';
+                      return l10n.horizonMonth;
                   }
                 }
 
@@ -252,7 +254,7 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
                           ),
                           items: [
                             CanvasPillItem(
-                              label: InterfacePreset.powerlifter.label,
+                              label: InterfacePreset.powerlifter.localizedLabel(l10n),
                               selected: interfaceConfig.preset ==
                                   InterfacePreset.powerlifter,
                               accentColor: accent,
@@ -261,7 +263,7 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
                                   .applyPreset(InterfacePreset.powerlifter),
                             ),
                             CanvasPillItem(
-                              label: InterfacePreset.volume.label,
+                              label: InterfacePreset.volume.localizedLabel(l10n),
                               selected: interfaceConfig.preset ==
                                   InterfacePreset.volume,
                               accentColor: accent,
@@ -270,7 +272,7 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
                                   .applyPreset(InterfacePreset.volume),
                             ),
                             CanvasPillItem(
-                              label: InterfacePreset.minimalist.label,
+                              label: InterfacePreset.minimalist.localizedLabel(l10n),
                               selected: interfaceConfig.preset ==
                                   InterfacePreset.minimalist,
                               accentColor: accent,
@@ -279,12 +281,12 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
                                   .applyPreset(InterfacePreset.minimalist),
                             ),
                             CanvasPillItem(
-                              label: 'Горизонт · ${calendarHorizonLabel()}',
+                              label: l10n.horizonChipLabel(calendarHorizonLabel()),
                               icon: Icons.date_range_outlined,
                               onTap: cycleCalendarHorizon,
                             ),
                             CanvasPillItem(
-                              label: 'Сетка',
+                              label: l10n.gridPillLabel,
                               icon: Icons.grid_view_rounded,
                               onTap: () => InterfaceMakerSheet.show(context),
                             ),
@@ -600,7 +602,7 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
               child: Text(
-                'КАЛЕНДАРЬ МИКРОЦИКЛОВ',
+                AppLocalizations.of(context).activePlanMicrocycleCalendarHeader,
                 style: InstrumentTheme.microLabel(
                   context,
                   color: colors.onSurfaceVariant,
@@ -711,7 +713,7 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'ДЕНЬ ПЛАНА',
+                  AppLocalizations.of(context).activePlanDayLabel,
                   style: InstrumentTheme.microLabel(
                     context,
                     color: colors.onSurfaceVariant,
@@ -736,7 +738,7 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
               minimumSize: const Size(48, 48),
               tapTargetSize: MaterialTapTargetSize.padded,
             ),
-            child: const Text('Смотреть'),
+            child: Text(AppLocalizations.of(context).actionView),
           ),
         ],
       ),
@@ -755,7 +757,7 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
       return Padding(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
         child: Text(
-          'На выбранный день тренировок нет',
+          AppLocalizations.of(context).activePlanNoWorkoutsSelectedDay,
           style: theme.textTheme.bodySmall?.copyWith(
             color: colors.onSurfaceVariant,
           ),
@@ -861,9 +863,11 @@ class _ActivePlanScreenState extends ConsumerState<ActivePlanScreen> {
                 ),
                 const SizedBox(height: 8),
                 if (workouts.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(child: Text('No workouts')),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: Text(AppLocalizations.of(context).noWorkouts),
+                    ),
                   )
                 else
                   Flexible(
@@ -1029,19 +1033,20 @@ extension _APAnalytics on _ActivePlanScreenState {
     final intensityAvg = totals?['intensity_avg'];
     final effortAvg = totals?['effort_avg'];
 
+    final l10n = AppLocalizations.of(context);
     return slots.map((slot) {
       switch (slot) {
         case MetricSlot.peakIntensity:
           return InstrumentMetricCellData(
             slot: slot,
-            label: 'ИНТЕНС. СР',
+            label: l10n.metricAvgIntensityShort,
             value: fmtNum(intensityAvg, suffix: '%'),
             valueColor: intensityAvg != null ? accent : null,
           );
         case MetricSlot.e1rm:
           return InstrumentMetricCellData(
             slot: slot,
-            label: 'ВЫПОЛНЕНО',
+            label: l10n.metricCompletedShort,
             value: plan.adherencePct != null
                 ? '${plan.adherencePct!.round()}%'
                 : '—',
@@ -1050,7 +1055,7 @@ extension _APAnalytics on _ActivePlanScreenState {
         case MetricSlot.avgRpe:
           return InstrumentMetricCellData(
             slot: slot,
-            label: 'RPE СР',
+            label: l10n.metricAvgRpeShort,
             value: effortAvg != null
                 ? 'RPE ${effortAvg.toStringAsFixed(1)}'
                 : '—',
@@ -1059,19 +1064,19 @@ extension _APAnalytics on _ActivePlanScreenState {
         case MetricSlot.kpsh:
           return InstrumentMetricCellData(
             slot: slot,
-            label: 'ПОВТОРЫ',
+            label: l10n.metricRepsShort,
             value: fmtNum(volTotal),
           );
         case MetricSlot.setsCount:
           return InstrumentMetricCellData(
             slot: slot,
-            label: 'СЕТЫ',
+            label: l10n.metricSetsShort,
             value: fmtNum(setsTotal),
           );
         case MetricSlot.density:
           return InstrumentMetricCellData(
             slot: slot,
-            label: 'СЕССИИ',
+            label: l10n.metricSessionsShort,
             value:
                 '${plan.actualSessionsCompleted}/${plan.plannedSessionsTotal}',
           );
@@ -1165,7 +1170,7 @@ extension _APAnalytics on _ActivePlanScreenState {
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        env.badgeLabel,
+                        env.localizedBadgeLabel(AppLocalizations.of(context)),
                         style: InstrumentTheme.microLabel(
                           context,
                           color: accent,
@@ -1176,8 +1181,8 @@ extension _APAnalytics on _ActivePlanScreenState {
                         height: 48,
                         child: IconButton(
                           tooltip: _chartExpanded
-                              ? 'Свернуть график'
-                              : 'Развернуть график',
+                              ? AppLocalizations.of(context).tooltipCollapseChart
+                              : AppLocalizations.of(context).tooltipExpandChart,
                           style: IconButton.styleFrom(
                             minimumSize: const Size(48, 48),
                             tapTargetSize: MaterialTapTargetSize.padded,
@@ -1207,7 +1212,10 @@ extension _APAnalytics on _ActivePlanScreenState {
                   if (showBriefing) ...[
                     const SizedBox(height: 4),
                     Text(
-                      env.briefing(snarky: interfaceConfig.snarkyVoice),
+                      env.localizedBriefing(
+                        AppLocalizations.of(context),
+                        snarky: interfaceConfig.snarkyVoice,
+                      ),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colors.onSurfaceVariant,
                         height: 1.35,
@@ -1228,7 +1236,7 @@ extension _APAnalytics on _ActivePlanScreenState {
                     metricY: _metricY,
                     bleedMode: true,
                     accentColor: accent,
-                    emptyText: 'Нет данных для плана',
+                    emptyText: AppLocalizations.of(context).activePlanNoData,
                     showScatterAxisTitles: false,
                   ),
                 ),

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/providers/ambient_environment_provider.dart';
 import 'package:workout_app/providers/interface_maker_provider.dart';
 import 'package:workout_app/services/service_locator.dart' as sl;
@@ -60,16 +61,17 @@ class SocialFeedScreen extends ConsumerWidget {
 
     return AssistantChatHost(
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return AmbientScaffoldShell(
           environment: env,
           extendBody: false,
           appBar: PrimaryAppBar(
-            title: 'Workout Feed',
+            title: l10n.workoutFeedTitle,
             onTitleTap: openChat,
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh),
-                tooltip: 'Refresh',
+                tooltip: l10n.refresh,
                 onPressed: () => ref.refresh(socialFeedProvider),
               ),
             ],
@@ -80,7 +82,7 @@ class SocialFeedScreen extends ConsumerWidget {
               child: Padding(
                 padding: EdgeInsets.all(dims.pagePadding),
                 child: Text(
-                  'Error: $error',
+                  l10n.genericError('$error'),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: scheme.onSurfaceVariant,
@@ -132,7 +134,7 @@ class SocialFeedScreen extends ConsumerWidget {
                         items: [
                           CanvasPillItem(
                             key: const ValueKey('feed_all'),
-                            label: 'All posts',
+                            label: l10n.allPostsLabel,
                             selected: activeFilter == _SocialFeedFilter.all,
                             onTap: () =>
                                 ref
@@ -142,7 +144,7 @@ class SocialFeedScreen extends ConsumerWidget {
                           ),
                           CanvasPillItem(
                             key: const ValueKey('feed_stats'),
-                            label: 'With stats',
+                            label: l10n.withStatsLabel,
                             icon: Icons.bar_chart_rounded,
                             selected:
                                 activeFilter == _SocialFeedFilter.withStats,
@@ -155,7 +157,7 @@ class SocialFeedScreen extends ConsumerWidget {
                           ),
                           CanvasPillItem(
                             key: const ValueKey('feed_liked'),
-                            label: 'Liked',
+                            label: l10n.likedLabel,
                             icon: Icons.favorite_outline,
                             selected: activeFilter == _SocialFeedFilter.liked,
                             accentColor: instrument.peakEffortColor,
@@ -219,7 +221,7 @@ class SocialFeedScreen extends ConsumerWidget {
                     10,
                   ),
                   child: InstrumentActionButton(
-                    label: 'Create Post',
+                    label: l10n.createPostLabel,
                     icon: Icons.add,
                     variant: InstrumentActionVariant.primary,
                     expanded: true,
@@ -235,13 +237,14 @@ class SocialFeedScreen extends ConsumerWidget {
   }
 
   void _showCreatePostDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final contentController = TextEditingController();
     String selectedScope = 'public';
 
     showInstrumentDialog<void>(
       context: context,
-      eyebrow: 'SOCIAL FEED',
-      title: 'Create Post',
+      eyebrow: l10n.socialFeedEyebrow,
+      title: l10n.createPostLabel,
       content: StatefulBuilder(
         builder: (dialogCtx, setState) {
           return Column(
@@ -257,26 +260,29 @@ class SocialFeedScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 14),
-              Text('VISIBILITY', style: InstrumentTheme.microLabel(dialogCtx)),
+              Text(
+                l10n.visibilityUpperLabel,
+                style: InstrumentTheme.microLabel(dialogCtx),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
                   InstrumentSelectablePill(
-                    label: 'Public',
+                    label: l10n.visibilityPublic,
                     selected: selectedScope == 'public',
                     bordered: false,
                     onTap: () => setState(() => selectedScope = 'public'),
                   ),
                   InstrumentSelectablePill(
-                    label: 'Followers',
+                    label: l10n.visibilityFollowers,
                     selected: selectedScope == 'followers',
                     bordered: false,
                     onTap: () => setState(() => selectedScope = 'followers'),
                   ),
                   InstrumentSelectablePill(
-                    label: 'Private',
+                    label: l10n.visibilityPrivate,
                     selected: selectedScope == 'private',
                     bordered: false,
                     onTap: () => setState(() => selectedScope = 'private'),
@@ -289,12 +295,12 @@ class SocialFeedScreen extends ConsumerWidget {
       ),
       actionsBuilder: (dialogCtx) => [
         InstrumentActionButton(
-          label: 'Cancel',
+          label: l10n.cancel,
           variant: InstrumentActionVariant.secondary,
           onPressed: () => Navigator.of(dialogCtx).pop(),
         ),
         InstrumentActionButton(
-          label: 'Post',
+          label: l10n.postLabel,
           variant: InstrumentActionVariant.primary,
           onPressed: () async {
             final content = contentController.text.trim();
@@ -500,7 +506,7 @@ class _SocialPostModule extends ConsumerWidget {
                         ? instrument.peakEffortColor
                         : scheme.onSurfaceVariant,
                   ),
-                  tooltip: 'Like',
+                  tooltip: AppLocalizations.of(context).likeLabel,
                   constraints: const BoxConstraints(
                     minWidth: 48,
                     minHeight: 48,

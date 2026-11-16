@@ -88,22 +88,22 @@ void main() {
     tester,
   ) async {
     final api = await mount(tester);
-    await tester.tap(find.byTooltip('Фильтры'));
+    await tester.tap(find.byTooltip('Filters'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('strength (1)'));
     await tester.pumpAndSettle();
     expect(api.queries.last['goals'], ['strength']);
-    await tester.tap(find.byTooltip('Закрыть'));
+    await tester.tap(find.byTooltip('Close'));
     await tester.pumpAndSettle();
     expect(find.byType(InputChip), findsNothing);
-    await tester.tap(find.byTooltip('Фильтры'));
+    await tester.tap(find.byTooltip('Filters'));
     await tester.pumpAndSettle();
     expect(api.queries.last.containsKey('goals'), false);
     await tester.tap(find.text('strength (1)'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Применить'));
+    await tester.ensureVisible(find.text('Apply'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Применить'));
+    await tester.tap(find.text('Apply'));
     await tester.pumpAndSettle();
     expect(api.queries.last['goals'], ['strength']);
     final chip = tester.widget<InputChip>(find.byType(InputChip));
@@ -124,7 +124,7 @@ void main() {
     await tester.tap(find.text('Starting Strength'));
     await tester.pumpAndSettle();
     expect(api.detailRequests, 1);
-    expect(find.textContaining('Не удалось открыть план'), findsOneWidget);
+    expect(find.textContaining('Failed to open plan'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -132,7 +132,7 @@ void main() {
     tester,
   ) async {
     await mount(tester, scale: 2);
-    await tester.tap(find.byTooltip('Фильтры'));
+    await tester.tap(find.byTooltip('Filters'));
     await tester.pumpAndSettle();
     await tester.drag(
       find.byType(SingleChildScrollView).last,
@@ -140,6 +140,6 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    expect(find.text('Применить'), findsOneWidget);
+    expect(find.text('Apply'), findsOneWidget);
   });
 }

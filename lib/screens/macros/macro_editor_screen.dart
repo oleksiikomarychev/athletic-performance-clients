@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/macro.dart';
 import 'package:workout_app/providers/macro_providers.dart';
 import 'package:workout_app/screens/macros/widgets/action_builder.dart';
@@ -111,7 +112,11 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
       }
       if (mounted) Navigator.of(context).pop(draft);
     } catch (e) {
-      setState(() => _error = 'Некорректный JSON правила: $e');
+      setState(
+        () => _error = AppLocalizations.of(context).macroEditorInvalidJsonRule(
+          e.toString(),
+        ),
+      );
     }
   }
 
@@ -160,6 +165,7 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
 
     return AssistantChatHost(
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         final theme = Theme.of(context);
         final scheme = theme.colorScheme;
         final instrument = InstrumentTheme.of(context);
@@ -169,15 +175,15 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
         return AmbientScaffoldShell(
           appBar: PrimaryAppBar(
             title: widget.initial.id == null
-                ? 'Создать макрос'
-                : 'Редактировать макрос',
+                ? l10n.macroEditorCreateTitle
+                : l10n.macroEditorEditTitle,
             onTitleTap: openChat,
             showBack: true,
             actions: [
               IconButton(
                 onPressed: _save,
                 icon: const Icon(Icons.save_outlined),
-                tooltip: 'Сохранить',
+                tooltip: l10n.tooltipSave,
               ),
             ],
           ),
@@ -222,7 +228,7 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
                 ],
                 _MacroClauseCard(
                   eyebrow: 'RULE METADATA',
-                  title: 'Параметры правила',
+                  title: l10n.macroEditorRuleParamsTitle,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -230,10 +236,10 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
                         controller: _nameCtrl,
                         decoration: InstrumentTheme.inputDecoration(
                           context,
-                          labelText: 'Название',
+                          labelText: l10n.macroEditorNameLabel,
                         ),
                         validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Обязательно'
+                            ? l10n.fieldRequired
                             : null,
                       ),
                       const SizedBox(height: 12),
@@ -249,12 +255,12 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
                             ),
                             decoration: InstrumentTheme.inputDecoration(
                               context,
-                              labelText: 'Приоритет',
+                              labelText: l10n.macroEditorPriorityLabel,
                             ),
                             keyboardType: TextInputType.number,
                             validator: (v) {
                               final n = int.tryParse(v ?? '');
-                              if (n == null) return 'Некорректное число';
+                              if (n == null) return l10n.macroEditorInvalidNumber;
                               if (n < 0 || n > 10000) return '0..10000';
                               return null;
                             },
@@ -270,7 +276,7 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
                                 children: [
                                   Flexible(
                                     child: Text(
-                                      'Активен',
+                                      l10n.macroEditorActiveLabel,
                                       style: theme.textTheme.titleSmall,
                                     ),
                                   ),
@@ -312,7 +318,7 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
                 const SizedBox(height: 14),
                 _MacroClauseCard(
                   eyebrow: '01 · TRIGGER',
-                  title: 'Триггер',
+                  title: l10n.macroEditorTriggerTitle,
                   child: TriggerBuilder(
                     initial: _trigger,
                     onChanged: (v) {
@@ -324,7 +330,7 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
                 const SizedBox(height: 14),
                 _MacroClauseCard(
                   eyebrow: '02 · CONDITION',
-                  title: 'Условие',
+                  title: l10n.macroEditorConditionTitle,
                   child: ConditionBuilder(
                     initial: _condition,
                     metric: (_trigger['metric'] as String?),
@@ -337,7 +343,7 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
                 const SizedBox(height: 14),
                 _MacroClauseCard(
                   eyebrow: '03 · ACTION',
-                  title: 'Действие',
+                  title: l10n.macroEditorActionTitle,
                   child: ActionBuilder(
                     initial: _action,
                     onChanged: (v) {
@@ -350,7 +356,7 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
                   const SizedBox(height: 14),
                   _MacroClauseCard(
                     eyebrow: '04 · DURATION',
-                    title: 'Длительность',
+                    title: l10n.macroEditorDurationTitle,
                     child: DurationSelector(
                       initial: _duration,
                       onChanged: (v) {
@@ -363,7 +369,7 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
                 const SizedBox(height: 14),
                 _MacroClauseCard(
                   eyebrow: 'PLAIN-LANGUAGE READOUT',
-                  title: 'Естественное описание',
+                  title: l10n.macroEditorNaturalDescTitle,
                   accentColor: instrument.deloadAura,
                   child: MacroHumanPreview(
                     trigger: humanTrigger,
@@ -396,7 +402,7 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
                                 ),
                                 const SizedBox(height: 3),
                                 Text(
-                                  'Редактировать JSON',
+                                  l10n.macroEditorEditJson,
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -432,20 +438,20 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
                           ),
                           decoration: InstrumentTheme.inputDecoration(
                             context,
-                            labelText: 'Правило (предпросмотр JSON)',
+                            labelText: l10n.macroEditorRuleJsonLabel,
                           ),
                           validator: (v) {
                             if (!_editRawJson) return null;
                             if (v == null || v.trim().isEmpty) {
-                              return 'Обязательно';
+                              return l10n.fieldRequired;
                             }
                             try {
                               final parsed = jsonDecode(v);
                               if (parsed is! Map) {
-                                return 'Должен быть JSON-объект';
+                                return l10n.macroEditorMustBeJsonObject;
                               }
                             } catch (_) {
-                              return 'Некорректный JSON';
+                              return l10n.macroEditorInvalidJson;
                             }
                             return null;
                           },
@@ -456,7 +462,7 @@ class _MacroEditorScreenState extends ConsumerState<MacroEditorScreen> {
                 ),
                 const SizedBox(height: 16),
                 InstrumentActionButton(
-                  label: 'Сохранить',
+                  label: l10n.tooltipSave,
                   icon: Icons.save_rounded,
                   expanded: true,
                   onPressed: _save,

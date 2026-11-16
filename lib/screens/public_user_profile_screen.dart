@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/user_profile.dart';
 import 'package:workout_app/models/user_stats.dart';
 import 'package:workout_app/providers/ambient_environment_provider.dart';
@@ -38,10 +39,11 @@ class PublicUserProfileScreen extends ConsumerWidget {
 
     return AssistantChatHost(
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return AmbientScaffoldShell(
           environment: env,
           appBar: PrimaryAppBar(
-            title: initialName ?? 'Profile',
+            title: initialName ?? l10n.profileTitle,
             onTitleTap: openChat,
           ),
           body: RefreshIndicator(
@@ -92,7 +94,7 @@ class PublicUserProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Failed to load profile: $error',
+              AppLocalizations.of(context).failedToLoadProfile('$error'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: scheme.onSurfaceVariant,
@@ -100,7 +102,7 @@ class PublicUserProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 14),
             InstrumentActionButton(
-              label: 'Retry',
+              label: AppLocalizations.of(context).retry,
               icon: Icons.refresh,
               variant: InstrumentActionVariant.primary,
               onPressed: () {
@@ -176,27 +178,30 @@ class PublicUserProfileScreen extends ConsumerWidget {
     WidgetRef ref,
     UserProfile profile,
   ) async {
+    final l10n = AppLocalizations.of(context);
     final noteController = TextEditingController();
     final result = await showInstrumentDialog<bool>(
       context: context,
-      eyebrow: 'COACHING REQUEST',
-      title: 'Request coaching from ${profile.displayName ?? profile.userId}',
+      eyebrow: l10n.coachingRequestEyebrow,
+      title: l10n.requestCoachingFromTitle(
+        profile.displayName ?? profile.userId,
+      ),
       content: TextField(
         controller: noteController,
         decoration: InstrumentTheme.inputDecoration(
           context,
-          labelText: 'Message (optional)',
+          labelText: l10n.messageOptionalLabel,
         ),
         maxLines: 3,
       ),
       actionsBuilder: (ctx) => [
         InstrumentActionButton(
-          label: 'Cancel',
+          label: l10n.cancel,
           variant: InstrumentActionVariant.secondary,
           onPressed: () => Navigator.of(ctx).pop(false),
         ),
         InstrumentActionButton(
-          label: 'Send',
+          label: l10n.sendLabel,
           variant: InstrumentActionVariant.primary,
           onPressed: () => Navigator.of(ctx).pop(true),
         ),
@@ -212,7 +217,7 @@ class PublicUserProfileScreen extends ConsumerWidget {
         note: noteController.text.trim(),
       );
       if (context.mounted) {
-        showAppSnackBar(context, 'Request sent');
+        showAppSnackBar(context, l10n.requestSentMessage);
       }
     } catch (e) {
       if (context.mounted) {
@@ -261,7 +266,7 @@ class PublicUserProfileScreen extends ConsumerWidget {
         const SizedBox(height: 12),
         if (!isSelf && coaching != null && coaching.enabled) ...[
           InstrumentActionButton(
-            label: 'Write a Review',
+            label: AppLocalizations.of(context).writeReviewLabel,
             icon: Icons.star_rounded,
             variant: InstrumentActionVariant.primary,
             onPressed: () => _showReviewDialog(context, ref, profile),
@@ -344,7 +349,11 @@ class PublicUserProfileScreen extends ConsumerWidget {
       );
     } catch (e) {
       if (context.mounted) {
-        showAppSnackBar(context, 'Cannot review: $e', isError: true);
+        showAppSnackBar(
+          context,
+          AppLocalizations.of(context).cannotReviewError('$e'),
+          isError: true,
+        );
       }
     }
   }

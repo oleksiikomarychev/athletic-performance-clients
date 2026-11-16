@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:workout_app/config/constants/route_names.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/responsive.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/responsive_container.dart';
@@ -11,6 +12,7 @@ class SettingsHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final instrument = InstrumentTheme.of(context);
@@ -20,7 +22,7 @@ class SettingsHomeScreen extends StatelessWidget {
             .withValues(alpha: isDark ? 0.85 : 0.55);
 
     return AmbientScaffoldShell(
-      appBar: const PrimaryAppBar.detail(title: 'Settings'),
+      appBar: PrimaryAppBar.detail(title: l10n.settings),
       body: ResponsiveContainer(
         maxWidth: Breakpoints.maxContentWidthNarrow,
         child: ListView(
@@ -69,7 +71,7 @@ class SettingsHomeScreen extends StatelessWidget {
                   _SettingsNavRow(
                     icon: Icons.tune_rounded,
                     iconColor: instrument.workingAura,
-                    title: 'General',
+                    title: l10n.settingsGeneral,
                     subtitle: 'Theme, density, language, coaching & account',
                     onTap: () {
                       Navigator.of(context).pushNamed(RouteNames.settingsGeneral);
@@ -79,8 +81,8 @@ class SettingsHomeScreen extends StatelessWidget {
                   _SettingsNavRow(
                     icon: Icons.file_upload_outlined,
                     iconColor: instrument.deloadAura,
-                    title: 'Import workouts',
-                    subtitle: 'Import Hevy CSV training history',
+                    title: l10n.settingsImportWorkouts,
+                    subtitle: l10n.settingsImportWorkoutsSubtitle,
                     onTap: () {
                       Navigator.of(context).pushNamed(RouteNames.settingsImport);
                     },
@@ -89,8 +91,8 @@ class SettingsHomeScreen extends StatelessWidget {
                   _SettingsNavRow(
                     icon: Icons.analytics_outlined,
                     iconColor: instrument.moderateEffortColor,
-                    title: 'Amplitude Test',
-                    subtitle: 'Diagnostics and funnel event telemetry',
+                    title: l10n.settingsAmplitudeTest,
+                    subtitle: l10n.settingsAmplitudeTestSubtitle,
                     onTap: () {
                       Navigator.of(context).pushNamed(RouteNames.amplitudeTest);
                     },

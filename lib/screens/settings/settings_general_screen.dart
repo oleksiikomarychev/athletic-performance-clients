@@ -106,7 +106,7 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
     final bottomInset = AmbientScaffoldShell.bottomContentInset(context);
 
     return AmbientScaffoldShell(
-      appBar: PrimaryAppBar.detail(title: 'General settings'),
+      appBar: PrimaryAppBar.detail(title: l10n.settingsGeneralTitle),
       body: ResponsiveContainer(
         maxWidth: Breakpoints.maxContentWidthNarrow,
         child: profileAsync.when(
@@ -133,7 +133,7 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'PROFILE LOAD ERROR',
+                      l10n.profileLoadErrorEyebrow,
                       style: InstrumentTheme.microLabel(
                         context,
                         color: instrument.peakEffortColor,
@@ -141,14 +141,14 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Failed to load profile: $e',
+                      l10n.failedToLoadProfile('$e'),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 14),
                     InstrumentActionButton(
-                      label: 'Retry',
+                      label: l10n.retry,
                       icon: Icons.refresh_rounded,
                       variant: InstrumentActionVariant.secondary,
                       onPressed: () => ref.invalidate(userProfileProvider),
@@ -370,25 +370,25 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
             Future<void> pickThemeMode() async {
               final selected = await showInstrumentBottomSheet<ThemeMode>(
                 context: context,
-                eyebrow: 'APPEARANCE',
-                title: 'Theme mode',
+                eyebrow: l10n.appearanceEyebrow,
+                title: l10n.settingsThemeMode,
                 builder: (ctx) => Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _SheetOptionRow(
-                      label: 'System',
+                      label: l10n.settingsThemeSystem,
                       selected: themeMode == ThemeMode.system,
                       onTap: () => Navigator.of(ctx).pop(ThemeMode.system),
                     ),
                     _SheetHairline(),
                     _SheetOptionRow(
-                      label: 'Light',
+                      label: l10n.settingsThemeLight,
                       selected: themeMode == ThemeMode.light,
                       onTap: () => Navigator.of(ctx).pop(ThemeMode.light),
                     ),
                     _SheetHairline(),
                     _SheetOptionRow(
-                      label: 'Dark',
+                      label: l10n.settingsThemeDark,
                       selected: themeMode == ThemeMode.dark,
                       onTap: () => Navigator.of(ctx).pop(ThemeMode.dark),
                     ),
@@ -404,21 +404,21 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
             Future<void> pickDensity() async {
               final selected = await showInstrumentBottomSheet<UiDensity>(
                 context: context,
-                eyebrow: 'LAYOUT SCALE',
-                title: 'Interface size',
+                eyebrow: l10n.layoutScaleEyebrow,
+                title: l10n.settingsInterfaceSize,
                 builder: (ctx) => Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _SheetOptionRow(
-                      label: 'Compact',
-                      subtitle: 'Less space between elements',
+                      label: l10n.settingsDensityCompact,
+                      subtitle: l10n.settingsDensityCompactSubtitle,
                       selected: density == UiDensity.compact,
                       onTap: () => Navigator.of(ctx).pop(UiDensity.compact),
                     ),
                     _SheetHairline(),
                     _SheetOptionRow(
-                      label: 'Comfortable',
-                      subtitle: 'More space between elements',
+                      label: l10n.settingsDensityComfortable,
+                      subtitle: l10n.settingsDensityComfortableSubtitle,
                       selected: density == UiDensity.comfortable,
                       onTap: () => Navigator.of(ctx).pop(UiDensity.comfortable),
                     ),
@@ -500,9 +500,9 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
             Future<void> signOut() async {
               final ok = await showInstrumentDialog<bool>(
                 context: context,
-                eyebrow: 'SESSION ACCESS',
-                title: 'Sign out',
-                message: 'Are you sure you want to sign out?',
+                eyebrow: l10n.sessionAccessEyebrow,
+                title: l10n.signOutAction,
+                message: l10n.signOutConfirmBody,
                 actionsBuilder: (ctx) => [
                   InstrumentActionButton(
                     label: l10n.cancel,
@@ -510,7 +510,7 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                     onPressed: () => Navigator.of(ctx).pop(false),
                   ),
                   InstrumentActionButton(
-                    label: 'Sign out',
+                    label: l10n.signOutAction,
                     variant: InstrumentActionVariant.secondary,
                     onPressed: () => Navigator.of(ctx).pop(true),
                   ),
@@ -523,10 +523,9 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
             Future<void> deleteAccount() async {
               final ok = await showInstrumentDialog<bool>(
                 context: context,
-                eyebrow: 'IRREVERSIBLE ACTION',
-                title: 'Delete account',
-                message:
-                    'This will schedule deletion of your account data. Continue?',
+                eyebrow: l10n.irreversibleActionEyebrow,
+                title: l10n.settingsDeleteAccountTitle,
+                message: l10n.deleteAccountConfirmMessage,
                 accentColor: instrument.peakEffortColor,
                 actionsBuilder: (ctx) => [
                   InstrumentActionButton(
@@ -535,7 +534,7 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                     onPressed: () => Navigator.of(ctx).pop(false),
                   ),
                   InstrumentActionButton(
-                    label: 'Delete',
+                    label: l10n.delete,
                     variant: InstrumentActionVariant.destructive,
                     onPressed: () => Navigator.of(ctx).pop(true),
                   ),
@@ -624,7 +623,7 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                   padding: EdgeInsets.zero,
                   items: [
                     CanvasPillItem(
-                      label: 'System',
+                      label: l10n.settingsThemeSystem,
                       icon: Icons.brightness_auto_outlined,
                       selected: themeMode == ThemeMode.system,
                       onTap: () => ref
@@ -632,7 +631,7 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                           .setThemeMode(ThemeMode.system),
                     ),
                     CanvasPillItem(
-                      label: 'Light',
+                      label: l10n.settingsThemeLight,
                       icon: Icons.light_mode_outlined,
                       selected: themeMode == ThemeMode.light,
                       onTap: () => ref
@@ -640,7 +639,7 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                           .setThemeMode(ThemeMode.light),
                     ),
                     CanvasPillItem(
-                      label: 'Dark',
+                      label: l10n.settingsThemeDark,
                       icon: Icons.dark_mode_outlined,
                       selected: themeMode == ThemeMode.dark,
                       onTap: () => ref
@@ -651,20 +650,20 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                 ),
                 const SizedBox(height: 14),
                 _GeneralModuleCard(
-                  eyebrow: 'APPEARANCE & LOCALE',
-                  title: 'Interface configuration',
+                  eyebrow: l10n.appearanceAndLocaleEyebrow,
+                  title: l10n.settingsInterfaceConfig,
                   children: [
                     _GeneralNavRow(
-                      title: 'Theme',
+                      title: l10n.settingsTheme,
                       subtitle: themeSubtitle(),
                       onTap: pickThemeMode,
                     ),
                     _SheetHairline(),
                     _GeneralNavRow(
-                      title: 'Interface size',
+                      title: l10n.settingsInterfaceSize,
                       subtitle: density == UiDensity.compact
-                          ? 'Compact'
-                          : 'Comfortable',
+                          ? l10n.settingsDensityCompact
+                          : l10n.settingsDensityComfortable,
                       onTap: pickDensity,
                     ),
                     _SheetHairline(),
@@ -676,15 +675,15 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                     _SheetHairline(),
                     _GeneralNavRow(
                       title: l10n.timezone,
-                      subtitle: timezone.isEmpty ? 'Not set' : timezone,
+                      subtitle: timezone.isEmpty ? l10n.notSetLabel : timezone,
                       onTap: editTimezone,
                     ),
                   ],
                 ),
                 const SizedBox(height: 14),
                 _GeneralModuleCard(
-                  eyebrow: 'PROFILE TELEMETRY',
-                  title: 'Visibility & charts',
+                  eyebrow: l10n.profileTelemetryEyebrow,
+                  title: l10n.visibilityAndCharts,
                   children: [
                     _GeneralToggleRow(
                       title: l10n.publicProfile,
@@ -693,7 +692,7 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                     ),
                     _SheetHairline(),
                     _GeneralToggleRow(
-                      title: 'Show activity chart',
+                      title: l10n.settingsShowActivityChart,
                       value: sectionPrefs.showActivityChart,
                       onChanged: (v) => ref
                           .read(profileScreenSectionsProvider.notifier)
@@ -701,7 +700,7 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                     ),
                     _SheetHairline(),
                     _GeneralToggleRow(
-                      title: 'Show workout history',
+                      title: l10n.settingsShowWorkoutHistory,
                       value: sectionPrefs.showWorkoutHistory,
                       onChanged: (v) => ref
                           .read(profileScreenSectionsProvider.notifier)
@@ -709,7 +708,7 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                     ),
                     _SheetHairline(),
                     _GeneralToggleRow(
-                      title: 'Show workout analytics',
+                      title: l10n.settingsShowWorkoutAnalytics,
                       value: sectionPrefs.showWorkoutAnalytics,
                       onChanged: (v) => ref
                           .read(profileScreenSectionsProvider.notifier)
@@ -717,7 +716,7 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                     ),
                     _SheetHairline(),
                     _GeneralToggleRow(
-                      title: 'Show all time',
+                      title: l10n.settingsShowAllTime,
                       value: sectionPrefs.workoutAnalyticsShowAllTime,
                       onChanged: sectionPrefs.showWorkoutAnalytics
                           ? (v) => ref
@@ -727,7 +726,7 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                     ),
                     _SheetHairline(),
                     _GeneralToggleRow(
-                      title: 'Use horizontal scroll',
+                      title: l10n.settingsUseHorizontalScroll,
                       value: sectionPrefs.workoutAnalyticsUseHorizontalScroll,
                       onChanged: sectionPrefs.showWorkoutAnalytics
                           ? (v) => ref
@@ -739,11 +738,11 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                 ),
                 const SizedBox(height: 14),
                 _GeneralModuleCard(
-                  eyebrow: 'COACHING & PAYOUTS',
-                  title: 'Trainer controls',
+                  eyebrow: l10n.coachingAndPayoutsEyebrow,
+                  title: l10n.settingsTrainerControls,
                   children: [
                     _GeneralToggleRow(
-                      title: 'Enable coaching',
+                      title: l10n.settingsEnableCoaching,
                       value: coachingEnabled,
                       onChanged: eligibleForCoaching
                           ? (v) => setCoachingEnabled(v)
@@ -751,10 +750,10 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                     ),
                     _SheetHairline(),
                     _GeneralNavRow(
-                      title: 'Coaching settings',
+                      title: l10n.coachingSettingsButton,
                       subtitle: eligibleForCoaching
                           ? null
-                          : 'Not available for this account',
+                          : l10n.notAvailableForAccount,
                       onTap: (coachingEnabled || eligibleForCoaching)
                           ? showCoachingSettingsDialog
                           : null,
@@ -763,8 +762,8 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                         coaching?.stripeConnectAccountId == null) ...[
                       _SheetHairline(),
                       _GeneralNavRow(
-                        title: 'Connect Stripe payouts',
-                        subtitle: 'Set up payment processing for coaching',
+                        title: l10n.settingsConnectStripe,
+                        subtitle: l10n.settingsConnectStripeSubtitle,
                         onTap: connectStripe,
                       ),
                     ],
@@ -772,8 +771,8 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                         coaching?.stripeConnectAccountId != null) ...[
                       _SheetHairline(),
                       _GeneralNavRow(
-                        title: 'Stripe connected',
-                        subtitle: 'Payment processing is set up',
+                        title: l10n.settingsStripeConnected,
+                        subtitle: l10n.settingsStripeConnectedSubtitle,
                         trailing: Icon(
                           Icons.check_circle_rounded,
                           color: instrument.successColor,
@@ -786,16 +785,16 @@ class _SettingsGeneralScreenState extends ConsumerState<SettingsGeneralScreen> {
                 ),
                 const SizedBox(height: 14),
                 _GeneralModuleCard(
-                  eyebrow: 'ACCOUNT ZONE',
-                  title: 'Session & data',
+                  eyebrow: l10n.accountZoneEyebrow,
+                  title: l10n.sessionAndDataTitle,
                   children: [
                     _GeneralNavRow(
-                      title: 'Sign out',
+                      title: l10n.signOutAction,
                       onTap: signOut,
                     ),
                     _SheetHairline(),
                     _GeneralNavRow(
-                      title: 'Delete account',
+                      title: l10n.settingsDeleteAccountTitle,
                       titleColor: instrument.peakEffortColor,
                       trailing: Icon(
                         Icons.delete_outline_rounded,
@@ -1166,6 +1165,7 @@ class _CoachingSettingsDialogFormState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
@@ -1174,7 +1174,7 @@ class _CoachingSettingsDialogFormState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _GeneralToggleRow(
-          title: 'Enable coaching features',
+          title: l10n.settingsEnableCoachingFeatures,
           value: _enabled,
           onChanged: (v) => setState(() => _enabled = v),
         ),
@@ -1183,7 +1183,7 @@ class _CoachingSettingsDialogFormState
           controller: _taglineController,
           decoration: InstrumentTheme.inputDecoration(
             context,
-            labelText: 'Tagline',
+            labelText: l10n.settingsTaglineLabel,
           ),
         ),
         const SizedBox(height: 10),
@@ -1191,12 +1191,15 @@ class _CoachingSettingsDialogFormState
           controller: _descriptionController,
           decoration: InstrumentTheme.inputDecoration(
             context,
-            labelText: 'Description',
+            labelText: l10n.settingsDescriptionLabel,
           ),
           maxLines: 3,
         ),
         const SizedBox(height: 14),
-        Text('SPECIALIZATIONS', style: InstrumentTheme.microLabel(context)),
+        Text(
+          l10n.settingsSpecializationsHeader,
+          style: InstrumentTheme.microLabel(context),
+        ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -1212,7 +1215,10 @@ class _CoachingSettingsDialogFormState
           ],
         ),
         const SizedBox(height: 14),
-        Text('LANGUAGES', style: InstrumentTheme.microLabel(context)),
+        Text(
+          l10n.settingsLanguagesHeader,
+          style: InstrumentTheme.microLabel(context),
+        ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -1235,13 +1241,13 @@ class _CoachingSettingsDialogFormState
           ),
           decoration: InstrumentTheme.inputDecoration(
             context,
-            labelText: 'Rate per month (USD)',
+            labelText: l10n.settingsRatePerMonthUsd,
           ),
           keyboardType: TextInputType.number,
         ),
         const SizedBox(height: 6),
         Text(
-          'Amount is entered in dollars (e.g. 120 = \$120.00).',
+          l10n.ratePerMonthHelper,
           style: theme.textTheme.labelSmall?.copyWith(
             color: scheme.onSurfaceVariant,
             fontFeatures: const [FontFeature.tabularFigures()],
@@ -1288,11 +1294,12 @@ class _TimezoneDialogFormState extends State<_TimezoneDialogForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return TextField(
       controller: _controller,
       decoration: InstrumentTheme.inputDecoration(
         context,
-        hintText: 'e.g. Europe/Kyiv',
+        hintText: l10n.settingsTimezoneHint,
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 import 'package:workout_app/models/calendar_plan_summary.dart';
 import 'package:workout_app/providers/ambient_environment_provider.dart';
@@ -58,7 +59,10 @@ class PlanPassportCard extends StatelessWidget {
     return labels[key] ?? raw.replaceAll('_', ' ');
   }
 
-  List<InstrumentMetricCellData> _defaultCells(CalendarPlan plan) {
+  List<InstrumentMetricCellData> _defaultCells(
+    CalendarPlan plan,
+    AppLocalizations l10n,
+  ) {
     final adoptedText = adoptersLoading
         ? '…'
         : (adoptersError != null ? '—' : '${adoptersCount ?? 0}');
@@ -79,7 +83,7 @@ class PlanPassportCard extends StatelessWidget {
       ),
       InstrumentMetricCellData(
         slot: MetricSlot.setsCount,
-        label: 'MICROCYCLES',
+        label: l10n.metricMicrocyclesShort,
         value: microCount > 0
             ? '$microCount'
             : (plan.sessionDurationTargetMin != null
@@ -88,7 +92,7 @@ class PlanPassportCard extends StatelessWidget {
       ),
       InstrumentMetricCellData(
         slot: MetricSlot.kpsh,
-        label: 'APPLIED',
+        label: l10n.metricAppliedShort,
         value: adoptedText,
       ),
     ];
@@ -141,7 +145,8 @@ class PlanPassportCard extends StatelessWidget {
     ];
 
     final equipmentList = plan.requiredEquipment ?? const <String>[];
-    final cells = metricCells ?? _defaultCells(plan);
+    final l10n = AppLocalizations.of(context);
+    final cells = metricCells ?? _defaultCells(plan, l10n);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
@@ -191,7 +196,7 @@ class PlanPassportCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 5),
                           Text(
-                            env.badgeLabel,
+                            env.localizedBadgeLabel(l10n),
                             style: InstrumentTheme.microLabel(
                               context,
                               color: accent,
@@ -213,7 +218,7 @@ class PlanPassportCard extends StatelessWidget {
                   if (showBriefing) ...[
                     const SizedBox(height: 5),
                     Text(
-                      env.briefing(snarky: snarkyVoice),
+                      env.localizedBriefing(l10n, snarky: snarkyVoice),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colors.onSurfaceVariant,
                         height: 1.35,
@@ -405,9 +410,10 @@ class PlanVariantsBar extends StatelessWidget {
       );
     }
 
+    final l10n = AppLocalizations.of(context);
     final items = <CanvasPillItem>[
       CanvasPillItem(
-        label: 'Оригинал',
+        label: l10n.planVariantOriginal,
         icon: Icons.star_rounded,
         selected: currentPlanId == origId,
         accentColor: instrument.moderateEffortColor,
@@ -428,7 +434,7 @@ class PlanVariantsBar extends StatelessWidget {
             ),
           ),
       CanvasPillItem(
-        label: '+ Вариант',
+        label: l10n.planVariantAdd,
         icon: Icons.add,
         onTap: onCreateVariant,
       ),
@@ -483,7 +489,7 @@ class PlanAnalyticsInstrumentShell extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Аналитика плана',
+                      AppLocalizations.of(context).planAnalyticsTitle,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.2,
@@ -502,7 +508,9 @@ class PlanAnalyticsInstrumentShell extends StatelessWidget {
                 width: 48,
                 height: 48,
                 child: IconButton(
-                  tooltip: expanded ? 'Свернуть' : 'Развернуть',
+                  tooltip: expanded
+                      ? AppLocalizations.of(context).tooltipCollapse
+                      : AppLocalizations.of(context).tooltipExpand,
                   style: IconButton.styleFrom(
                     minimumSize: const Size(48, 48),
                     tapTargetSize: MaterialTapTargetSize.padded,

@@ -190,14 +190,14 @@ class UserProfileScreen extends ConsumerWidget {
             },
             child: profileAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => _buildErrorState(ref, error),
+              error: (error, _) => _buildErrorState(context, ref, error),
               data: (profile) {
                 return ref
                     .watch(profileAggregatesProvider)
                     .when(
                       loading: () =>
                           const Center(child: CircularProgressIndicator()),
-                      error: (error, _) => _buildErrorState(ref, error),
+                      error: (error, _) => _buildErrorState(context, ref, error),
                       data: (stats) => _buildContent(
                         hostContext,
                         ref,
@@ -364,15 +364,15 @@ class UserProfileScreen extends ConsumerWidget {
                         Expanded(
                           child: DropdownButtonFormField<String>(
                             initialValue: sex,
-                            decoration: const InputDecoration(labelText: 'Sex'),
-                            items: const [
+                            decoration: InputDecoration(labelText: l10n.sexLabel),
+                            items: [
                               DropdownMenuItem(
                                 value: 'male',
-                                child: Text('Male'),
+                                child: Text(l10n.sexMale),
                               ),
                               DropdownMenuItem(
                                 value: 'female',
-                                child: Text('Female'),
+                                child: Text(l10n.sexFemale),
                               ),
                             ],
                             onChanged: (value) {
@@ -384,21 +384,21 @@ class UserProfileScreen extends ConsumerWidget {
                         Expanded(
                           child: DropdownButtonFormField<String>(
                             initialValue: experienceLevel,
-                            decoration: const InputDecoration(
-                              labelText: 'Experience level',
+                            decoration: InputDecoration(
+                              labelText: l10n.experienceLevelLabel,
                             ),
-                            items: const [
+                            items: [
                               DropdownMenuItem(
                                 value: 'beginner',
-                                child: Text('Beginner'),
+                                child: Text(l10n.experienceBeginner),
                               ),
                               DropdownMenuItem(
                                 value: 'intermediate',
-                                child: Text('Intermediate'),
+                                child: Text(l10n.experienceIntermediate),
                               ),
                               DropdownMenuItem(
                                 value: 'advanced',
-                                child: Text('Advanced'),
+                                child: Text(l10n.experienceAdvanced),
                               ),
                             ],
                             onChanged: (value) {
@@ -411,25 +411,25 @@ class UserProfileScreen extends ConsumerWidget {
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       initialValue: primaryGoal,
-                      decoration: const InputDecoration(
-                        labelText: 'Primary goal',
+                      decoration: InputDecoration(
+                        labelText: l10n.primaryGoalLabel,
                       ),
-                      items: const [
+                      items: [
                         DropdownMenuItem(
                           value: 'strength',
-                          child: Text('Strength'),
+                          child: Text(l10n.goalStrength),
                         ),
                         DropdownMenuItem(
                           value: 'hypertrophy',
-                          child: Text('Hypertrophy'),
+                          child: Text(l10n.goalHypertrophy),
                         ),
                         DropdownMenuItem(
                           value: 'fat_loss',
-                          child: Text('Fat loss'),
+                          child: Text(l10n.goalFatLoss),
                         ),
                         DropdownMenuItem(
                           value: 'general_fitness',
-                          child: Text('General fitness'),
+                          child: Text(l10n.goalGeneralFitness),
                         ),
                       ],
                       onChanged: (value) {
@@ -439,18 +439,21 @@ class UserProfileScreen extends ConsumerWidget {
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       initialValue: trainingEnvironment,
-                      decoration: const InputDecoration(
-                        labelText: 'Training environment',
+                      decoration: InputDecoration(
+                        labelText: l10n.trainingEnvironmentLabel,
                       ),
-                      items: const [
+                      items: [
                         DropdownMenuItem(
                           value: 'commercial_gym',
-                          child: Text('Commercial gym'),
+                          child: Text(l10n.envCommercialGym),
                         ),
-                        DropdownMenuItem(value: 'home', child: Text('Home')),
+                        DropdownMenuItem(
+                          value: 'home',
+                          child: Text(l10n.envHome),
+                        ),
                         DropdownMenuItem(
                           value: 'garage',
-                          child: Text('Garage'),
+                          child: Text(l10n.envGarage),
                         ),
                       ],
                       onChanged: (value) {
@@ -531,18 +534,18 @@ class UserProfileScreen extends ConsumerWidget {
     ref.invalidate(profileWorkoutHistoryAnalyticsProvider);
   }
 
-  Widget _buildErrorState(WidgetRef ref, Object error) {
+  Widget _buildErrorState(BuildContext context, WidgetRef ref, Object error) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.error_outline, size: 48, color: AppColors.error),
           const SizedBox(height: 16),
-          Text('Ошибка загрузки: $error'),
+          Text(AppLocalizations.of(context).loadErrorWithDetails(error.toString())),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => _invalidateAllProfileProviders(ref),
-            child: Text('Повторить'),
+            child: Text(AppLocalizations.of(context).retry),
           ),
         ],
       ),
@@ -736,13 +739,17 @@ class UserProfileScreen extends ConsumerWidget {
                       } catch (e) {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Failed to apply: $e')),
+                            SnackBar(
+                              content: Text(
+                                AppLocalizations.of(context).failedToApply('$e'),
+                              ),
+                            ),
                           );
                         }
                       }
                     },
-              icon: Icon(Icons.check_circle_outline),
-              label: Text('Use as profile picture'),
+              icon: const Icon(Icons.check_circle_outline),
+              label: Text(AppLocalizations.of(context).useAsProfilePicture),
             ),
           ),
         if (imageBytes != null) const SizedBox(height: 12),
@@ -754,8 +761,8 @@ class UserProfileScreen extends ConsumerWidget {
                 onChanged: (v) =>
                     ref.read(avatarPromptProvider.notifier).state = v,
                 decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.casino_outlined),
-                  hintText: 'Describe your avatar',
+                  prefixIcon: const Icon(Icons.casino_outlined),
+                  hintText: AppLocalizations.of(context).describeYourAvatarHint,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 12,
@@ -786,7 +793,13 @@ class UserProfileScreen extends ConsumerWidget {
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Failed: $e')),
+                              SnackBar(
+                                content: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  ).failedWithError('$e'),
+                                ),
+                              ),
                             );
                           }
                         } finally {
@@ -811,7 +824,7 @@ class UserProfileScreen extends ConsumerWidget {
                           color: Colors.white,
                         ),
                       )
-                    : Text('Generate'),
+                    : Text(AppLocalizations.of(context).generate),
               ),
             ),
           ],
@@ -1073,7 +1086,9 @@ class UserProfileScreen extends ConsumerWidget {
         const SizedBox(height: 16),
         sessionsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Text('Ошибка загрузки списка: $error'),
+          error: (error, _) => Text(
+            AppLocalizations.of(context).listLoadErrorWithDetails(error.toString()),
+          ),
           data: (sessions) => Column(
             children: sessions
                 .map((s) => _buildWorkoutCard(context, s))
@@ -1246,15 +1261,15 @@ class _UserHistoryAnalyticsSectionState
       case 'sets_count':
         return l10n.coachAthletePlanMetricSets;
       case 'volume_sum':
-        return 'КПШ';
+        return l10n.chartMetricRepsTotal;
       case 'reps_per_set_avg':
-        return 'Повт. в подходе (ср.)';
+        return l10n.chartMetricRepsPerSetAvg;
       case 'kilograms_avg':
-        return 'Килограммы (ср.)';
+        return l10n.chartMetricKgAvg;
       case 'tonnage_sum':
-        return 'Тоннаж';
+        return l10n.chartMetricTonnage;
       case 'one_rm_est_avg':
-        return 'Разовый максимум (расч.)';
+        return l10n.chartMetricE1rm;
       case 'intensity_avg':
         return l10n.coachAthletePlanMetricIntensity;
       case 'effort_avg':
@@ -1483,7 +1498,7 @@ class _UserHistoryAnalyticsSectionState
                   const SizedBox(height: 6),
                   if (options.isEmpty)
                     Text(
-                      'Нет опций',
+                      AppLocalizations.of(ctx2).noOptions,
                       style: TextStyle(color: Theme.of(ctx2).colorScheme.onSurfaceVariant),
                     )
                   else
@@ -1536,7 +1551,9 @@ class _UserHistoryAnalyticsSectionState
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       initialValue: metric,
-                      decoration: const InputDecoration(labelText: 'Ось Y'),
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(ctx2).yAxisLabel,
+                      ),
                       items: _metrics
                           .map(
                             (m) => DropdownMenuItem<String>(
@@ -1551,13 +1568,13 @@ class _UserHistoryAnalyticsSectionState
                       },
                     ),
                     buildMultiSelect<int>(
-                      title: 'Упражнения',
+                      title: AppLocalizations.of(ctx2).planDetailExercisesTitle,
                       options: allExerciseIds,
                       selected: selectedExerciseIds,
                       labelOf: (id) => _layerKeyLabel('exercise:$id', meta),
                     ),
                     buildMultiSelect<String>(
-                      title: 'Мышцы',
+                      title: AppLocalizations.of(ctx2).musclesTitle,
                       options: allMuscles,
                       selected: selectedMuscles,
                       labelOf: (m) => _layerKeyLabel('muscle:$m', meta),
@@ -1568,7 +1585,7 @@ class _UserHistoryAnalyticsSectionState
                         Expanded(
                           child: TextButton(
                             onPressed: () => Navigator.of(ctx2).pop(),
-                            child: Text('Cancel'),
+                            child: Text(AppLocalizations.of(ctx2).cancel),
                           ),
                         ),
                         Expanded(
@@ -1598,7 +1615,7 @@ class _UserHistoryAnalyticsSectionState
                               _syncAnalyticsLayers();
                               Navigator.of(ctx2).pop();
                             },
-                            child: Text('Apply'),
+                            child: Text(AppLocalizations.of(ctx2).apply),
                           ),
                         ),
                       ],
@@ -1615,6 +1632,7 @@ class _UserHistoryAnalyticsSectionState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     _ensureDefaultSeries();
     final async = ref.watch(profileWorkoutHistoryAnalyticsProvider);
     final sectionPrefs = ref.watch(profileScreenSectionsProvider);
@@ -1627,7 +1645,7 @@ class _UserHistoryAnalyticsSectionState
       ),
       error: (e, _) => SizedBox(
         height: 280,
-        child: Center(child: Text('Failed to load analytics: $e')),
+        child: Center(child: Text(l10n.failedToLoadAnalytics('$e'))),
       ),
       data: (resp) {
         final meta = resp?.meta is Map<String, dynamic>
@@ -1706,7 +1724,7 @@ class _UserHistoryAnalyticsSectionState
                         minimumSize: const Size(48, 48),
                         tapTargetSize: MaterialTapTargetSize.padded,
                       ),
-                      tooltip: 'Add series',
+                      tooltip: l10n.addSeriesTooltip,
                       onPressed: () => _openSeriesEditor(resp),
                       icon: const Icon(Icons.add),
                     ),
@@ -1719,7 +1737,7 @@ class _UserHistoryAnalyticsSectionState
                         minimumSize: const Size(48, 48),
                         tapTargetSize: MaterialTapTargetSize.padded,
                       ),
-                      tooltip: 'Clear',
+                      tooltip: l10n.clearTooltip,
                       onPressed: () {
                         setState(() {
                           _seriesConfigs.clear();
@@ -1775,7 +1793,7 @@ class _UserHistoryAnalyticsSectionState
                         metricY: metricX,
                         lineSeries: series,
                         scatterSeries: null,
-                        emptyText: 'Нет данных',
+                        emptyText: AppLocalizations.of(context).noData,
                         showScatterAxisTitles: false,
                         bottomLabelModulo:
                             useHScroll && desiredWidth > constraints.maxWidth

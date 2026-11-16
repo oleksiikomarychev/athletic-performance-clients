@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/user_summary.dart';
 import 'package:workout_app/providers/ambient_environment_provider.dart';
 import 'package:workout_app/providers/interface_maker_provider.dart';
@@ -49,7 +50,7 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
 
     return AssistantChatHost(
       initialMessage:
-          'Открываю ассистента из AllUsersScreen. Помогаю выбрать тренера или найти профиль в каталоге пользователей.',
+          'Opening assistant from AllUsersScreen. Helping select a coach or find a profile in the user directory.',
       contextBuilder: () async => <String, dynamic>{
         'v': 1,
         'app': 'WorkoutApp',
@@ -63,16 +64,17 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
         },
       },
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return AmbientScaffoldShell(
           environment: env,
           appBar: PrimaryAppBar(
-            title: 'All Users',
+            title: l10n.allUsersTitle,
             onTitleTap: openChat,
             actions: [
               if (_filterCoaches)
                 IconButton(
                   icon: const Icon(Icons.tune),
-                  tooltip: 'Filter coaches',
+                  tooltip: l10n.filterCoachesLabel,
                   onPressed: _showFilterBottomSheet,
                 ),
             ],
@@ -96,7 +98,7 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Failed to load users: $error',
+                        l10n.failedToLoadData('$error'),
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: scheme.onSurfaceVariant,
@@ -104,7 +106,7 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
                       ),
                       const SizedBox(height: 14),
                       InstrumentActionButton(
-                        label: 'Retry',
+                        label: l10n.retry,
                         icon: Icons.refresh,
                         variant: InstrumentActionVariant.primary,
                         onPressed: () => ref.invalidate(filteredUsersProvider),
@@ -122,10 +124,11 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
   }
 
   void _showFilterBottomSheet() {
+    final l10n = AppLocalizations.of(context);
     showInstrumentBottomSheet<void>(
       context: context,
-      eyebrow: 'COACH DIRECTORY',
-      title: 'Filter Coaches',
+      eyebrow: l10n.coachDirectoryEyebrow,
+      title: l10n.filterCoachesTitle,
       builder: (sheetCtx) => _FilterBottomSheet(
         filters: _filters,
         onApply: (newFilters) {
@@ -172,7 +175,7 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
           items: [
             CanvasPillItem(
               key: const ValueKey('role_all'),
-              label: 'All users',
+              label: AppLocalizations.of(context).allUsersPillLabel,
               icon: Icons.people_outline,
               selected: !_filterCoaches,
               onTap: () {
@@ -184,7 +187,7 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
             ),
             CanvasPillItem(
               key: const ValueKey('role_coaches'),
-              label: 'Coaches only',
+              label: AppLocalizations.of(context).coachesOnlyPillLabel,
               icon: Icons.workspace_premium_outlined,
               selected: _filterCoaches,
               accentColor: instrument.successColor,
@@ -198,7 +201,9 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
             if (_filterCoaches)
               CanvasPillItem(
                 key: const ValueKey('coach_filters'),
-                label: hasExtraFilters ? 'Filters · Active' : 'Filter coaches',
+                label: hasExtraFilters
+                    ? AppLocalizations.of(context).filtersActiveLabel
+                    : AppLocalizations.of(context).filterCoachesLabel,
                 icon: Icons.tune,
                 selected: hasExtraFilters,
                 accentColor: instrument.moderateEffortColor,
@@ -219,7 +224,7 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'DIRECTORY TELEMETRY',
+                  AppLocalizations.of(context).coachDirectoryEyebrow,
                   style: InstrumentTheme.microLabel(context),
                 ),
                 const SizedBox(height: 10),
@@ -227,24 +232,24 @@ class _AllUsersScreenState extends ConsumerState<AllUsersScreen> {
                   cells: [
                     InstrumentMetricCellData(
                       slot: MetricSlot.setsCount,
-                      label: 'SHOWING',
+                      label: AppLocalizations.of(context).showingUpperLabel,
                       value: '${users.length}',
                       valueColor: instrument.workingAura,
                     ),
                     InstrumentMetricCellData(
                       slot: MetricSlot.kpsh,
-                      label: 'PUBLIC',
+                      label: AppLocalizations.of(context).publicUpperLabel,
                       value: '$publicCount',
                       valueColor: instrument.successColor,
                     ),
                     InstrumentMetricCellData(
                       slot: MetricSlot.frequencyPerWeek,
-                      label: 'COACHES',
+                      label: AppLocalizations.of(context).coachesUpperLabel,
                       value: '$coachCount',
                     ),
                     InstrumentMetricCellData(
                       slot: MetricSlot.density,
-                      label: 'SORT',
+                      label: AppLocalizations.of(context).sortUpperLabel,
                       value: (_filters.sortBy ?? 'created_at').toUpperCase(),
                     ),
                   ],
@@ -520,7 +525,10 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('SPECIALIZATIONS', style: InstrumentTheme.microLabel(context)),
+            Text(
+              AppLocalizations.of(context).settingsSpecializationsHeader,
+              style: InstrumentTheme.microLabel(context),
+            ),
             const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -544,7 +552,10 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
           ],
         ),
         const SizedBox(height: 16),
-        Text('LANGUAGES', style: InstrumentTheme.microLabel(context)),
+        Text(
+          AppLocalizations.of(context).settingsLanguagesHeader,
+          style: InstrumentTheme.microLabel(context),
+        ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -578,7 +589,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
               ),
               decoration: InstrumentTheme.inputDecoration(
                 context,
-                labelText: 'Min Rate (\$)',
+                labelText: AppLocalizations.of(context).minRateUsdLabel,
               ),
             );
             final maxField = TextField(
@@ -589,7 +600,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
               ),
               decoration: InstrumentTheme.inputDecoration(
                 context,
-                labelText: 'Max Rate (\$)',
+                labelText: AppLocalizations.of(context).maxRateUsdLabel,
               ),
             );
             if (constraints.maxWidth < 300) {
@@ -617,12 +628,21 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
           isExpanded: true,
           decoration: InstrumentTheme.inputDecoration(
             context,
-            labelText: 'Sort By',
+            labelText: AppLocalizations.of(context).sortByLabel,
           ),
-          items: const [
-            DropdownMenuItem(value: 'created_at', child: Text('Created At')),
-            DropdownMenuItem(value: 'rating', child: Text('Rating')),
-            DropdownMenuItem(value: 'last_active', child: Text('Last Active')),
+          items: [
+            DropdownMenuItem(
+              value: 'created_at',
+              child: Text(AppLocalizations.of(context).sortCreatedAt),
+            ),
+            DropdownMenuItem(
+              value: 'rating',
+              child: Text(AppLocalizations.of(context).sortRating),
+            ),
+            DropdownMenuItem(
+              value: 'last_active',
+              child: Text(AppLocalizations.of(context).sortLastActive),
+            ),
           ],
           onChanged: (value) {
             setState(() {
@@ -637,12 +657,12 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
           alignment: WrapAlignment.end,
           children: [
             InstrumentActionButton(
-              label: 'Clear',
+              label: AppLocalizations.of(context).clearTooltip,
               variant: InstrumentActionVariant.secondary,
               onPressed: widget.onClear,
             ),
             InstrumentActionButton(
-              label: 'Apply Filters',
+              label: AppLocalizations.of(context).applyFiltersLabel,
               variant: InstrumentActionVariant.primary,
               onPressed: _applyFilters,
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/responsive.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/services/user_analytics_service.dart';
 import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
 import 'package:workout_app/widgets/instrument_modal.dart';
@@ -164,8 +165,9 @@ class _AmplitudeTestScreenState extends State<AmplitudeTestScreen> {
         ? instrument.successColor
         : instrument.peakEffortColor;
 
+    final l10n = AppLocalizations.of(context);
     return AmbientScaffoldShell(
-      appBar: PrimaryAppBar.detail(title: 'Amplitude Test'),
+      appBar: PrimaryAppBar.detail(title: l10n.settingsAmplitudeTest),
       body: ResponsiveContainer(
         maxWidth: Breakpoints.maxContentWidthNarrow,
         child: ListView(
@@ -220,7 +222,7 @@ class _AmplitudeTestScreenState extends State<AmplitudeTestScreen> {
                   ),
                   const SizedBox(height: 18),
                   InstrumentActionButton(
-                    label: 'Send Test Event',
+                    label: l10n.amplitudeSendTestEvent,
                     icon: Icons.bolt_rounded,
                     loading: _isSending,
                     expanded: true,
@@ -228,7 +230,7 @@ class _AmplitudeTestScreenState extends State<AmplitudeTestScreen> {
                   ),
                   const SizedBox(height: 10),
                   InstrumentActionButton(
-                    label: 'Send Custom Event',
+                    label: l10n.amplitudeSendCustomEvent,
                     icon: Icons.analytics_outlined,
                     variant: InstrumentActionVariant.secondary,
                     expanded: true,
@@ -236,7 +238,7 @@ class _AmplitudeTestScreenState extends State<AmplitudeTestScreen> {
                   ),
                   const SizedBox(height: 10),
                   InstrumentActionButton(
-                    label: 'Show Debug Info',
+                    label: l10n.amplitudeShowDebugInfo,
                     icon: Icons.bug_report_outlined,
                     variant: InstrumentActionVariant.secondary,
                     expanded: true,
@@ -250,7 +252,7 @@ class _AmplitudeTestScreenState extends State<AmplitudeTestScreen> {
                   ),
                   const SizedBox(height: 10),
                   InstrumentActionButton(
-                    label: 'Test Time-to-First-Dollar Funnel',
+                    label: l10n.amplitudeTestFunnel,
                     icon: Icons.trending_up_rounded,
                     variant: InstrumentActionVariant.secondary,
                     expanded: true,

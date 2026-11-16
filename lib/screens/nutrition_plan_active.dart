@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/providers/interface_maker_provider.dart';
 import 'package:workout_app/providers/plan_providers.dart';
 import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
@@ -27,12 +28,13 @@ class NutritionPlanActive extends ConsumerWidget {
             activePlanSnapshot?.calendarPlan.nutritionPlan?.isNotEmpty ?? false,
       },
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         final topInset = AmbientScaffoldShell.topContentInset(context);
         final bottomInset = AmbientScaffoldShell.bottomContentInset(context);
 
         return AmbientScaffoldShell(
           appBar: PrimaryAppBar(
-            title: 'Active Nutrition Plan',
+            title: l10n.activeNutritionPlanTitle,
             onTitleTap: openChat,
             showBack: true,
           ),
@@ -44,7 +46,7 @@ class NutritionPlanActive extends ConsumerWidget {
             error: (error, _) => Padding(
               padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
               child: ErrorMessage(
-                message: 'Error: $error',
+                message: l10n.genericError('$error'),
                 onRetry: () => ref.invalidate(activeAppliedPlanProvider),
               ),
             ),
@@ -52,9 +54,9 @@ class NutritionPlanActive extends ConsumerWidget {
               if (activePlan == null) {
                 return Padding(
                   padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
-                  child: const EmptyState(
+                  child: EmptyState(
                     icon: Icons.calendar_today_outlined,
-                    title: 'No active calendar plan',
+                    title: l10n.noActiveCalendarPlan,
                     description:
                         'Apply a calendar plan to view its nutrition targets.',
                   ),
@@ -65,9 +67,9 @@ class NutritionPlanActive extends ConsumerWidget {
               if (nutritionPlan == null || nutritionPlan.isEmpty) {
                 return Padding(
                   padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
-                  child: const EmptyState(
+                  child: EmptyState(
                     icon: Icons.restaurant_menu_rounded,
-                    title: 'No nutrition plan configured',
+                    title: l10n.noNutritionPlanConfigured,
                     description:
                         'The active calendar plan does not define nutrition guidelines.',
                   ),
@@ -144,29 +146,30 @@ class NutritionPlanActive extends ConsumerWidget {
       return const [];
     }
 
+    final l10n = AppLocalizations.of(context);
     final instrument = InstrumentTheme.of(context);
     return [
       InstrumentMetricCellData(
         slot: MetricSlot.tonnage,
-        label: 'KCAL',
+        label: l10n.kcalUpperLabel,
         value: kcal ?? '—',
         valueColor: instrument.stormAura,
       ),
       InstrumentMetricCellData(
         slot: MetricSlot.peakIntensity,
-        label: 'PROTEIN',
+        label: l10n.proteinUpperLabel,
         value: protein != null ? '${protein}g' : '—',
         valueColor: instrument.deloadAura,
       ),
       InstrumentMetricCellData(
         slot: MetricSlot.avgRpe,
-        label: 'FAT',
+        label: l10n.fatUpperLabel,
         value: fat != null ? '${fat}g' : '—',
         valueColor: instrument.moderateEffortColor,
       ),
       InstrumentMetricCellData(
         slot: MetricSlot.setsCount,
-        label: 'CARB',
+        label: l10n.carbUpperLabel,
         value: carbs != null ? '${carbs}g' : '—',
         valueColor: instrument.workingAura,
       ),

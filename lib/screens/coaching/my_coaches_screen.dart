@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:workout_app/config/constants/route_names.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/crm_coach_athlete_link.dart';
 import 'package:workout_app/providers/ambient_environment_provider.dart';
 import 'package:workout_app/screens/coach/coach_chat_screen.dart';
@@ -64,15 +65,16 @@ class MyCoachesScreen extends ConsumerWidget {
 
     return AssistantChatHost(
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return AmbientScaffoldShell(
           environment: env,
           appBar: PrimaryAppBar(
-            title: 'My Coaches',
+            title: l10n.myCoachesTitle,
             onTitleTap: openChat,
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh),
-                tooltip: 'Refresh',
+                tooltip: l10n.refresh,
                 onPressed: () => ref.refresh(myCoachesProvider),
               ),
             ],
@@ -271,7 +273,7 @@ class MyCoachesScreen extends ConsumerWidget {
                               runSpacing: 8,
                               children: [
                                 InstrumentActionButton(
-                                  label: 'Analytics',
+                                  label: l10n.analyticsLabel,
                                   icon: Icons.insights_outlined,
                                   variant: InstrumentActionVariant.secondary,
                                   onPressed: () {
@@ -282,7 +284,7 @@ class MyCoachesScreen extends ConsumerWidget {
                                   },
                                 ),
                                 InstrumentActionButton(
-                                  label: 'Chat',
+                                  label: l10n.chatLabel,
                                   icon: Icons.chat_bubble_outline,
                                   variant: InstrumentActionVariant.secondary,
                                   onPressed: hasChannel
@@ -298,7 +300,7 @@ class MyCoachesScreen extends ConsumerWidget {
                                       : null,
                                 ),
                                 InstrumentActionButton(
-                                  label: 'Subscribe',
+                                  label: l10n.subscribeLabel,
                                   icon: Icons.credit_card_outlined,
                                   variant: InstrumentActionVariant.primary,
                                   onPressed: statusLower == 'active'
@@ -355,14 +357,22 @@ Future<void> _startCheckoutForLink(
     final uri = Uri.tryParse(urlStr);
     if (uri == null) {
       if (context.mounted) {
-        showAppSnackBar(context, 'Invalid checkout URL', isError: true);
+        showAppSnackBar(
+          context,
+          AppLocalizations.of(context).invalidCheckoutUrl,
+          isError: true,
+        );
       }
       return;
     }
     final canLaunch = await canLaunchUrl(uri);
     if (!canLaunch) {
       if (context.mounted) {
-        showAppSnackBar(context, 'Cannot open checkout URL', isError: true);
+        showAppSnackBar(
+          context,
+          AppLocalizations.of(context).cannotOpenCheckoutUrl,
+          isError: true,
+        );
       }
       return;
     }

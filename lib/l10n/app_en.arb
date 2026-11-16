@@ -1,6 +1,5 @@
 {
   "appTitle": "Workout App",
-
   "missingAthleteId": "Missing athleteId",
   "missingChatArguments": "Missing chat arguments",
   "fieldRequired": "Required",
@@ -167,37 +166,30 @@
   "macroWorkoutPickerWorkoutsOnDate": "Workouts on this date",
   "macroWorkoutPickerOrSelectFromList": "Or select from list",
   "macroWorkoutPickerList": "List",
-
   "analyticsPlanTitle": "Plan analytics {planName}",
   "@analyticsPlanTitle": {
     "placeholders": {
       "planName": {}
     }
   },
-
   "errorLoadingActivePlan": "Failed to load active plan",
   "selectTwoMetrics": "Select two metrics",
   "activePlanNotFound": "Active plan not found",
   "errorLoadingData": "Error loading data",
-
   "axisX": "X axis",
   "axisY": "Y axis",
   "showChart": "Show chart",
-
   "selectRangeAndMetrics": "Select a range and metrics",
   "noDataForSelectedMetrics": "No data for selected metrics",
-
   "metricVolumeKg": "Volume (kg)",
   "metricEffortRpe": "Effort (RPE)",
   "metricKpsh": "KPSH",
   "metricReps": "Reps",
   "metricOneRm": "1RM",
-
   "language": "Language",
   "languageSystem": "System",
   "languageEnglish": "English",
   "languageUkrainian": "Ukrainian",
-
   "accountTitle": "Account",
   "editProfileTitle": "Edit profile",
   "displayName": "Display name",
@@ -212,7 +204,6 @@
   "unitsImperial": "Imperial",
   "timezone": "Timezone",
   "notifications": "Notifications",
-  "cancel": "Cancel",
   "save": "Save",
   "profileUpdated": "Profile updated",
   "failedToUpdateProfile": "Failed to update profile",
@@ -230,25 +221,33 @@
   "coachingRate": "Rate",
   "coachingCustomRate": "Custom rate",
   "requestCoaching": "Request coaching",
-
   "statsTotalWorkouts": "Total Workouts",
   "statsVolumeKg": "Volume (kg)",
   "statsActiveDays": "Active Days",
-
   "activityTitle": "Activity",
   "lastWeeks": "Last {weeks} weeks",
-  "@lastWeeks": {"placeholders": {"weeks": {}}},
+  "@lastWeeks": {
+    "placeholders": {
+      "weeks": {}
+    }
+  },
   "maxKgPerDay": "Max: {value} kg/day",
-  "@maxKgPerDay": {"placeholders": {"value": {}}},
+  "@maxKgPerDay": {
+    "placeholders": {
+      "value": {}
+    }
+  },
   "sessionsCount": "{count} session(s)",
-  "@sessionsCount": {"placeholders": {"count": {}}},
+  "@sessionsCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "noActivity": "No activity",
   "less": "Less",
   "more": "More",
-
   "completedWorkoutsTitle": "Completed Workouts",
   "noCompletedWorkoutsYet": "No completed workouts yet",
-
   "exerciseFormTitleAdd": "Add exercise",
   "exerciseFormExerciseNameLabel": "Exercise name",
   "exerciseFormPleaseEnterName": "Please enter a name",
@@ -257,27 +256,30 @@
   "exerciseFormSelectGroup": "Select group",
   "exerciseFormLoadingGroups": "Loading groups...",
   "exerciseFormPleaseSelectMuscleGroup": "Please select a muscle group",
-
   "exerciseFormProgressionTemplateOptional": "Progression template (optional)",
   "exerciseFormSelectTemplate": "Select template",
   "exerciseFormNoTemplate": "No template",
-
   "exerciseFormSetsTitle": "Sets",
   "exerciseFormAddSet": "Add set",
   "exerciseFormSaveExercise": "Save exercise",
   "exerciseFormWeightKg": "Weight (kg)",
   "exerciseFormReps": "Reps",
   "exerciseFormRequired": "Required",
-
   "exerciseFormFailedToLoadData": "Failed to load data: {error}",
   "exerciseFormErrorSaving": "Error saving: {error}",
-
   "exerciseDefinitionIdRequired": "Exercise definition id is required",
   "exerciseFormDefaultReps": "5",
   "exerciseFormDefaultWeight": "0",
-  "@exerciseFormFailedToLoadData": {"placeholders": {"error": {}}},
-  "@exerciseFormErrorSaving": {"placeholders": {"error": {}}},
-
+  "@exerciseFormFailedToLoadData": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@exerciseFormErrorSaving": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "exerciseListTitle": "Exercises",
   "exerciseListAddExerciseTitle": "Add exercise",
   "exerciseListNameLabel": "Name",
@@ -298,13 +300,31 @@
   "exerciseListDeleteExerciseBody": "This action cannot be undone.",
   "exerciseListDelete": "Delete",
   "exerciseListErrorDeleting": "Failed to delete: {error}",
-
-  "@exerciseListErrorLoadingMuscleGroups": {"placeholders": {"error": {}}},
-  "@exerciseListErrorGeneric": {"placeholders": {"error": {}}},
-  "@exerciseListMuscleGroupPrefix": {"placeholders": {"value": {}}},
-  "@exerciseListEquipmentPrefix": {"placeholders": {"value": {}}},
-  "@exerciseListErrorDeleting": {"placeholders": {"error": {}}},
-
+  "@exerciseListErrorLoadingMuscleGroups": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@exerciseListErrorGeneric": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@exerciseListMuscleGroupPrefix": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@exerciseListEquipmentPrefix": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@exerciseListErrorDeleting": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "userMaxTitle": "Add max",
   "userMaxExerciseLabel": "Exercise",
   "userMaxSelectExerciseValidator": "Select an exercise",
@@ -317,9 +337,11 @@
   "userMaxSaving": "Saving...",
   "userMaxSave": "Save max",
   "userMaxFailedToSave": "Failed to save max: {error}",
-
-  "@userMaxFailedToSave": {"placeholders": {"error": {}}},
-
+  "@userMaxFailedToSave": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "yes": "Yes",
   "no": "No",
   "planDraftMicrocycle": "Microcycle",
@@ -327,45 +349,49 @@
   "massEditToolWorkoutsMatched": "Workouts matched: {count}",
   "massEditToolSetsModified": "Sets modified: {count}",
   "massEditToolSetsToBeModified": "Sets to be modified: {count}",
-
   "workoutDetailMacrosChangesFoundTitle": "Macro changes found",
   "workoutDetailMacrosChangesFoundBody": "Mesocycle injections: {injectCount}\nWorkout patches: {hasPatches}",
   "workoutDetailMacrosApplied": "Macros applied",
   "workoutDetailFailedToApplyMacros": "Failed to apply macros: {error}",
-
   "workoutDetailFailedToRefreshWorkoutBeforeApplyingReadiness": "Failed to refresh workout before applying readiness",
   "workoutDetailWorkoutNotReadyMissingIds": "Workout is not ready for set updates (missing ids)",
   "workoutDetailIncreaseTooltip": "Increase",
-
   "workoutDetailSessionActive": "Active session",
   "workoutDetailSessionNone": "No active session",
-
   "workoutDetailSelectSetTypeTitle": "Select set type",
   "workoutDetailSetTypeNormal": "Normal set",
   "workoutDetailSetTypeDrop": "Drop set",
   "workoutDetailSetTypeCluster": "Cluster set",
   "workoutDetailSetTypeRestPause": "Rest-pause set",
   "workoutDetailFailedToUpdateSetType": "Failed to update set type: {error}",
-
-  "@workoutDetailMacrosChangesFoundBody": {"placeholders": {"injectCount": {}, "hasPatches": {}}},
-  "@workoutDetailFailedToApplyMacros": {"placeholders": {"error": {}}},
-  "@workoutDetailFailedToUpdateSetType": {"placeholders": {"error": {}}},
-
+  "@workoutDetailMacrosChangesFoundBody": {
+    "placeholders": {
+      "injectCount": {},
+      "hasPatches": {}
+    }
+  },
+  "@workoutDetailFailedToApplyMacros": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@workoutDetailFailedToUpdateSetType": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "activePlanTitle": "Active plan",
   "activePlanFailedToLoad": "Failed to load active plan: {error}",
   "activePlanNone": "No active plan",
-
   "activePlanAiMassEditTitle": "AI mass edit (chat)",
   "activePlanAiMassEditHint": "For example: Increase RPE by 1 and add 1 set to all bench presses on Mondays",
   "activePlanAiMassEditSend": "Send",
   "activePlanAiMassEditStarted": "AI mass edit started (task: {taskId})",
   "activePlanAiMassEditFailedToSend": "Failed to send AI mass edit command: {error}",
-
   "activePlanMassEditTitle": "Mass edit (from {start} to {end})",
   "activePlanRangeLabel": "Range:",
   "activePlanRangeFutureFromWeek": "Future from week",
   "activePlanRangeByMesoMicro": "By meso/micro",
-
   "activePlanIntensityLabel": "Intensity %",
   "activePlanRpeLabel": "RPE",
   "activePlanRepsLabel": "Reps",
@@ -379,114 +405,251 @@
   "activePlanHintEg5": "e.g. 5",
   "activePlanHintRepsOffset": "+/- reps (e.g. +1)",
   "activePlanHintFactorReps": "× factor (e.g. 0.9)",
-
   "activePlanRecalcTargetLabel": "Recalc target:",
   "activePlanRecalcTargetAuto": "Auto",
   "activePlanRecalcTargetReps": "Reps",
   "activePlanRecalcTargetRpe": "RPE",
   "activePlanRecalcTargetIntensity": "Intensity",
-
   "activePlanValidatorLabel": "Validator:",
   "activePlanValidatorNone": "None",
   "activePlanValidatorFixReps": "Fix reps",
   "activePlanValidatorFixIntensity": "Fix intensity",
-
   "activePlanSelectAtLeastOneExercise": "Select at least one exercise",
   "activePlanSelectAtLeastOneParameter": "Select at least one parameter",
-
   "activePlanPlanCancelled": "Plan cancelled",
   "activePlanFailedToCancelPlan": "Failed to cancel plan",
-
   "activePlanExerciseIdFallback": "Exercise {id}",
-
-  "@activePlanFailedToLoad": {"placeholders": {"error": {}}},
-  "@activePlanAiMassEditStarted": {"placeholders": {"taskId": {}}},
-  "@idPrefix": {"placeholders": {"id": {}}},
-  "@workoutsAffected": {"placeholders": {"count": {}}},
-  "@workoutsShifted": {"placeholders": {"count": {}}},
-  "@setsModified": {"placeholders": {"count": {}}},
-  "@setsToBeModified": {"placeholders": {"count": {}}},
-  "@shiftDays": {"placeholders": {"sign": {}, "days": {}}},
-  "@startingFrom": {"placeholders": {"date": {}}},
-  "@upToDate": {"placeholders": {"date": {}}},
-  "@dateNotEarlierThan": {"placeholders": {"date": {}}},
-  "@dateNotLaterThan": {"placeholders": {"date": {}}},
-  "@statuses": {"placeholders": {"statuses": {}}},
-  "@exercises": {"placeholders": {"exercises": {}}},
-  "@replaceExerciseTo": {"placeholders": {"name": {}, "id": {}}},
-  "@renameExerciseTo": {"placeholders": {"name": {}}},
-  "@addNewExercises": {"placeholders": {"count": {}}},
-  "@setIntensity": {"placeholders": {"value": {}}},
-  "@increaseIntensityBy": {"placeholders": {"value": {}}},
-  "@decreaseIntensityBy": {"placeholders": {"value": {}}},
-  "@setVolume": {"placeholders": {"value": {}}},
-  "@increaseVolumeBy": {"placeholders": {"value": {}}},
-  "@decreaseVolumeBy": {"placeholders": {"value": {}}},
-  "@setWeight": {"placeholders": {"value": {}}},
-  "@increaseWeightBy": {"placeholders": {"value": {}}},
-  "@decreaseWeightBy": {"placeholders": {"value": {}}},
-  "@setEffort": {"placeholders": {"value": {}}},
-  "@increaseEffortBy": {"placeholders": {"value": {}}},
-  "@decreaseEffortBy": {"placeholders": {"value": {}}},
-  "@macroActionLoadTemplatesError": {"placeholders": {"error": {}}},
-  "@macroActionMesoLabel": {"placeholders": {"index": {}}},
-  "@macroActionDayLabel": {"placeholders": {"index": {}, "type": {}}},
-  "@macroActionAfterAnchor": {"placeholders": {"name": {}}},
-  "@activePlanAiMassEditFailedToSend": {"placeholders": {"error": {}}},
-  "@activePlanExerciseIdFallback": {"placeholders": {"id": {}}},
-  "@massEditToolWorkoutsMatched": {"placeholders": {"count": {}}},
-  "@massEditToolSetsModified": {"placeholders": {"count": {}}},
-  "@massEditToolSetsToBeModified": {"placeholders": {"count": {}}},
-
+  "@activePlanFailedToLoad": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@activePlanAiMassEditStarted": {
+    "placeholders": {
+      "taskId": {}
+    }
+  },
+  "@idPrefix": {
+    "placeholders": {
+      "id": {}
+    }
+  },
+  "@workoutsAffected": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@workoutsShifted": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@setsModified": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@setsToBeModified": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@shiftDays": {
+    "placeholders": {
+      "sign": {},
+      "days": {}
+    }
+  },
+  "@startingFrom": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "@upToDate": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "@dateNotEarlierThan": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "@dateNotLaterThan": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "@statuses": {
+    "placeholders": {
+      "statuses": {}
+    }
+  },
+  "@exercises": {
+    "placeholders": {
+      "exercises": {}
+    }
+  },
+  "@replaceExerciseTo": {
+    "placeholders": {
+      "name": {},
+      "id": {}
+    }
+  },
+  "@renameExerciseTo": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@addNewExercises": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@setIntensity": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@increaseIntensityBy": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@decreaseIntensityBy": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@setVolume": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@increaseVolumeBy": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@decreaseVolumeBy": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@setWeight": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@increaseWeightBy": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@decreaseWeightBy": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@setEffort": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@increaseEffortBy": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@decreaseEffortBy": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "@macroActionLoadTemplatesError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@macroActionMesoLabel": {
+    "placeholders": {
+      "index": {}
+    }
+  },
+  "@macroActionDayLabel": {
+    "placeholders": {
+      "index": {},
+      "type": {}
+    }
+  },
+  "@macroActionAfterAnchor": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@activePlanAiMassEditFailedToSend": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@activePlanExerciseIdFallback": {
+    "placeholders": {
+      "id": {}
+    }
+  },
+  "@massEditToolWorkoutsMatched": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@massEditToolSetsModified": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@massEditToolSetsToBeModified": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "activePlanReplaceTitle": "Replace exercises (from {start} to {end})",
   "activePlanSelectSourceExercises": "Select source exercises:",
   "activePlanSelectTargetExercise": "Select target exercise",
   "activePlanPreserveIntensity": "Preserve intensity via 1RM",
   "activePlanSelectAtLeastOneSourceExercise": "Select at least one source exercise",
   "activePlanSelectTargetExerciseSnack": "Select a target exercise",
-
   "activePlanPreviewReplacementTitle": "Preview replacement",
   "activePlanPreviewTarget": "Target: {name}",
   "activePlanPreviewExercisesToReplace": "Exercises to replace: {count}",
   "activePlanPreviewSetsAffected": "Sets affected: {count}",
-
   "activePlanDropoutReasonNotEnjoyable": "Not enjoyable",
   "activePlanDropoutReasonOther": "Other / prefer not to say",
   "activePlanDropoutSkip": "Skip",
   "activePlanDropoutConfirm": "Confirm",
-
   "activePlanUpdatedSets": "Updated {count} sets",
   "activePlanFailed": "Failed: {error}",
-
   "activePlanReplacementCancelledOneRmRequired": "Replacement cancelled: 1RM required",
-
   "activePlanEnterOneRmTitle": "Enter 1RM for {exerciseName}",
   "activePlanOneRmLabel": "1RM (kg)",
   "activePlanOneRmHint": "e.g. 120",
   "activePlanOneRmHelp": "Enter your current max for this exercise.",
   "activePlanEnterNumberGtZero": "Enter a number > 0",
-
   "activePlanShiftedWorkouts": "Shifted {count} workouts by +{days} day(s)",
   "activePlanShiftFailed": "Shift failed: {error}",
-
   "activePlanKeep": "Keep",
   "activePlanCancelPlan": "Cancel plan",
   "activePlanWhyCancelling": "Why are you cancelling?",
   "activePlanDropoutReasonNotEnoughTime": "Not enough time",
   "activePlanDropoutReasonInjury": "Injury / pain",
   "activePlanDropoutReasonTooHard": "Too hard",
-
   "activePlanReplaceSuccess": "Replaced {exercises} exercises, updated {sets} sets",
   "activePlanReplaceFailed": "Replace failed: {error}",
-
   "activePlanCancelConfirmTitle": "Cancel active plan?",
   "activePlanCancelConfirmBody": "This will stop tracking this applied plan. Existing workouts will remain.",
-
   "activePlanDroppedPrefix": "Dropped: {reason}{date}",
   "activePlanAdherencePercent": "Adherence: {value}%",
   "activePlanFailedToLoadAnalytics": "Failed to load analytics: {error}",
   "activePlanStatusActive": "Active",
-
   "coachRelationshipsTitle": "Coach ↔ Athletes",
   "coachRelationshipsFilterAll": "All",
   "coachRelationshipsFilterPending": "Pending",
@@ -532,7 +695,6 @@
   "coachRelationshipsNudgeMessageNoDays": "Hey {athleteId}, let's schedule our next workout soon!",
   "coachRelationshipsVolumeAndPlan": "Volume: {volume} | Active plan: {plan}",
   "coachRelationshipsVolumeDash": "-",
-
   "coachRelationshipsMenuAll": "All",
   "coachRelationshipsMenuPending": "Pending",
   "coachRelationshipsMenuActive": "Active",
@@ -541,25 +703,94 @@
   "coachRelationshipsMenuPauseCoaching": "Pause coaching",
   "coachRelationshipsMenuResumeCoaching": "Resume coaching",
   "coachRelationshipsMenuEndCoaching": "End coaching",
-
-  "@coachRelationshipsError": {"placeholders": {"error": {}}},
-  "@coachRelationshipsAthletePrefix": {"placeholders": {"name": {}}},
-  "@coachRelationshipsStatusPrefix": {"placeholders": {"status": {}}},
-  "@coachRelationshipsNotePrefix": {"placeholders": {"note": {}}},
-  "@coachRelationshipsChannelPrefix": {"placeholders": {"channel": {}}},
-  "@coachRelationshipsSessions12w": {"placeholders": {"count": {}}},
-  "@coachRelationshipsLastWorkout": {"placeholders": {"date": {}, "suffix": {}}},
-  "@coachRelationshipsDaysAgoSuffix": {"placeholders": {"days": {}}},
-  "@coachRelationshipsFailedToAccept": {"placeholders": {"error": {}}},
-  "@coachRelationshipsFailedToDecline": {"placeholders": {"error": {}}},
-  "@coachRelationshipsFailedToPause": {"placeholders": {"error": {}}},
-  "@coachRelationshipsFailedToResume": {"placeholders": {"error": {}}},
-  "@coachRelationshipsFailedToEnd": {"placeholders": {"error": {}}},
-  "@coachRelationshipsFailedToSendNudge": {"placeholders": {"error": {}}},
-  "@coachRelationshipsNudgeMessageWithDays": {"placeholders": {"athleteId": {}, "days": {}}},
-  "@coachRelationshipsNudgeMessageNoDays": {"placeholders": {"athleteId": {}}},
-  "@coachRelationshipsVolumeAndPlan": {"placeholders": {"volume": {}, "plan": {}}},
-
+  "@coachRelationshipsError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachRelationshipsAthletePrefix": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@coachRelationshipsStatusPrefix": {
+    "placeholders": {
+      "status": {}
+    }
+  },
+  "@coachRelationshipsNotePrefix": {
+    "placeholders": {
+      "note": {}
+    }
+  },
+  "@coachRelationshipsChannelPrefix": {
+    "placeholders": {
+      "channel": {}
+    }
+  },
+  "@coachRelationshipsSessions12w": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@coachRelationshipsLastWorkout": {
+    "placeholders": {
+      "date": {},
+      "suffix": {}
+    }
+  },
+  "@coachRelationshipsDaysAgoSuffix": {
+    "placeholders": {
+      "days": {}
+    }
+  },
+  "@coachRelationshipsFailedToAccept": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachRelationshipsFailedToDecline": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachRelationshipsFailedToPause": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachRelationshipsFailedToResume": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachRelationshipsFailedToEnd": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachRelationshipsFailedToSendNudge": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachRelationshipsNudgeMessageWithDays": {
+    "placeholders": {
+      "athleteId": {},
+      "days": {}
+    }
+  },
+  "@coachRelationshipsNudgeMessageNoDays": {
+    "placeholders": {
+      "athleteId": {}
+    }
+  },
+  "@coachRelationshipsVolumeAndPlan": {
+    "placeholders": {
+      "volume": {},
+      "plan": {}
+    }
+  },
   "planEditorTitle": "Editor: {name}",
   "planEditorMacros": "Macros",
   "planEditorNoPlanId": "No plan ID",
@@ -578,7 +809,6 @@
   "planEditorDeleteMesocycleTooltip": "Delete mesocycle",
   "planEditorMicroDays": "Days: {count}",
   "planEditorExerciseIdFallback": "Exercise {id}",
-
   "planEditorChangesSaved": "Changes saved",
   "planEditorMicrocycleDeleted": "Microcycle deleted",
   "planEditorDeleteMicrocycleTitle": "Delete microcycle",
@@ -588,7 +818,6 @@
   "planEditorSkipNoRights": "Skipped {count} microcycles without access rights",
   "planEditorRightsCheckUnavailableApplyAll": "Rights check unavailable, applying to all selected: {error}",
   "planEditorMassEditsResult": "Mass edits: success {success}, failed {failed}",
-
   "coachAthletePlanTitleFallback": "Athlete {id}",
   "coachAthletePlanLoadAnalyticsError": "Failed to load plan analytics: {error}",
   "coachAthletePlanMetricSets": "Sets",
@@ -624,7 +853,6 @@
   "coachAthletePlanMassEditNoChanges": "No changes to apply",
   "coachAthletePlanMassEditApplied": "Mass edit applied for selected day",
   "coachAthletePlanMassEditWorkoutHint": "New note for all workouts on this day",
-
   "planEditorMassReplaceTitle": "Mass exercise replacement",
   "planEditorChooseTarget": "Choose target exercise",
   "planEditorTargetPrefix": "Target: {name}",
@@ -640,55 +868,221 @@
   "planEditorPreviewTotals": "Exercises to replace: {exercises}, sets affected: {sets}",
   "planEditorPreviewMicroStats": "Exercises: {ex} · Sets: {sets}",
   "planEditorApplyReplaceResult": "Replacement: success {success}, failed {failed}",
-
-  "@planEditorTitle": {"placeholders": {"name": {}}},
-  "@planEditorBulk": {"placeholders": {"count": {}}},
-  "@planEditorTargetPrefix": {"placeholders": {"name": {}}},
-  "@planEditorOccurrences": {"placeholders": {"count": {}}},
-  "@planEditorRightsCheckUnavailable": {"placeholders": {"error": {}}},
-  "@planEditorPreviewTarget": {"placeholders": {"name": {}}},
-  "@planEditorPreviewTotals": {"placeholders": {"exercises": {}, "sets": {}}},
-  "@planEditorPreviewMicroStats": {"placeholders": {"ex": {}, "sets": {}}},
-  "@planEditorApplyReplaceResult": {"placeholders": {"success": {}, "failed": {}}},
-  "@planEditorDeleteMesocycleBody": {"placeholders": {"name": {}}},
-  "@planEditorDeleteFailed": {"placeholders": {"error": {}}},
-  "@planEditorMicroDays": {"placeholders": {"count": {}}},
-  "@planEditorExerciseIdFallback": {"placeholders": {"id": {}}},
-  "@planEditorDeleteMicrocycleBody": {"placeholders": {"name": {}}},
-  "@planEditorSkipNoRights": {"placeholders": {"count": {}}},
-  "@planEditorRightsCheckUnavailableApplyAll": {"placeholders": {"error": {}}},
-  "@planEditorMassEditsResult": {"placeholders": {"success": {}, "failed": {}}},
-  "@coachAthletePlanTitleFallback": {"placeholders": {"id": {}}},
-  "@coachAthletePlanLoadAnalyticsError": {"placeholders": {"error": {}}},
-  "@coachAthletePlanSessionsCompleted": {"placeholders": {"completed": {}, "planned": {}}},
-  "@coachAthletePlanPeriod": {"placeholders": {"start": {}, "end": {}}},
-  "@coachAthletePlanNotes": {"placeholders": {"notes": {}}},
-  "@coachAthletePlanDeleteExerciseConfirmBody": {"placeholders": {"name": {}}},
-  "@coachAthletePlanDeleteError": {"placeholders": {"error": {}}},
-  "@coachAthletePlanOrder": {"placeholders": {"order": {}}},
-  "@coachAthletePlanSets": {"placeholders": {"count": {}}},
-  "@coachAthletePlanMassEditError": {"placeholders": {"error": {}}},
-
-  "@coachAthletePlanMassEditExerciseHint": {"placeholders": {}},
-  "@macroActionLoadTemplatesError": {"placeholders": {"error": {}}},
-  "@macroActionMesoLabel": {"placeholders": {"index": {}}},
-  "@macroActionDayLabel": {"placeholders": {"index": {}, "type": {}}},
-  "@macroActionAfterAnchor": {"placeholders": {"name": {}}},
-  "@activePlanPreviewTarget": {"placeholders": {"name": {}}},
-  "@activePlanPreviewExercisesToReplace": {"placeholders": {"count": {}}},
-  "@activePlanPreviewSetsAffected": {"placeholders": {"count": {}}},
-  "@activePlanUpdatedSets": {"placeholders": {"count": {}}},
-  "@activePlanFailed": {"placeholders": {"error": {}}},
-  "@activePlanReplacementCancelledOneRmRequired": {"placeholders": {}},
-  "@activePlanEnterOneRmTitle": {"placeholders": {"exerciseName": {}}},
-  "@activePlanShiftedWorkouts": {"placeholders": {"count": {}, "days": {}}},
-  "@activePlanShiftFailed": {"placeholders": {"error": {}}},
-  "@activePlanReplaceSuccess": {"placeholders": {"exercises": {}, "sets": {}}},
-  "@activePlanReplaceFailed": {"placeholders": {"error": {}}},
-  "@activePlanDroppedPrefix": {"placeholders": {"reason": {}, "date": {}}},
-  "@activePlanFailedToLoadAnalytics": {"placeholders": {"error": {}}},
-  "@activePlanAdherencePercent": {"placeholders": {"value": {}}},
-
+  "@planEditorTitle": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@planEditorBulk": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@planEditorTargetPrefix": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@planEditorOccurrences": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@planEditorRightsCheckUnavailable": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@planEditorPreviewTarget": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@planEditorPreviewTotals": {
+    "placeholders": {
+      "exercises": {},
+      "sets": {}
+    }
+  },
+  "@planEditorPreviewMicroStats": {
+    "placeholders": {
+      "ex": {},
+      "sets": {}
+    }
+  },
+  "@planEditorApplyReplaceResult": {
+    "placeholders": {
+      "success": {},
+      "failed": {}
+    }
+  },
+  "@planEditorDeleteMesocycleBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@planEditorDeleteFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@planEditorMicroDays": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@planEditorExerciseIdFallback": {
+    "placeholders": {
+      "id": {}
+    }
+  },
+  "@planEditorDeleteMicrocycleBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@planEditorSkipNoRights": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@planEditorRightsCheckUnavailableApplyAll": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@planEditorMassEditsResult": {
+    "placeholders": {
+      "success": {},
+      "failed": {}
+    }
+  },
+  "@coachAthletePlanTitleFallback": {
+    "placeholders": {
+      "id": {}
+    }
+  },
+  "@coachAthletePlanLoadAnalyticsError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachAthletePlanSessionsCompleted": {
+    "placeholders": {
+      "completed": {},
+      "planned": {}
+    }
+  },
+  "@coachAthletePlanPeriod": {
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
+  },
+  "@coachAthletePlanNotes": {
+    "placeholders": {
+      "notes": {}
+    }
+  },
+  "@coachAthletePlanDeleteExerciseConfirmBody": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@coachAthletePlanDeleteError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachAthletePlanOrder": {
+    "placeholders": {
+      "order": {}
+    }
+  },
+  "@coachAthletePlanSets": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@coachAthletePlanMassEditError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@coachAthletePlanMassEditExerciseHint": {
+    "placeholders": {}
+  },
+  "@activePlanPreviewTarget": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "@activePlanPreviewExercisesToReplace": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@activePlanPreviewSetsAffected": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@activePlanUpdatedSets": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "@activePlanFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@activePlanReplacementCancelledOneRmRequired": {
+    "placeholders": {}
+  },
+  "@activePlanEnterOneRmTitle": {
+    "placeholders": {
+      "exerciseName": {}
+    }
+  },
+  "@activePlanShiftedWorkouts": {
+    "placeholders": {
+      "count": {},
+      "days": {}
+    }
+  },
+  "@activePlanShiftFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@activePlanReplaceSuccess": {
+    "placeholders": {
+      "exercises": {},
+      "sets": {}
+    }
+  },
+  "@activePlanReplaceFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@activePlanDroppedPrefix": {
+    "placeholders": {
+      "reason": {},
+      "date": {}
+    }
+  },
+  "@activePlanFailedToLoadAnalytics": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@activePlanAdherencePercent": {
+    "placeholders": {
+      "value": {}
+    }
+  },
   "workoutListTitle": "Workouts",
   "workoutListAddWorkout": "Add Workout",
   "workoutListWorkoutName": "Workout Name",
@@ -697,7 +1091,6 @@
   "workoutListNextWorkout": "Next Workout",
   "workoutListEmpty": "No workouts in this progression",
   "exerciseCount": "{count, plural, =1{1 exercise} other{{count} exercises}}",
-
   "nutritionSessionsTitle": "Nutrition Sessions",
   "nutritionSessionsEmpty": "No nutrition sessions yet",
   "nutritionSessionsEmptyDesc": "Start tracking your nutrition by creating your first session",
@@ -726,11 +1119,15 @@
   "nutritionNoItemsAvailable": "No items available",
   "updateSession": "Update Session",
   "createSession": "Create Session",
-
   "exerciseListEmptyDesc": "Try changing the filter or add a new exercise",
-
-  "@workoutListCreateError": {"placeholders": {"error": {}}},
-  "@workoutListNextWorkout": {"placeholders": {}},
+  "@workoutListCreateError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "@workoutListNextWorkout": {
+    "placeholders": {}
+  },
   "@exerciseCount": {
     "placeholders": {
       "count": {
@@ -739,8 +1136,16 @@
       }
     }
   },
-  "@nutritionSessionTitle": {"placeholders": {"id": {}}},
-  "@userIdLabel": {"placeholders": {"id": {}}},
+  "@nutritionSessionTitle": {
+    "placeholders": {
+      "id": {}
+    }
+  },
+  "@userIdLabel": {
+    "placeholders": {
+      "id": {}
+    }
+  },
   "@entriesCount": {
     "placeholders": {
       "count": {
@@ -748,5 +1153,945 @@
         "format": "compact"
       }
     }
-  }
+  },
+  "envBadgeWorkZone": "WORK ZONE",
+  "envBadgeLive": "LIVE",
+  "envBadgeCnsStorm": "CNS STORM",
+  "envBadgeDeload": "DELOAD",
+  "envIdleTactical": "System ready. Select a session or configure the grid.",
+  "envIdleSnarky": "The barbell will not lift itself. Pick a target.",
+  "envLiveTacticalPeak": "Session in progress · Peak {peak}",
+  "envLiveTactical": "Active session in progress · Focus mode",
+  "envLiveSnarkyPeak": "Clock is ticking. Conquer {peak} and quit whining.",
+  "envLiveSnarky": "Stopwatch is running. Less talk, more reps.",
+  "envStormTacticalWithTonnage": "Peak {detail} · Volume {tonnage} · High CNS load",
+  "envStormTactical": "Peak {detail} · Peak CNS load",
+  "envStormSnarky": "Peak {detail}. CNS is begging for mercy — turn it up.",
+  "envDeloadLightZone": "light zone",
+  "envDeloadTacticalWithTonnage": "Recovery · {rpe} · Volume {tonnage}",
+  "envDeloadTactical": "Deload phase · {rpe} · Adaptation",
+  "envDeloadSnarky": "Resort mode ({rpe}). Do not even think about adding plates.",
+  "envWorkTacticalPeakTonnage": "Peak {peak} · Working volume {tonnage}",
+  "envWorkSnarkyPeak": "Working corridor: {peak}. Discipline beats ego.",
+  "envWorkTacticalSets": "Work zone · {sets} sets",
+  "envWorkTacticalSetsWithTonnage": "Work zone · {sets} sets · {tonnage}",
+  "envWorkSnarkySets": "{sets} working sets. Boring? That is called progress.",
+  "envWorkTacticalReady": "{prefix}Work zone · Ready to launch",
+  "envWorkSnarkyReady": "{prefix}Clean slate. Load it properly.",
+  "unitKgValue": "{value} kg",
+  "unitSetsShort": "{count} sets",
+  "unitExercisesShort": "{count} ex.",
+  "unitMinutesShort": "{count} min",
+  "presetPowerlifter": "Strength 5/3/1",
+  "presetVolume": "Volume",
+  "presetMinimalist": "Minimalist",
+  "presetCustom": "Custom",
+  "slotShortPeakIntensity": "PEAK %",
+  "slotShortE1rm": "E1RM",
+  "slotShortPeakRpe": "PEAK RPE",
+  "slotShortAvgRpe": "AVG RPE",
+  "slotShortTonnage": "TONNAGE",
+  "slotShortKpsh": "REPS",
+  "slotShortSetsCount": "SETS",
+  "slotShortDensity": "DENSITY",
+  "slotShortDurationWeeks": "WEEKS",
+  "slotShortFrequencyPerWeek": "FREQ",
+  "slotNamePeakIntensity": "Peak % 1RM",
+  "slotNameE1rm": "Estimated 1RM",
+  "slotNamePeakRpe": "Peak RPE",
+  "slotNameAvgRpe": "Average RPE",
+  "slotNameTonnage": "Tonnage",
+  "slotNameKpsh": "Total Reps",
+  "slotNameSetsCount": "Working Sets",
+  "slotNameDensity": "Density",
+  "slotNameDurationWeeks": "Duration",
+  "slotNameFrequencyPerWeek": "Workouts/week",
+  "moduleVariantOrHorizonStrip": "Presets / Variants strip",
+  "moduleCommandBriefing": "Load Briefing",
+  "modulePrimaryTelemetry": "Telemetry & Chart",
+  "moduleScheduleOrLibrary": "Library / Microcycles",
+  "interfaceMakerTitle": "Screen Grid & Modules",
+  "interfaceMakerReset": "Reset",
+  "interfaceMakerPresetsSection": "DISCIPLINE PRESETS",
+  "interfaceMakerWaveChartTitle": "Wave chart in cards",
+  "interfaceMakerWaveChartSubtitle": "Disable for a compact view without charts",
+  "interfaceMakerSnarkyTitle": "CARROT-style briefing",
+  "interfaceMakerSnarkySubtitle": "Snarky load summary instead of dry tactical",
+  "interfaceMakerSlotsSection": "4 TELEMETRY SLOTS (DATA POINT PICKER)",
+  "interfaceMakerSlotNumber": "Slot {index}",
+  "interfaceMakerModulesSection": "MODULES & SCREEN ORDER",
+  "interfaceMakerMoveUp": "Move up",
+  "interfaceMakerMoveDown": "Move down",
+  "homeNoPlannedSessions": "All planned sessions completed or no plan selected",
+  "homeOpenActivePlanTooltip": "Open active plan",
+  "homeOpenCalendarPlanTooltip": "Open calendar plan",
+  "actionStart": "Start",
+  "actionFinish": "Finish",
+  "actionNew": "New",
+  "metricTimeShort": "TIME",
+  "metricExercisesShort": "EX.",
+  "sessionLogHeader": "SESSION LOG",
+  "sessionLogLibrary": "Library",
+  "sessionLogLoadError": "Failed to load workouts",
+  "sessionLogEmptyTitle": "No manual sessions",
+  "sessionLogEmptySubtitle": "Tap \"New\" to log a free workout",
+  "sessionLogAllShown": "ALL SESSIONS SHOWN",
+  "workoutDeleteTooltip": "Delete workout",
+  "workoutManualSession": "Manual session",
+  "workoutMarkAllCompletedTooltip": "Mark all as completed",
+  "tooltipDecrease": "Decrease",
+  "deleteExerciseTooltip": "Delete exercise",
+  "deleteSetTooltip": "Delete set",
+  "metricMicrocyclesShort": "MICROCYCLES",
+  "metricAppliedShort": "APPLIED",
+  "planVariantOriginal": "Original",
+  "planVariantAdd": "+ Variant",
+  "planAnalyticsTitle": "Plan Analytics",
+  "tooltipCollapse": "Collapse",
+  "tooltipExpand": "Expand",
+  "navWorkouts": "Workouts",
+  "navPlans": "Plans",
+  "navFeed": "Feed",
+  "navCrm": "CRM",
+  "navDebug": "Debug",
+  "aiAssistant": "AI Assistant",
+  "profile": "Profile",
+  "settings": "Settings",
+  "activePlanEmptyTitle": "No active plan",
+  "activePlanEmptyDescription": "Select a calendar plan to start a cycle",
+  "activePlanSelectPlan": "Select plan",
+  "horizon1Week": "1 wk",
+  "horizon2Weeks": "2 wk",
+  "horizonMonth": "Month",
+  "horizonChipLabel": "Horizon · {horizon}",
+  "gridPillLabel": "Grid",
+  "planPillLabel": "Plan",
+  "activePlanMicrocycleCalendarHeader": "MICROCYCLE CALENDAR",
+  "activePlanDayLabel": "PLAN DAY",
+  "actionView": "View",
+  "activePlanNoWorkoutsSelectedDay": "No workouts on the selected day",
+  "noWorkouts": "No workouts",
+  "metricAvgIntensityShort": "AVG INT.",
+  "metricCompletedShort": "DONE",
+  "metricAvgRpeShort": "AVG RPE",
+  "metricRepsShort": "REPS",
+  "metricSetsShort": "SETS",
+  "metricSessionsShort": "SESSIONS",
+  "tooltipCollapseChart": "Collapse chart",
+  "tooltipExpandChart": "Expand chart",
+  "activePlanNoData": "No data for plan",
+  "workoutListAddTitle": "Add Workout",
+  "workoutListNameLabel": "Workout name",
+  "actionAdd": "Add",
+  "workoutListNameRequired": "Please enter a workout name",
+  "workoutListLoadError": "Error loading workouts: {error}",
+  "workoutListEmptyTitle": "No workouts",
+  "workoutListEmptyDescription": "There are no workouts in this progression yet",
+  "workoutListSectionTitle": "Workout List",
+  "workoutsCreateTitle": "Create Workout",
+  "actionCreate": "Create",
+  "workoutsDeleteTitle": "Delete workout?",
+  "workoutsDeleteConfirm": "Are you sure you want to delete this manual workout?",
+  "workoutsPlanLoadError": "Error loading plan: {error}",
+  "workoutDetailOpenError": "Failed to open workout",
+  "actionBack": "Back",
+  "workoutDetailAppStateNotReady": "Failed to update set: app state not ready",
+  "workoutDetailDeleteExerciseTitle": "Delete Exercise",
+  "workoutDetailExerciseRemoved": "Exercise removed from workout",
+  "workoutDetailDeleteUnsavedExerciseError": "Error: Cannot delete unsaved exercise",
+  "workoutDetailAddSetUnsavedError": "Cannot add set: exercise is not saved yet",
+  "workoutDetailSetAdded": "Set added successfully",
+  "workoutDetailUpdated": "Workout updated",
+  "workoutDetailStarted": "Workout started",
+  "workoutDetailSessionCancelled": "Session cancelled",
+  "workoutDetailFinished": "Workout finished",
+  "workoutDetailAllSetsCompleted": "All sets are already completed",
+  "workoutDetailDeleteSetTitle": "Delete Set",
+  "workoutDetailSetDeleted": "Set deleted successfully",
+  "workoutDetailExerciseAdded": "Exercise added successfully",
+  "workoutDetailFallbackTitle": "Workout Details",
+  "workoutDetailNoExercisesTitle": "No exercises yet",
+  "workoutDetailNoExercisesSubtitle": "Tap \"Add exercise\" below to build a session",
+  "metricTimerShort": "TIMER",
+  "metricModeShort": "MODE",
+  "tooltipEditExercise": "Edit exercise",
+  "actionClear": "Clear",
+  "planEditorSelectedCount": "SELECTED: {count}",
+  "planEditorBulkShort": "Bulk",
+  "planEditorMesocyclesCount": "MESOCYCLES · {count}",
+  "planEditorMicrocyclesCount": "MICROCYCLES: {count}",
+  "planEditorEditMicrocycleTooltip": "Edit microcycle",
+  "planEditorIntensity": "Intensity",
+  "planEditorReps": "Reps",
+  "planEditorModeSet": "Set",
+  "planEditorModeOffset": "Offset",
+  "planEditorModeScale": "Scale",
+  "planEditorRecalcAuto": "Recalc: Auto",
+  "planEditorRecalcReps": "Recalc: Reps",
+  "planEditorRecalcEffort": "Recalc: RPE",
+  "planEditorRecalcIntensity": "Recalc: Intensity",
+  "planEditorAutoRecalcReps": "Auto-recalc: Reps (from Intensity & RPE)",
+  "planEditorAutoRecalcIntensity": "Auto-recalc: Intensity (from Reps & RPE)",
+  "planEditorAutoRecalcRpe": "Auto-recalc: RPE (from Intensity & Reps)",
+  "planEditorAutoRecalcNone": "Auto-recalc: disabled",
+  "planEditorFilterExercisesOptional": "Filter: exercises (optional)",
+  "planEditorMassEditWarning": "ALL sets of all exercises in all selected microcycles will be modified.",
+  "planEditorNoChanges": "No changes for selected parameters",
+  "planEditorMassEditPreviewTitle": "Mass edits preview",
+  "planEditorMicrocyclesCountPlain": "Microcycles: {count}",
+  "planEditorMismatchesCount": "Mismatches: {count}",
+  "planEditorChangedSets": "Changed sets: {changed} of {total}",
+  "planEditorDeltaSummary": "Changes: Int {i} · RPE {e} · Reps {v}",
+  "planEditorFixNone": "Validator: No auto-fix",
+  "planEditorFixReps": "Validator: Fix Reps",
+  "planEditorFixIntensity": "Validator: Fix Intensity",
+  "planEditorPreviewMicroDiff": "Sets: {changed}/{total} · Δ Int {i} · Δ RPE {e} · Δ Reps {v}",
+  "planDetailDeleteFailed": "Failed to delete plan: {error}",
+  "tooltipMoreActions": "More actions",
+  "planDetailEditPlan": "Edit plan",
+  "planDetailRecalcSets": "Recalculate sets (RPE)",
+  "planDetailDeletePlan": "Delete plan",
+  "planDetailAdoptersLoadError": "Failed to load adoption count: {error}",
+  "planDetailLoadError": "Failed to load plan: {error}",
+  "planDetailRecalculated": "Plan recalculated",
+  "planDetailRecalcError": "Failed to recalculate plan: {error}",
+  "planDetailVariantsLoadError": "Failed to load variants: {error}",
+  "planDetailNewVariantTitle": "New plan variant",
+  "planDetailVariantNameLabel": "Variant name",
+  "errorEnterName": "Enter a name",
+  "planDetailVariantCreated": "Variant created",
+  "errorWithDetails": "Error: {error}",
+  "metricVolumeShort": "VOLUME",
+  "unitRepsShort": "{count} reps",
+  "unitSetsPerWorkout": "{value}/wo",
+  "planDetailAnalyticsFilters": "Analytics filters",
+  "planDetailGranularity": "GRANULARITY",
+  "planDetailExercisesTitle": "Exercises",
+  "loadingEllipsis": "Loading…",
+  "planDetailMuscleGroupsTitle": "Muscle groups",
+  "planDetailAxesTitle": "X Axis / Y Axis",
+  "planDetailFiltersPillCount": "Filters · {bucket} ({count})",
+  "planDetailFiltersPill": "Filters · {bucket}",
+  "planDetailExercisesLoadError": "Failed to load exercise data",
+  "planDetailAllExercises": "All exercises",
+  "planDetailFilterEmpty": "Filter contains no data",
+  "planDetailAndMore": "{items} and {count} more",
+  "planDetailAllMuscles": "All muscles",
+  "planDetailSelectExercises": "Select exercises",
+  "planDetailSelectMuscles": "Select muscles",
+  "planDetailSelectMetricX": "Select metric for X axis",
+  "planDetailSelectMetricY": "Select metric for Y axis",
+  "metricYRepsVolume": "Reps (volume)",
+  "metricYIntensityPct": "Intensity (%)",
+  "metricYEffortRpe": "Effort (RPE)",
+  "granularitySessions": "Sessions",
+  "granularityMicrocycles": "Microcycles",
+  "granularityWeeks": "Weeks",
+  "planDetailCurrentMax": "Current max: {weight} kg × {reps}",
+  "planDetailMaxNotSet": "Max not set",
+  "planDetailMadePublic": "Plan made public",
+  "planDetailMadePrivate": "Plan hidden (private only)",
+  "planDetailVisibilityError": "Failed to update plan visibility: {error}",
+  "metricSetShort": "SET",
+  "metricIntShort": "INT",
+  "metricRepsColShort": "REPS",
+  "normRulesCount": "Custom rules: {count}",
+  "normNotSet": "Normalization not set",
+  "normUnitPct1rm": "% of 1RM",
+  "normUnitKg": "kg",
+  "normRulesSuffix": ", rules: {count}",
+  "normSectionHeader": "POST-MICROCYCLE NORMALIZATION",
+  "normDeltaLabel": "Change (e.g. -2.5)",
+  "normDeltaHint": "In kg or %",
+  "normUnitLabel": "Unit",
+  "normUnitPctMult": "% (multiplicative)",
+  "normUnitKgAbs": "kg (absolute)",
+  "normDescription": "Specify one global change and/or rules for specific exercises, muscle groups, or target muscles.",
+  "normRulesHeader": "NORMALIZATION RULES",
+  "normAddRule": "Add rule",
+  "normNoRules": "No custom rules yet",
+  "normRuleHeader": "RULE {index}",
+  "normDeleteRuleTooltip": "Delete rule",
+  "normExerciseIdsLabel": "Exercise IDs (comma-separated)",
+  "normExerciseIdsHint": "E.g.: 12, 45, 103",
+  "normMuscleGroupsLabel": "Muscle groups (comma-separated)",
+  "normMuscleGroupsHint": "E.g.: chest, quads",
+  "normTargetMusclesLabel": "Target muscles (comma-separated)",
+  "normTargetMusclesHint": "E.g.: biceps_long, lats",
+  "normDeltaValueLabel": "Δ value",
+  "normUnitShortLabel": "Unit",
+  "microcycleNameLabel": "Microcycle name",
+  "planCreateEnterNameError": "Please enter a plan name",
+  "planCreateSuccess": "Plan created successfully",
+  "microEditorMassEditTitle": "Mass edit sets",
+  "microEditorIntensityOpt": "Intensity %1RM (optional)",
+  "microEditorRpeOpt": "RPE (optional)",
+  "microEditorRepsOpt": "Reps (optional)",
+  "microEditorSaved": "Microcycle saved",
+  "microEditorSaveError": "Save error: {error}",
+  "microEditorTitle": "Microcycle: {name}",
+  "tooltipSave": "Save",
+  "microEditorUnsavedChanges": "There are unsaved changes",
+  "microEditorWorkoutMeta": "ORDER: {order} · EXERCISES: {count}",
+  "microEditorSetLabel": "Set",
+  "plansOpenError": "Failed to open plan: {error}",
+  "plansSearchHint": "Search plans",
+  "plansClearSearchTooltip": "Clear search",
+  "plansFiltersTooltip": "Filters",
+  "plansFoundCount": "Found: {count}",
+  "plansLoadError": "Failed to load plans: {error}",
+  "plansEmptyTitle": "No plans found",
+  "plansEmptyDescription": "Try changing the query or filters",
+  "actionLoadMore": "Show more",
+  "actionLoadFailedRetry": "Failed to load. Retry",
+  "filterDuration": "Duration",
+  "filterGoal": "Goal",
+  "filterFrequency": "Workouts per week",
+  "filterLevel": "Level",
+  "filterDurationValue": "{value} wk",
+  "filterFrequencyValue": "{value} / wk",
+  "planFiltersTitle": "Plan filters",
+  "tooltipClose": "Close",
+  "actionRetryLoad": "Retry loading",
+  "roundNearest": "Nearest",
+  "roundUp": "Up",
+  "roundDown": "Down",
+  "applyPlanGenProgress": "Generating plan: {done} of {total} ({remaining} left)",
+  "applyPlanGenStage": "Generating plan: {stage}",
+  "applyPlanGenEllipsis": "Generating plan…",
+  "weightKgLabel": "Weight (kg)",
+  "repsLabel": "Reps",
+  "errorValidWeight": "Enter a valid weight",
+  "errorValidRepsRange": "Enter 1–12 reps",
+  "saveMaxFailed": "Failed to save max: {error}",
+  "saveMaxButton": "Save max",
+  "maxSavedForExercise": "Max saved for {name}",
+  "noSavedMaxesForPlan": "No saved maxes for this plan",
+  "selectAtLeastOneUserMax": "Please select at least one User Max",
+  "applyPlanTitle": "Apply plan",
+  "applyPlanBaseMaxesHeader": "BASE MAXES · USER MAX",
+  "applyPlanSelectedCount": "Selected: {count}",
+  "applyPlanRecentButton": "Recent",
+  "applyPlanNoMaxesHint": "No saved maxes for exercises in this plan. Add a 1RM above.",
+  "applyPlanNoExactMatchHint": "No exact exercise match — showing all your User Maxes:",
+  "applyPlanWorkingWeightsHeader": "WORKING WEIGHTS CALCULATION",
+  "applyPlanComputeWeights": "Compute weights",
+  "applyPlanComputeWeightsSubtitle": "Auto-calculate by % of selected max",
+  "applyPlanStepKgLabel": "Step (kg)",
+  "applyPlanRoundingHeader": "ROUNDING",
+  "userMaxDisplay": "{weight} kg × {reps}",
+  "deletePlanWithVariantsTitle": "Delete plan with variants?",
+  "deletePlanTitle": "Delete plan?",
+  "deletePlanCascadeBody": "The plan, all its variants, and linked plan applications will be permanently deleted.",
+  "deletePlanSingleBody": "The plan and linked plan applications will be deleted. This action cannot be undone.",
+  "untitled": "Untitled",
+  "deleteAll": "Delete all",
+  "replaceActivePlanTitle": "Replace active plan?",
+  "replaceActivePlanBody": "You already have an active plan. The new plan will replace it. Completed workout history will be preserved.",
+  "replacePlanAction": "Replace plan",
+  "macroMetricReadiness": "readiness",
+  "macroMetricSessionRpe": "session RPE",
+  "macroMetricReps": "rep count",
+  "macroMetricE1rm": "estimated 1RM",
+  "macroMetricTrend": "progress trend",
+  "macroMetricRpeDelta": "RPE deviation from plan",
+  "macroMetricRepsDelta": "rep deviation from plan",
+  "macroMetricFallback": "metric",
+  "macroTriggerAllExercises": "across all exercises",
+  "macroTriggerForExercises": "for exercises: {names}",
+  "macroOpGte": "greater than or equal to",
+  "macroOpLte": "less than or equal to",
+  "macroOpEq": "equal to",
+  "macroOpNeq": "not equal to",
+  "macroOpGt": "greater than",
+  "macroOpLt": "less than",
+  "macroOpInRange": "in range",
+  "macroOpOutOfRange": "out of range",
+  "macroCondNotSet": "condition not set",
+  "macroCondInRangeValues": "value in range {a} to {b}{unit}",
+  "macroCondOutOfRangeValues": "value out of range {a} to {b}{unit}",
+  "macroCondInRange": "value in range",
+  "macroCondOutOfRange": "value out of range",
+  "macroCondStagnatesValues": "stagnation over {n} windows within {eps} percent",
+  "macroCondStagnates": "stagnation over windows",
+  "macroCondDirPositive": "positive",
+  "macroCondDirNegative": "negative",
+  "macroCondDirSuffix": ", direction: {dir}",
+  "macroCondDeviatesValues": "deviation from {n}-window average at least {val} percent{dir}",
+  "macroCondDeviates": "deviation from average",
+  "macroCondHoldsWorkouts": "holds for {n} consecutive workouts: value {rel} {val}{unit}",
+  "macroCondHoldsWorkoutsGeneric": "holds for several consecutive workouts",
+  "macroCondHoldsSets": "holds for {n} consecutive sets in workout: value {rel} {val}{unit}",
+  "macroCondHoldsSetsGeneric": "holds for several consecutive sets in workout",
+  "macroCondSimpleGt": "value greater than {val}{unit}",
+  "macroCondSimpleLt": "value less than {val}{unit}",
+  "macroCondSimpleEq": "value equals {val}{unit}",
+  "macroCondSimpleNeq": "value not equal to {val}{unit}",
+  "macroCondSet": "condition set",
+  "macroActionTargetAll": "for all exercises",
+  "macroActionTargetExercises": "for exercises: {list}",
+  "macroActionTargetTags": "by tags: {tags}",
+  "macroActionTargetTagsExamples": "{base}, e.g.: {examples}",
+  "macroInjectMesoBase": "inject mesocycle",
+  "macroInjectMesoTemplate": "{base} from template ID {id}",
+  "macroInjectWeeks": "{weeks} weeks",
+  "macroInjectMicroDays": "microcycle {days} days",
+  "macroInjectRestDays": "rest days: {days}",
+  "macroInjectFocus": "focus: {tags}",
+  "macroInjectAppendEnd": "at the end of plan",
+  "macroInjectAfterWorkoutId": "after workout #{id}",
+  "macroInjectAfterSelectedWorkout": "after selected workout",
+  "macroInjectAfterMesoIdx": "after mesocycle {idx}",
+  "macroInjectAfterSelectedMeso": "after selected mesocycle",
+  "macroConflictReplace": "replace scheduled",
+  "macroConflictShift": "shift forward",
+  "macroConflictSkip": "skip conflicting",
+  "macroConflictPrefix": "on conflict: {text}",
+  "macroActDecreaseWeightPct": "decrease weight by {pct} percent {target}",
+  "macroActIncreaseWeightPct": "increase weight by {pct} percent {target}",
+  "macroActAdjustWeightRpe": "adjust weight to target RPE {rpe} {target}",
+  "macroActDecreaseReps": "decrease reps by {reps} {target}",
+  "macroActIncreaseReps": "increase reps by {reps} {target}",
+  "macroActAdjustRepsRpe": "adjust reps to target RPE {rpe} {target}",
+  "macroActRemoveSets": "remove {sets} sets {target}",
+  "macroActAddSets": "add {sets} sets {target}",
+  "macroActFallback": "perform action {target}",
+  "macroDurNextWorkouts": "for the next {count} workouts",
+  "macroDurUntilLast": "until the last workout",
+  "macroDurUntilEndMeso": "until the end of mesocycle",
+  "macroDurUntilEndMicro": "until the end of microcycle",
+  "macroDurUntilWorkoutId": "until workout #{id}",
+  "macroDurUntilSelectedWorkout": "until selected workout",
+  "macroPreviewEmpty": "Description will appear after selecting metric, condition, and action",
+  "macroPreviewSentence": "If {metric} {trigger}, and {condition}, then {action}",
+  "macroLabelMetric": "METRIC",
+  "macroLabelTrigger": "TRIGGER",
+  "macroLabelCondition": "CONDITION",
+  "macroLabelAction": "ACTION",
+  "macroLabelDuration": "DURATION",
+  "macroPreviewSetChangesCount": "Set changes: {count}",
+  "macroPreviewMesoInsertsCount": "Mesocycle inserts: {count}",
+  "macroPreviewMissingParamsHint": "Plan parameters are required to calculate weights.",
+  "macroPreviewDialogTitle": "Completed workout suggestions",
+  "macroPreviewViewChanges": "View changes",
+  "macroPreviewLoadError": "Failed to load macro suggestions: {error}",
+  "macroPreviewAppBarTitle": "Macro changes",
+  "macroPreviewConfirmNeedsNewServer": "Confirmation requires a newer server version.",
+  "macroPreviewObservationWorkout": "Observation: workout #{id}",
+  "macroPreviewSpecifyWeightParams": "Specify weight parameters to calculate this preview.",
+  "macroPreviewOneRmKgForExercise": "1RM, kg · {name}",
+  "macroPreviewWeightStepKg": "Weight step, kg",
+  "macroPreviewRoundNearest": "To nearest step",
+  "macroPreviewRoundDown": "Round down",
+  "macroPreviewRoundUp": "Round up",
+  "macroPreviewCalcButton": "Calculate preview",
+  "macroPreviewNoSetChanges": "No set changes.",
+  "macroPreviewExercisesModified": "Exercise instances modified: {count}",
+  "macroPreviewMesoAdded": "Mesocycle added",
+  "macroPreviewMesoNotAdded": "Mesocycle not added: {reason}",
+  "macroPreviewConfirmSetsButton": "Confirm set changes",
+  "macroPreviewApplyMesoRulesButton": "Apply mesocycle insert rules separately",
+  "macroPreviewAppliedToActivePlan": "Applied to active plan #{id}",
+  "macroPreviewInstanceNewSet": "instance {id}, new set",
+  "macroPreviewInstanceSet": "instance {id}, set {setId}",
+  "macroPreviewBefore": "Before: {values}",
+  "macroPreviewRequested": "Requested: {values}",
+  "macroPreviewClosestOption": "Closest option: {values}",
+  "macroPreviewAfter": "Result: {values}",
+  "macroPreviewDeleteSet": "Delete set",
+  "macroPreviewMesoInsertParams": "Mesocycle insert: {params}",
+  "macroEditorInvalidJsonRule": "Invalid rule JSON: {error}",
+  "macroEditorCreateTitle": "Create macro",
+  "macroEditorEditTitle": "Edit macro",
+  "macroEditorRuleParamsTitle": "Rule parameters",
+  "macroEditorNameLabel": "Name",
+  "macroEditorPriorityLabel": "Priority",
+  "macroEditorInvalidNumber": "Invalid number",
+  "macroEditorActiveLabel": "Active",
+  "macroEditorTriggerTitle": "Trigger",
+  "macroEditorConditionTitle": "Condition",
+  "macroEditorActionTitle": "Action",
+  "macroEditorDurationTitle": "Duration",
+  "macroEditorNaturalDescTitle": "Natural description",
+  "macroEditorEditJson": "Edit JSON",
+  "macroEditorRuleJsonLabel": "Rule (JSON preview)",
+  "macroEditorMustBeJsonObject": "Must be a JSON object",
+  "macroEditorInvalidJson": "Invalid JSON",
+  "macroTriggerHelpReadiness": "Readiness score 1–10 (optional). Defaults to null; user can log it after workout to scale weights and trigger rules.",
+  "macroTriggerHelpSessionRpe": "Session perceived exertion (Session RPE). Useful for auto-regulating load.",
+  "macroTriggerHelpReps": "Total reps over the selected period. Use with exercise filter.",
+  "macroTriggerHelpE1rm": "Estimated 1-rep max from performance (estimated 1RM). Useful for tracking progress.",
+  "macroTriggerHelpTrend": "Performance trend (increase/decrease) over the last N windows.",
+  "macroTriggerHelpRpeDelta": "RPE deviation from plan per set (actual − planned). Used for autoregulation.",
+  "macroTriggerHelpRepsDelta": "Reps deviation from plan per set (actual − planned). For under/over-performance rules.",
+  "macroTriggerHintReadiness": "Numeric readiness score (1–10). Null by default; logged after workout. Case: < 6 for 5 consecutive workouts — deload mesocycle. Use holds_for for consecutive rules.",
+  "macroTriggerHintSessionRpe": "Session RPE: number 1–10. Use holds_for for consecutive rules.",
+  "macroTriggerHintReps": "Total reps (integer). Can be scoped to specific exercises below.",
+  "macroTriggerHintE1rm": "Estimated 1RM (kg). Compare with a number or use trend operators in conditions.",
+  "macroTriggerHintTrend": "For trends use operators: stagnates_for (n, epsilon_percent) or deviates_from_avg (n, value_percent, direction).",
+  "macroTriggerHintRpeDelta": "ΔRPE = actual − planned (can be negative). Use holds_for for consecutive workouts, holds_for_sets for consecutive sets.",
+  "macroTriggerHintRepsDelta": "Δreps = actual − planned (integer, can be negative). Use holds_for_sets for intra-workout checks.",
+  "macroTriggerSelectExercisesHint": "This metric applies to selected exercises. Choose one or more.",
+  "macroCondHelpCompare": "Numeric comparison. Enter a value (integer or decimal), e.g. 10 or -2.5.",
+  "macroCondHelpInRange": "Checks that value is INSIDE range (inclusive). Enter two numbers; order does not matter.",
+  "macroCondHelpOutOfRange": "Checks that value is OUTSIDE range (inclusive). Enter two numbers.",
+  "macroCondHelpStagnates": "Stagnation: last n windows stay within epsilon_percent (%) corridor. Specify n and epsilon_percent.",
+  "macroCondHelpDeviates": "Deviation from n-window average. value_percent is threshold in %, direction is optional.",
+  "macroCondHelpHoldsWorkouts": "N consecutive workouts: relation (>, <, >=, <=, ==, !=, in range, out of range) holds N times in a row.",
+  "macroCondHelpHoldsSets": "N consecutive sets in workout: relation applies to per-set delta (e.g. Δreps).",
+  "macroCondNoteStagnates": "Trend (stagnation): compares range width of last n values against epsilon_percent (%).\nFormat: n — integer (windows), epsilon_percent — percentage.\nExample: n=5, epsilon_percent=1.0 (change ≤ 1% over 5 windows).",
+  "macroCondNoteDeviates": "Trend (deviation): compares latest value to n-window average.\nFormat: n — integer, value_percent — threshold %, direction — positive/negative (optional).\nExample: n=5, value_percent=3, direction=\"negative\" (drop ≥ 3%).",
+  "macroActHelpAdjustWeight": "Changes weight and/or intensity by %: positive increases, negative decreases. Example: -2.5 lowers weight by 2.5%.",
+  "macroActHelpAdjustReps": "Changes reps by ±N: positive adds rep(s), negative removes.",
+  "macroActHelpAdjustWeightRpe": "Adjusts intensity/weight to target RPE (1–10) keeping current reps. Uses RPE table.",
+  "macroActHelpAdjustRepsRpe": "Selects reps for target RPE (1–10) at fixed intensity (if set). Uses RPE table.",
+  "macroActHelpAdjustSets": "Adds or removes sets: positive adds (clones last set), negative removes from end.",
+  "macroActHelpInjectTemplate": "Injects a mesocycle from an existing template by ID. Placement and conflict strategy can be set.",
+  "macroActHelpInjectExisting": "Injects an existing mesocycle by ID from database. Specify ID and placement.",
+  "macroActHelpInjectCustom": "Creates a custom mesocycle: duration in weeks, microcycle length in days, rest days, and focus tags.",
+  "macroActErrPct": "Change must be greater than -100%.",
+  "macroActErrRpe": "Specify RPE from 1 to 10.",
+  "macroActErrInt": "Specify an integer.",
+  "workoutPickerActivePlanNotFound": "Active plan not found",
+  "userMaxWeakMusclesTitle": "Weak muscles analysis",
+  "userMaxLlmEnriched": "LLM enrichment enabled",
+  "userMaxTopWeakMuscles": "Top weak muscles",
+  "noData": "No data",
+  "userMaxStrengthByMuscle": "Strength by muscle",
+  "userMaxTrends": "Trends",
+  "userMaxAnomalies": "Anomalies",
+  "userMaxNoneDetected": "None detected",
+  "userMaxAnalysisError": "Analysis error: {error}",
+  "userMaxExerciseFallback": "Exercise {id}",
+  "userMaxDeleteTitle": "Delete max?",
+  "userMaxDeleteBody": "{exercise}\n{weight} kg × {reps} reps",
+  "userMaxDeleted": "Max deleted",
+  "userMaxDeleteError": "Failed to delete max: {error}",
+  "userMaxDeleteTooltip": "Delete max",
+  "chatPlanGenTitle": "Plan generation (FSM)",
+  "chatPlanGenDesc": "Starts a finite state machine dialog to build a training plan.",
+  "chatMassEditDesc": "Mass edit plan using AI.",
+  "chatAssistantTitle": "Assistant chat",
+  "chatInputHint": "Type a message...",
+  "chatSendTooltip": "Send",
+  "chatNoConnectionTooltip": "No connection",
+  "chatStatusConnected": "Connected",
+  "chatStatusConnecting": "Connecting...",
+  "chatStatusReconnecting": "Reconnecting...",
+  "chatStatusError": "Connection error",
+  "chatStatusDisconnected": "Disconnected",
+  "chatWorkoutLinkDesc": "Link to workout in active plan",
+  "chatExerciseLinkDesc": "Link to exercise",
+  "chatSessionLabel": "Session: {id}",
+  "chatTypingStatus": "Assistant is typing...{session}",
+  "chatTypingSessionSuffix": " (session {id})",
+  "loadErrorWithDetails": "Load error: {error}",
+  "listLoadErrorWithDetails": "Failed to load list: {error}",
+  "chartMetricRepsTotal": "Total reps",
+  "chartMetricRepsPerSetAvg": "Reps per set (avg)",
+  "chartMetricKgAvg": "Weight kg (avg)",
+  "chartMetricTonnage": "Tonnage",
+  "chartMetricE1rm": "1RM (est.)",
+  "noOptions": "No options",
+  "yAxisLabel": "Y Axis",
+  "musclesTitle": "Muscles",
+  "statusCompleted": "Completed",
+  "statusInProgress": "In progress",
+  "statusPlanned": "Planned",
+  "exerciseLoadError": "Failed to load exercises: {error}",
+  "exerciseSelectTitle": "Select exercise",
+  "exerciseSearchLabel": "Search exercises",
+  "filterAll": "All",
+  "exerciseEmptyTitle": "No exercises found",
+  "exerciseEmptyDescription": "Try changing the search query or muscle group.",
+  "exerciseMuscleGroupMeta": "Muscle group: {group}",
+  "exerciseEquipmentMeta": "Equipment: {equipment}",
+  "signInTitle": "Sign in to continue",
+  "signInWelcomeBack": "Welcome back! Sign in to your account.",
+  "signInCreateAccount": "Create an account to start training.",
+  "signInLegalConsent": "By continuing, you agree to the Terms of Service and acknowledge the Privacy Policy:",
+  "legalTermsOfService": "Terms of Service",
+  "legalPrivacyPolicy": "Privacy Policy",
+  "legalMedicalDisclaimer": "Medical Disclaimer",
+  "templateLoadError": "Failed to load template: {error}",
+  "templateDetailsTitle": "Template details",
+  "descriptionSectionHeader": "DESCRIPTION",
+  "signOutTitle": "Sign out?",
+  "signOutConfirmBody": "Are you sure you want to sign out?",
+  "signOutAction": "Sign out",
+  "signOutError": "Sign out error: {error}",
+  "noDisplayDataTitle": "No data to display",
+  "workoutHistoryEmptyDesc": "Completed sessions for this workout will appear here.",
+  "settingsGeneral": "General",
+  "settingsImportWorkouts": "Import workouts",
+  "settingsImportWorkoutsSubtitle": "Import Hevy CSV training history",
+  "settingsAmplitudeTest": "Amplitude Test",
+  "settingsAmplitudeTestSubtitle": "Diagnostics and funnel event telemetry",
+  "settingsGeneralTitle": "General settings",
+  "settingsThemeMode": "Theme mode",
+  "settingsThemeSystem": "System",
+  "settingsThemeLight": "Light",
+  "settingsThemeDark": "Dark",
+  "settingsInterfaceSize": "Interface size",
+  "settingsDensityCompact": "Compact",
+  "settingsDensityCompactSubtitle": "Less space between elements",
+  "settingsDensityComfortable": "Comfortable",
+  "settingsDensityComfortableSubtitle": "More space between elements",
+  "settingsDeleteAccountTitle": "Delete account",
+  "settingsInterfaceConfig": "Interface configuration",
+  "settingsTheme": "Theme",
+  "settingsShowActivityChart": "Show activity chart",
+  "settingsShowWorkoutHistory": "Show workout history",
+  "settingsShowWorkoutAnalytics": "Show workout analytics",
+  "settingsShowAllTime": "Show all time",
+  "settingsUseHorizontalScroll": "Use horizontal scroll",
+  "settingsTrainerControls": "Trainer controls",
+  "settingsEnableCoaching": "Enable coaching",
+  "settingsConnectStripe": "Connect Stripe payouts",
+  "settingsConnectStripeSubtitle": "Set up payment processing for coaching",
+  "settingsStripeConnected": "Stripe connected",
+  "settingsStripeConnectedSubtitle": "Payment processing is set up",
+  "settingsEnableCoachingFeatures": "Enable coaching features",
+  "settingsTaglineLabel": "Tagline",
+  "settingsDescriptionLabel": "Description",
+  "settingsSpecializationsHeader": "SPECIALIZATIONS",
+  "settingsLanguagesHeader": "LANGUAGES",
+  "settingsRatePerMonthUsd": "Rate per month (USD)",
+  "settingsTimezoneHint": "e.g. Europe/Kyiv",
+  "importCreatedWorkouts": "Created workouts",
+  "importTotalRows": "Total rows in file",
+  "importRowErrors": "Row errors",
+  "amplitudeSendTestEvent": "Send Test Event",
+  "amplitudeSendCustomEvent": "Send Custom Event",
+  "amplitudeShowDebugInfo": "Show Debug Info",
+  "amplitudeTestFunnel": "Test Time-to-First-Dollar Funnel",
+  "debugScreenTitle": "Debug Screen",
+  "debugCoachChatTitle": "Debug Coach Chat",
+  "debugChatEmbeddedTitle": "Chat Screen (embedded)",
+  "statusCancelled": "Cancelled",
+  "statusPlannedLabel": "Planned",
+  "reviewRatingHeader": "RATING",
+  "reviewCommentHeader": "COMMENT (OPTIONAL)",
+  "reviewShareExperienceHint": "Share your experience...",
+  "actionSubmit": "Submit",
+  "reviewSubmittedSuccess": "Review submitted successfully",
+  "sessionStartedHeader": "STARTED",
+  "sessionFinishedHeader": "FINISHED",
+  "sessionDurationHeader": "DURATION",
+  "sessionCompletedSetsHeader": "COMPLETED SETS",
+  "planCardTargetSessionLength": "Target session length",
+  "avatarTooltip": "Avatar",
+  "profileLoadErrorEyebrow": "PROFILE LOAD ERROR",
+  "failedToLoadProfile": "Failed to load profile: {error}",
+  "appearanceEyebrow": "APPEARANCE",
+  "layoutScaleEyebrow": "LAYOUT SCALE",
+  "sessionAccessEyebrow": "SESSION ACCESS",
+  "irreversibleActionEyebrow": "IRREVERSIBLE ACTION",
+  "deleteAccountConfirmMessage": "This will schedule deletion of your account data. Continue?",
+  "appearanceAndLocaleEyebrow": "APPEARANCE & LOCALE",
+  "profileTelemetryEyebrow": "PROFILE TELEMETRY",
+  "visibilityAndCharts": "Visibility & charts",
+  "coachingAndPayoutsEyebrow": "COACHING & PAYOUTS",
+  "notAvailableForAccount": "Not available for this account",
+  "accountZoneEyebrow": "ACCOUNT ZONE",
+  "sessionAndDataTitle": "Session & data",
+  "notSetLabel": "Not set",
+  "ratePerMonthHelper": "Amount is entered in dollars (e.g. 120 = $120.00).",
+  "addMuscleTagLabel": "Add muscle tag",
+  "typeToSearchHint": "Type to search...",
+  "failedToReadFileBytes": "Failed to read selected file bytes",
+  "gifUploaded": "GIF uploaded",
+  "imageUploaded": "Image uploaded",
+  "uploadFailed": "Upload failed: {error}",
+  "editExerciseTitle": "Edit Exercise",
+  "createExerciseTitle": "Create Exercise",
+  "nameLabel": "Name",
+  "muscleGroupLabel": "Muscle group",
+  "selectGroupHint": "Select group",
+  "movementTypeLabel": "Movement type",
+  "movementTypeCompound": "Compound",
+  "movementTypeIsolation": "Isolation",
+  "regionLabel": "Region",
+  "regionUpper": "Upper",
+  "regionLower": "Lower",
+  "failedToUpdateExercise": "Failed to update exercise: {error}",
+  "failedToCreateExercise": "Failed to create exercise: {error}",
+  "create": "Create",
+  "exercisesTitle": "Exercises",
+  "errorLoadingExercises": "Error loading exercises: {error}",
+  "noExercisesTitle": "No Exercises",
+  "noExercisesDescription": "No exercises found. Add your first exercise!",
+  "noMuscleGroup": "No muscle group",
+  "noEquipment": "No equipment",
+  "uploadImageTooltip": "Upload Image",
+  "deleteExerciseQuestion": "Delete exercise?",
+  "failedToDeleteExercise": "Failed to delete exercise: {error}",
+  "exerciseTitle": "Exercise",
+  "failedToLoadExercise": "Failed to load exercise: {error}",
+  "exerciseNotFoundTitle": "Exercise not found",
+  "muscleGroupHeader": "MUSCLE GROUP",
+  "equipmentHeader": "EQUIPMENT",
+  "movementTypeHeader": "MOVEMENT TYPE",
+  "regionHeader": "REGION",
+  "targetMusclesHeader": "TARGET MUSCLES",
+  "synergistMusclesHeader": "SYNERGIST MUSCLES",
+  "parentExerciseEyebrow": "PARENT EXERCISE",
+  "baseMovementTitle": "Base Movement",
+  "directVariantsTitle": "Direct Variants",
+  "relatedSiblingsTitle": "Related Siblings",
+  "failedToLoadData": "Failed to load data: {error}",
+  "errorSaving": "Error saving: {error}",
+  "progressionTemplateOptionalLabel": "Progression Template (optional)",
+  "selectTemplateHint": "Select template",
+  "noTemplateOption": "No template",
+  "saveExercise": "Save Exercise",
+  "exerciseDetailsTitle": "Exercise Details",
+  "exerciseNameLabel": "Exercise Name",
+  "sets": "Sets",
+  "addSet": "Add Set",
+  "removeSetTooltip": "Remove set",
+  "catalogEntryEyebrow": "CATALOG ENTRY",
+  "destructiveActionEyebrow": "DESTRUCTIVE ACTION",
+  "allLabel": "All",
+  "tryChangingFilterOrAddExercise": "Try changing the filter or add a new exercise",
+  "sexLabel": "Sex",
+  "sexMale": "Male",
+  "sexFemale": "Female",
+  "experienceLevelLabel": "Experience level",
+  "experienceBeginner": "Beginner",
+  "experienceIntermediate": "Intermediate",
+  "experienceAdvanced": "Advanced",
+  "primaryGoalLabel": "Primary goal",
+  "goalStrength": "Strength",
+  "goalHypertrophy": "Hypertrophy",
+  "goalFatLoss": "Fat loss",
+  "goalGeneralFitness": "General fitness",
+  "trainingEnvironmentLabel": "Training environment",
+  "envCommercialGym": "Commercial gym",
+  "envHome": "Home",
+  "envGarage": "Garage",
+  "failedToApply": "Failed to apply: {error}",
+  "useAsProfilePicture": "Use as profile picture",
+  "describeYourAvatarHint": "Describe your avatar",
+  "failedWithError": "Failed: {error}",
+  "generate": "Generate",
+  "failedToLoadAnalytics": "Failed to load analytics: {error}",
+  "addSeriesTooltip": "Add series",
+  "clearTooltip": "Clear",
+  "failedToApplyReadiness": "Failed to apply readiness: {error}",
+  "failedToUpdateSetNotReady": "Failed to update set: app state not ready",
+  "failedToUpdateSet": "Failed to update set: {error}",
+  "deleteExerciseTitle": "Delete Exercise",
+  "exerciseRemovedFromWorkout": "Exercise removed from workout",
+  "errorCannotDeleteUnsavedExercise": "Error: Cannot delete unsaved exercise",
+  "failedToRemoveExercise": "Failed to remove exercise: {error}",
+  "cannotAddSetUnsavedExercise": "Cannot add set: exercise is not saved yet",
+  "setAddedSuccessfully": "Set added successfully",
+  "failedToAddSet": "Failed to add set: {error}",
+  "failedToLoadExercises": "Failed to load exercises: {error}",
+  "workoutUpdated": "Workout updated",
+  "failedToUpdateWorkout": "Failed to update workout: {error}",
+  "workoutStarted": "Workout started",
+  "failedToStartSession": "Failed to start session: {error}",
+  "sessionCancelled": "Session cancelled",
+  "workoutFinished": "Workout finished",
+  "failedToFinishSession": "Failed to finish session: {error}",
+  "allSetsAlreadyCompleted": "All sets are already completed",
+  "failedToCompleteAllSets": "Failed to complete all sets: {error}",
+  "failedToUpdateSetCompletion": "Failed to update set completion: {error}",
+  "deleteSetTitle": "Delete Set",
+  "deleteSetConfirmMessage": "Are you sure you want to delete this set? This action cannot be undone.",
+  "setDeletedSuccessfully": "Set deleted successfully",
+  "failedToDeleteSet": "Failed to delete set: {error}",
+  "exerciseAddedSuccessfully": "Exercise added successfully",
+  "failedToAddExercise": "Failed to add exercise: {error}",
+  "exerciseUpdatedSuccessfully": "Exercise updated successfully",
+  "errorUpdatingExercise": "Error updating exercise: {error}",
+  "setCountLabel": "{count, plural, =1{1 SET} other{{count} SETS}}",
+  "userMaxesTitle": "User Maxes",
+  "noMaxesSavedTitle": "No maxes saved",
+  "addFirstMaxWeightDescription": "Add your first max weight",
+  "allSessionsLabel": "All sessions",
+  "resetDatesTooltip": "Reset dates",
+  "collapseCalendarTooltip": "Collapse calendar",
+  "selectDateRangeTooltip": "Select date range",
+  "calendarMonthLabel": "Month",
+  "primaryMetricTrendHeader": "PRIMARY METRIC (TREND)",
+  "trendLabel": "Trend",
+  "exerciseDetailNotFoundDescription": "The requested exercise definition could not be located.",
+  "variantsCountEyebrow": "VARIANTS · {count}",
+  "otherVariantsCountEyebrow": "OTHER VARIANTS · {count}",
+  "failedToLoadGroups": "Failed to load groups: {error}",
+  "deleteExerciseConfirmBody": "Are you sure you want to delete \"{name}\"?",
+  "exerciseSpecEyebrow": "01 · EXERCISE SPEC",
+  "pleaseEnterNameValidation": "Please enter a name",
+  "prescribedSetsEyebrow": "02 · PRESCRIBED SETS ({count})",
+  "requiredField": "Required",
+  "setNumberLabel": "SET #{number}",
+  "removeExerciseConfirmBody": "Are you sure you want to remove this exercise from your workout?",
+  "allSetsMarkedCompleted": "All sets marked as completed ({count})",
+  "markedSetsPartial": "Marked {success} sets, failed {failed}",
+  "myAthletesTitle": "My Athletes",
+  "thresholdsAndFiltersTooltip": "Thresholds & filters",
+  "allSegmentsLabel": "All segments",
+  "recentlyActiveLabel": "Recently active",
+  "sessionsPerWeekLabel": "Sessions / wk",
+  "adherenceLabel": "Adherence",
+  "visibleMetricLabel": "VISIBLE",
+  "linksMetricLabel": "LINKS",
+  "avgSessionsPerWeekMetricLabel": "AVG S / WK",
+  "atRiskMetricLabel": "AT RISK",
+  "rosterFiltersEyebrow": "ROSTER FILTERS",
+  "thresholdsFilterTitle": "Thresholds & filters",
+  "resetLabel": "Reset",
+  "doneLabel": "Done",
+  "viewDetailedAnalyticsLabel": "View detailed analytics",
+  "sessionsUpperLabel": "SESSIONS",
+  "sessionsPerWeekUpperLabel": "S / WK",
+  "planPercentUpperLabel": "PLAN %",
+  "rpeDistributionUpperLabel": "RPE DISTRIBUTION",
+  "allUsersTitle": "All Users",
+  "filterCoachesLabel": "Filter coaches",
+  "coachDirectoryEyebrow": "COACH DIRECTORY",
+  "filterCoachesTitle": "Filter Coaches",
+  "allUsersPillLabel": "All users",
+  "coachesOnlyPillLabel": "Coaches only",
+  "filtersActiveLabel": "Filters · Active",
+  "showingUpperLabel": "SHOWING",
+  "publicUpperLabel": "PUBLIC",
+  "coachesUpperLabel": "COACHES",
+  "sortUpperLabel": "SORT",
+  "minRateUsdLabel": "Min Rate ($)",
+  "maxRateUsdLabel": "Max Rate ($)",
+  "sortByLabel": "Sort By",
+  "sortCreatedAt": "Created At",
+  "sortRating": "Rating",
+  "sortLastActive": "Last Active",
+  "applyFiltersLabel": "Apply Filters",
+  "volumeUpperLabel": "VOLUME",
+  "sessPerWeekUpperLabel": "SESS / WK",
+  "intensityUpperLabel": "INTENSITY",
+  "avgRpeUpperLabel": "AVG RPE",
+  "lastDayUpperLabel": "LAST DAY",
+  "daysGapUpperLabel": "DAYS GAP",
+  "crmTitle": "CRM",
+  "activeUpperLabel": "ACTIVE",
+  "engagedUpperLabel": "ENGAGED",
+  "inactiveUpperLabel": "INACTIVE",
+  "viewAthletesListLabel": "View athletes list",
+  "relationshipsAndChatLabel": "Relationships & chat",
+  "lastUpperLabel": "LAST",
+  "planUpperLabel": "PLAN",
+  "relationshipEyebrow": "RELATIONSHIP",
+  "failedToSendError": "Failed to send: {error}",
+  "typeMessageHint": "Type a message...",
+  "sendMessageTooltip": "Send message",
+  "adherenceUpperLabel": "ADHERENCE",
+  "startUpperLabel": "START",
+  "endUpperLabel": "END",
+  "workoutNotesEyebrow": "WORKOUT NOTES",
+  "removeExerciseEyebrow": "REMOVE EXERCISE",
+  "exerciseEditorEyebrow": "EXERCISE EDITOR",
+  "massEditLabel": "Mass edit",
+  "myCoachesTitle": "My Coaches",
+  "analyticsLabel": "Analytics",
+  "chatLabel": "Chat",
+  "subscribeLabel": "Subscribe",
+  "invalidCheckoutUrl": "Invalid checkout URL",
+  "cannotOpenCheckoutUrl": "Cannot open checkout URL",
+  "profileTitle": "Profile",
+  "coachingRequestEyebrow": "COACHING REQUEST",
+  "requestCoachingFromTitle": "Request coaching from {name}",
+  "messageOptionalLabel": "Message (optional)",
+  "sendLabel": "Send",
+  "requestSentMessage": "Request sent",
+  "writeReviewLabel": "Write a Review",
+  "cannotReviewError": "Cannot review: {error}",
+  "workoutFeedTitle": "Workout Feed",
+  "allPostsLabel": "All posts",
+  "withStatsLabel": "With stats",
+  "likedLabel": "Liked",
+  "createPostLabel": "Create Post",
+  "socialFeedEyebrow": "SOCIAL FEED",
+  "visibilityUpperLabel": "VISIBILITY",
+  "visibilityPublic": "Public",
+  "visibilityFollowers": "Followers",
+  "visibilityPrivate": "Private",
+  "postLabel": "Post",
+  "likeLabel": "Like",
+  "errorLoadingItems": "Error loading items: {error}",
+  "addItemTitle": "Add {name}",
+  "itemGenericName": "Item",
+  "dosageWithUnitLabel": "Dosage ({unit})",
+  "addLabel": "Add",
+  "genericError": "Error: {error}",
+  "sessionConfigurationTitle": "Session Configuration",
+  "sessionIdLabel": "Session ID",
+  "workoutIdOptionalLabel": "Workout ID (optional)",
+  "appliedPlanWorkoutIdOptionalLabel": "Applied Plan Workout ID (optional)",
+  "selectedEntriesTitle": "Selected Entries",
+  "availableItemsTitle": "Available Items",
+  "removeEntryTooltip": "Remove entry",
+  "addEntryTooltip": "Add entry",
+  "deleteSessionTitle": "Delete Session",
+  "deleteSessionConfirm": "Are you sure you want to delete this session?",
+  "sessionDeletedSuccess": "Session deleted successfully",
+  "editSessionTooltip": "Edit session",
+  "deleteSessionTooltip": "Delete session",
+  "kcalUpperLabel": "KCAL",
+  "proteinUpperLabel": "PROTEIN",
+  "fatUpperLabel": "FAT",
+  "carbUpperLabel": "CARB",
+  "activeNutritionPlanTitle": "Active Nutrition Plan",
+  "noActiveCalendarPlan": "No active calendar plan",
+  "noNutritionPlanConfigured": "No nutrition plan configured",
+  "createSessionTooltip": "Create session",
+  "failedToLoadNutritionSessions": "Failed to load nutrition sessions: {error}",
+  "createSessionButton": "Create Session",
+  "pleaseEnterPlanName": "Please enter a plan name",
+  "planCreatedSuccess": "Plan created successfully",
+  "failedToCreatePlan": "Failed to create plan: {error}",
+  "createCalendarPlanTitle": "Create Calendar Plan",
+  "planNameLabel": "Plan Name",
+  "addMesocycleLabel": "Add Mesocycle",
+  "removeMesocycleTooltip": "Remove Mesocycle",
+  "mesocycleNameLabel": "Mesocycle Name",
+  "microcyclesLabel": "Microcycles",
+  "microcycleLengthDaysLabel": "Microcycle Length (days)",
+  "addExerciseLabel": "Add exercise",
+  "planAppliedSuccess": "Plan applied successfully",
+  "applyPlanButton": "Apply Plan",
+  "noPlanWorkoutsAvailable": "No plan workouts available",
+  "removeRuleEyebrow": "REMOVE RULE",
+  "deleteMacroTitle": "Delete Macro",
+  "planMacrosTitle": "Plan Macros",
+  "previewApplyTooltip": "Preview/Apply",
+  "addMacroLabel": "Add Macro",
+  "noMacrosYet": "No macros yet",
+  "allCountLabel": "All ({count})",
+  "noMatchingMacros": "No matching macros",
+  "switchFilterToViewRules": "Switch filter above to view rules.",
+  "macroSuggestionsEyebrow": "MACRO SUGGESTIONS",
+  "sessionHistoryTitle": "Session History",
+  "loadSessionsLabel": "Load sessions",
+  "clearFilterLabel": "Clear filter",
+  "errorLoadingHistory": "Error loading history: {error}",
+  "noSessionsFound": "No sessions found",
+  "tryChangingYourFilter": "Try changing your filter",
+  "sessionNumberTitle": "Session #{id}",
+  "workoutIdUpperLabel": "WORKOUT ID",
+  "statusUpperLabel": "STATUS",
+  "startedUpperLabel": "STARTED",
+  "finishedUpperLabel": "FINISHED",
+  "durationUpperLabel": "DURATION",
+  "noExerciseDataForWorkout": "No exercise data available for this workout",
+  "repsUpperLabel": "REPS",
+  "plannedUpperLabel": "PLANNED",
+  "actualUpperLabel": "ACTUAL",
+  "thresholdsLabel": "Thresholds",
+  "rosterTelemetryEyebrow": "ROSTER TELEMETRY",
+  "minSessionsPerWeekSliderLabel": "Min sessions / week: {value}",
+  "minAdherenceSliderLabel": "Min adherence: {percent}%",
+  "workflowsChannelsEyebrow": "WORKFLOWS · CHANNELS",
+  "userIdFieldLabel": "User ID"
 }

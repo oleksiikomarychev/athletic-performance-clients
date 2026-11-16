@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 
 /// Unified compact instrument control bar combining Active Session timer/actions
 /// and Readiness scaling controls in Execution Mode.
@@ -201,7 +202,7 @@ class WorkoutExecutionHeaderBar extends StatelessWidget {
               ),
             ),
             icon: const Icon(Icons.play_arrow_rounded, size: 18),
-            label: const Text('Start'),
+            label: Text(AppLocalizations.of(context).actionStart),
           )
         : Wrap(
             spacing: 6,
@@ -225,7 +226,7 @@ class WorkoutExecutionHeaderBar extends StatelessWidget {
                   side: BorderSide(color: scheme.error.withValues(alpha: 0.6)),
                 ),
                 icon: const Icon(Icons.stop_circle_outlined, size: 16),
-                label: const Text('Cancel'),
+                label: Text(AppLocalizations.of(context).cancel),
               ),
               SizedBox(
                 width: 48,
@@ -233,7 +234,7 @@ class WorkoutExecutionHeaderBar extends StatelessWidget {
                 child: IconButton(
                   onPressed: isBusy ? null : onCompleteAllSets,
                   icon: const Icon(Icons.playlist_add_check_rounded, size: 22),
-                  tooltip: 'Mark all as completed',
+                  tooltip: AppLocalizations.of(context).workoutMarkAllCompletedTooltip,
                   color: instrument.successColor,
                   style: IconButton.styleFrom(
                     minimumSize: const Size(48, 48),
@@ -260,7 +261,7 @@ class WorkoutExecutionHeaderBar extends StatelessWidget {
                   ),
                 ),
                 icon: const Icon(Icons.check_circle_outline, size: 16),
-                label: const Text('Finish'),
+                label: Text(AppLocalizations.of(context).actionFinish),
               ),
             ],
           );
@@ -330,7 +331,7 @@ class WorkoutExecutionHeaderBar extends StatelessWidget {
           child: IconButton(
             icon: const Icon(Icons.remove, size: 18),
             color: scheme.primary,
-            tooltip: 'Уменьшить',
+            tooltip: AppLocalizations.of(context).tooltipDecrease,
             style: IconButton.styleFrom(
               minimumSize: const Size(48, 48),
               tapTargetSize: MaterialTapTargetSize.padded,
@@ -364,7 +365,7 @@ class WorkoutExecutionHeaderBar extends StatelessWidget {
           child: IconButton(
             icon: const Icon(Icons.add, size: 18),
             color: scheme.primary,
-            tooltip: 'Увеличить',
+            tooltip: AppLocalizations.of(context).workoutDetailIncreaseTooltip,
             style: IconButton.styleFrom(
               minimumSize: const Size(48, 48),
               tapTargetSize: MaterialTapTargetSize.padded,
@@ -391,7 +392,7 @@ class WorkoutExecutionHeaderBar extends StatelessWidget {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Применить'),
+              : Text(AppLocalizations.of(context).apply),
         ),
       ],
     );
@@ -516,7 +517,7 @@ class ExerciseSummaryHeader extends StatelessWidget {
               child: IconButton(
                 icon: const Icon(Icons.delete_outline_rounded, size: 18),
                 color: scheme.error,
-                tooltip: 'Delete exercise',
+                tooltip: AppLocalizations.of(context).deleteExerciseTooltip,
                 style: IconButton.styleFrom(
                   minimumSize: const Size(48, 48),
                   tapTargetSize: MaterialTapTargetSize.padded,
@@ -771,7 +772,7 @@ class SetCapsuleRow extends StatelessWidget {
                     color: scheme.onSurfaceVariant,
                     onPressed: isBusy ? null : onDelete,
                     padding: EdgeInsets.zero,
-                    tooltip: 'Delete set',
+                    tooltip: AppLocalizations.of(context).deleteSetTooltip,
                     style: IconButton.styleFrom(
                       minimumSize: const Size(48, 48),
                       tapTargetSize: MaterialTapTargetSize.padded,

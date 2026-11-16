@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/providers/ambient_environment_provider.dart';
 import 'package:workout_app/services/service_locator.dart' as sl;
 import 'package:workout_app/src/widgets/snack_utils.dart';
@@ -78,7 +79,11 @@ class _CoachChatScreenState extends ConsumerState<CoachChatScreen> {
       ref.invalidate(_channelMessagesProvider(widget.args.channelId));
     } catch (e) {
       if (mounted) {
-        showAppSnackBar(context, 'Failed to send: $e', isError: true);
+        showAppSnackBar(
+          context,
+          AppLocalizations.of(context).failedToSendError('$e'),
+          isError: true,
+        );
       }
     } finally {
       if (mounted) {
@@ -107,7 +112,7 @@ class _CoachChatScreenState extends ConsumerState<CoachChatScreen> {
 
     return AssistantChatHost(
       initialMessage:
-          'Открываю ассистента из CoachChatScreen. Используй контекст v1, чтобы понимать текущий канал коуч–атлет.',
+          'Opening assistant from CoachChatScreen. Use v1 context to understand the current coach-athlete channel.',
       contextBuilder: _buildChatContext,
       builder: (context, openChat) {
         return AmbientScaffoldShell(
@@ -119,7 +124,7 @@ class _CoachChatScreenState extends ConsumerState<CoachChatScreen> {
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh),
-                tooltip: 'Refresh',
+                tooltip: AppLocalizations.of(context).refresh,
                 onPressed: () => ref.refresh(
                   _channelMessagesProvider(widget.args.channelId),
                 ),
@@ -235,7 +240,7 @@ class _CoachChatScreenState extends ConsumerState<CoachChatScreen> {
                             maxLines: 4,
                             decoration: InstrumentTheme.inputDecoration(
                               context,
-                              hintText: 'Type a message...',
+                              hintText: AppLocalizations.of(context).typeMessageHint,
                               radius: 16,
                             ),
                           ),
@@ -243,7 +248,7 @@ class _CoachChatScreenState extends ConsumerState<CoachChatScreen> {
                         const SizedBox(width: 10),
                         Semantics(
                           button: true,
-                          label: 'Send message',
+                          label: AppLocalizations.of(context).sendMessageTooltip,
                           child: InkWell(
                             onTap: _sending ? null : _sendMessage,
                             borderRadius: BorderRadius.circular(999),

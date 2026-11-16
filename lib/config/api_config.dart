@@ -22,7 +22,7 @@ class ApiConfig {
     }
 
     // 2. Если это не Web, пробуем взять из .env, если нет - дефолтный IP
-    return dotenv.maybeGet('LOCAL_API_BASE_URL') ?? 'http://192.168.31.151:8000';
+    return dotenv.maybeGet('LOCAL_API_BASE_URL') ?? 'http://127.0.0.1:8000';
   }
 
   static String _stripWww(String host) =>

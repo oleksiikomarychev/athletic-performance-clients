@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/services/base_api_service.dart';
 import 'package:workout_app/widgets/instrument_modal.dart';
 
@@ -15,22 +16,21 @@ Future<T?> applyPlanWithConfirmation<T>(
     if (error.statusCode != 409) rethrow;
     if (!context.mounted) return null;
 
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showInstrumentDialog<bool>(
       context: context,
       eyebrow: 'PLAN ACTIVATION',
-      title: 'Заменить активный план?',
-      message:
-          'У вас уже есть активный план. Новый план заменит его. '
-          'История завершённых тренировок сохранится.',
+      title: l10n.replaceActivePlanTitle,
+      message: l10n.replaceActivePlanBody,
       accentColor: InstrumentTheme.of(context).stormAura,
       actionsBuilder: (dialogContext) => [
         InstrumentActionButton(
-          label: 'Отмена',
+          label: AppLocalizations.of(dialogContext).cancel,
           variant: InstrumentActionVariant.secondary,
           onPressed: () => Navigator.of(dialogContext).pop(false),
         ),
         InstrumentActionButton(
-          label: 'Заменить план',
+          label: AppLocalizations.of(dialogContext).replacePlanAction,
           variant: InstrumentActionVariant.primary,
           accentColor: InstrumentTheme.of(dialogContext).stormAura,
           onPressed: () => Navigator.of(dialogContext).pop(true),

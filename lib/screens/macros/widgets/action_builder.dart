@@ -233,30 +233,30 @@ class _ActionBuilderState extends ConsumerState<ActionBuilder> {
     return l10n.macroActionHintGeneric;
   }
 
-  String _modeHelp() {
+  String _modeHelp(AppLocalizations l10n) {
     if (_type == 'Adjust_Load' && _mode == 'by_Percent') {
-      return 'Изменяет вес и/или интенсивность на заданный %: положительное — увеличить, отрицательное — уменьшить. Пример: -2.5 снизит вес на 2.5%.';
+      return l10n.macroActHelpAdjustWeight;
     }
     if (_type == 'Adjust_Reps' && _mode == 'by_Value') {
-      return 'Изменяет количество повторений на ±N: положительное — добавить повтор(ы), отрицательное — убрать.';
+      return l10n.macroActHelpAdjustReps;
     }
     if (_type == 'Adjust_Load' && _mode == 'to_Target') {
-      return 'Подгоняет интенсивность/вес к целевому RPE (1–10), сохраняя текущие повторы. Использует RPE-таблицу.';
+      return l10n.macroActHelpAdjustWeightRpe;
     }
     if (_type == 'Adjust_Reps' && _mode == 'to_Target') {
-      return 'Подбирает повторы под целевой RPE (1–10) при фиксированной интенсивности (если задана). Использует RPE-таблицу.';
+      return l10n.macroActHelpAdjustRepsRpe;
     }
     if (_type == 'Adjust_Sets' && _mode == 'by_Value') {
-      return 'Добавляет или удаляет подходы: положительное — добавить (клонируется последний сет), отрицательное — удалить с конца.';
+      return l10n.macroActHelpAdjustSets;
     }
     if (_type == 'Inject_Mesocycle' && _mesoMode == 'by_Template') {
-      return 'Внедряет мезоцикл из существующего шаблона по его ID. Можно указать размещение и стратегию разрешения конфликтов.';
+      return l10n.macroActHelpInjectTemplate;
     }
     if (_type == 'Inject_Mesocycle' && _mesoMode == 'by_Existing') {
-      return 'Внедряет уже существующий мезоцикл по его ID из базы. Укажите идентификатор и размещение.';
+      return l10n.macroActHelpInjectExisting;
     }
     if (_type == 'Inject_Mesocycle' && _mesoMode == 'Create_Inline') {
-      return 'Создаёт мезоцикл вручную: продолжительность в неделях, длина микроцикла в днях, выходные дни и теги фокуса для тренировок. Можно задать размещение и стратегию конфликтов.';
+      return l10n.macroActHelpInjectCustom;
     }
     return '';
   }
@@ -339,7 +339,7 @@ class _ActionBuilderState extends ConsumerState<ActionBuilder> {
           if (_mode.isNotEmpty || _mesoMode.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
-              _modeHelp(),
+              _modeHelp(l10n),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: scheme.onSurfaceVariant,
               ),
@@ -368,13 +368,13 @@ class _ActionBuilderState extends ConsumerState<ActionBuilder> {
                 final n = double.tryParse(v.trim().replaceAll(',', '.'));
                 if (n == null || !n.isFinite) return l10n.macroActionEnterNumber;
                 if (_mode == 'by_Percent' && n <= -100) {
-                  return 'Изменение должно быть больше −100%.';
+                  return l10n.macroActErrPct;
                 }
                 if (_mode == 'to_Target' && (n < 1 || n > 10)) {
-                  return 'Укажите RPE от 1 до 10.';
+                  return l10n.macroActErrRpe;
                 }
                 if (_mode == 'by_Value' && n != n.truncateToDouble()) {
-                  return 'Укажите целое число.';
+                  return l10n.macroActErrInt;
                 }
                 return null;
               },

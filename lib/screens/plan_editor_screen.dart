@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 import 'package:workout_app/models/mesocycle.dart';
 import 'package:workout_app/models/microcycle.dart';
@@ -102,8 +103,9 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) {
+          final l10n = AppLocalizations.of(ctx);
           return AlertDialog(
-            title: const Text('Массовая замена упражнений'),
+            title: Text(l10n.planEditorMassReplaceTitle),
             content: SizedBox(
               width: (MediaQuery.sizeOf(ctx).width - 96).clamp(0.0, 440.0),
               child: Column(
@@ -126,7 +128,11 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                             }
                           },
                           icon: const Icon(Icons.search),
-                          label: Text(target == null ? 'Выбрать целевое упражнение' : 'Цель: ${target!.name}'),
+                          label: Text(
+                            target == null
+                                ? l10n.planEditorChooseTarget
+                                : l10n.planEditorTargetPrefix(target!.name),
+                          ),
                       ),
                       TextButton(
                         onPressed: () {
@@ -138,7 +144,11 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                             }
                           });
                         },
-                        child: Text(selectedSources.length == exerciseIdsSorted.length ? 'Снять все' : 'Выбрать все'),
+                        child: Text(
+                          selectedSources.length == exerciseIdsSorted.length
+                              ? l10n.planEditorClearAll
+                              : l10n.planEditorSelectAll,
+                        ),
                       ),
                     ],
                   ),
@@ -162,8 +172,8 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                               }
                             });
                           },
-                          title: Text(unique[id] ?? 'Exercise $id'),
-                          subtitle: Text('Вхождений: ${counts[id] ?? 0}'),
+                          title: Text(unique[id] ?? l10n.planEditorExerciseIdFallback(id)),
+                          subtitle: Text(l10n.planEditorOccurrences(counts[id] ?? 0)),
                           controlAffinity: ListTileControlAffinity.leading,
                         )).toList(),
                       ),
@@ -172,7 +182,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                   const SizedBox(height: 8),
                   TextField(
                     controller: dayCtrl,
-                    decoration: const InputDecoration(labelText: 'Фильтр: день (число, опционально)'),
+                    decoration: InputDecoration(labelText: l10n.planEditorDayFilterLabel),
                     keyboardType: TextInputType.number,
                   ),
                   if (error != null) ...[
@@ -183,16 +193,16 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Отмена')),
+              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(l10n.cancel)),
               FilledButton(
                 onPressed: () async {
                   final dayIndex = int.tryParse(dayCtrl.text);
                   if (target == null) {
-                    setState(() => error = 'Выберите целевое упражнение');
+                    setState(() => error = l10n.planEditorSelectTargetError);
                     return;
                   }
                   if (selectedSources.isEmpty) {
-                    setState(() => error = 'Выберите хотя бы одно упражнение для замены');
+                    setState(() => error = l10n.planEditorSelectSourceError);
                     return;
                   }
                   Navigator.of(ctx).pop();
@@ -202,7 +212,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                     dayIndex: dayIndex,
                   );
                 },
-                child: const Text('Предпросмотр'),
+                child: Text(l10n.planEditorPreview),
               ),
             ],
           );
@@ -223,7 +233,11 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Проверка прав недоступна, продолжаю без неё: $e')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).planEditorRightsCheckUnavailable(e.toString()),
+            ),
+          ),
         );
       }
       validIds = _selectedMicrocycleIds.toList();
@@ -232,7 +246,11 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
     if (validIds.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Нет доступных микроциклов для замены')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).planEditorNoAccessibleMicrocycles,
+            ),
+          ),
         );
       }
       return;
@@ -260,43 +278,52 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
 
     if (totalEx == 0) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Нет упражнений для замены')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).planEditorNoExercisesToReplace),
+          ),
+        );
       }
       return;
     }
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Предпросмотр замены упражнений'),
-        content: SizedBox(
-          width: (MediaQuery.sizeOf(ctx).width - 96).clamp(0.0, 440.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Цель: ${target.name}'),
-              Text('Будет заменено упражнений: $totalEx, сетов затронуто: $totalSets'),
-              const SizedBox(height: 8),
-              Flexible(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: diffs.map((e) => ListTile(
-                      dense: true,
-                      title: Text(e['name'] as String),
-                      subtitle: Text('Упражнений: ${e['ex']} · Сетов: ${e['sets']}'),
-                    )).toList(),
+      builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx);
+        return AlertDialog(
+          title: Text(l10n.planEditorPreviewReplaceTitle),
+          content: SizedBox(
+            width: (MediaQuery.sizeOf(ctx).width - 96).clamp(0.0, 440.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.planEditorPreviewTarget(target.name)),
+                Text(l10n.planEditorPreviewTotals(totalEx, totalSets)),
+                const SizedBox(height: 8),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: diffs.map((e) => ListTile(
+                        dense: true,
+                        title: Text(e['name'] as String),
+                        subtitle: Text(
+                          l10n.planEditorPreviewMicroStats(e['ex'] as int, e['sets'] as int),
+                        ),
+                      )).toList(),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Отмена')),
-          FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Применить')),
-        ],
-      ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(l10n.cancel)),
+            FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(l10n.apply)),
+          ],
+        );
+      },
     );
 
     if (confirmed == true) {
@@ -407,7 +434,11 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Замена: успешно $success, ошибок $failed')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).planEditorApplyReplaceResult(success, failed),
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _batchSaving = false);
@@ -586,16 +617,17 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
         },
       },
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return Scaffold(
           appBar: PrimaryAppBar(
-            title: 'Редактор: ${plan.name}',
+            title: l10n.planEditorTitle(plan.name),
             onTitleTap: openChat,
             actions: [
               SizedBox(
                 width: 48,
                 height: 48,
                 child: IconButton(
-                  tooltip: 'Macros',
+                  tooltip: l10n.planEditorMacros,
                   style: IconButton.styleFrom(
                     minimumSize: const Size(48, 48),
                     tapTargetSize: MaterialTapTargetSize.padded,
@@ -621,12 +653,12 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                   controller: _searchCtrl,
                   decoration: InstrumentTheme.inputDecoration(
                     context,
-                    hintText: 'Поиск упражнения по названию...',
+                    hintText: l10n.planEditorSearchHint,
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: _query.isEmpty
                         ? null
                         : IconButton(
-                            tooltip: 'Очистить',
+                            tooltip: l10n.actionClear,
                             style: IconButton.styleFrom(
                               minimumSize: const Size(48, 48),
                               tapTargetSize: MaterialTapTargetSize.padded,
@@ -659,7 +691,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         Text(
-                          'ВЫБРАНО: ${_selectedMicrocycleIds.length}',
+                          l10n.planEditorSelectedCount(_selectedMicrocycleIds.length.toString()),
                           style: InstrumentTheme.tabular(
                             InstrumentTheme.microLabel(
                               context,
@@ -682,7 +714,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                                   ),
                                 )
                               : const Icon(Icons.tune, size: 18),
-                          label: const Text('Массово'),
+                          label: Text(l10n.planEditorBulkShort),
                         ),
                         FilledButton.tonalIcon(
                           onPressed:
@@ -692,7 +724,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                             tapTargetSize: MaterialTapTargetSize.padded,
                           ),
                           icon: const Icon(Icons.swap_horiz, size: 18),
-                          label: const Text('Замена'),
+                          label: Text(l10n.planEditorReplace),
                         ),
                       ],
                     ),
@@ -700,7 +732,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                 ],
                 SizedBox(height: dimensions.rowGap),
                 Text(
-                  'МЕЗОЦИКЛЫ · ${plan.mesocycles.length}',
+                  l10n.planEditorMesocyclesCount(plan.mesocycles.length.toString()),
                   style: InstrumentTheme.tabular(
                     InstrumentTheme.microLabel(context),
                   ),
@@ -750,7 +782,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      'МИКРОЦИКЛОВ: ${filtered.length}',
+                                      l10n.planEditorMicrocyclesCount(filtered.length.toString()),
                                       style: InstrumentTheme.tabular(
                                         InstrumentTheme.microLabel(context),
                                       ),
@@ -762,7 +794,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                                 width: 48,
                                 height: 48,
                                 child: IconButton(
-                                  tooltip: 'Удалить мезоцикл',
+                                  tooltip: l10n.planEditorDeleteMesocycleTooltip,
                                   style: IconButton.styleFrom(
                                     minimumSize: const Size(48, 48),
                                     tapTargetSize:
@@ -819,7 +851,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                                   ),
                                 ),
                                 subtitle: Text(
-                                  'Дней: ${micro.daysCount ?? 0}',
+                                  l10n.planEditorMicroDays(micro.daysCount ?? 0),
                                   style: InstrumentTheme.tabular(
                                     theme.textTheme.bodySmall ??
                                         const TextStyle(fontSize: 12),
@@ -832,7 +864,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                                       width: 48,
                                       height: 48,
                                       child: IconButton(
-                                        tooltip: 'Редактировать микроцикл',
+                                        tooltip: l10n.planEditorEditMicrocycleTooltip,
                                         style: IconButton.styleFrom(
                                           minimumSize: const Size(48, 48),
                                           tapTargetSize:
@@ -847,7 +879,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                                       width: 48,
                                       height: 48,
                                       child: IconButton(
-                                        tooltip: 'Удалить микроцикл',
+                                        tooltip: l10n.planEditorDeleteMicrocycleTooltip,
                                         style: IconButton.styleFrom(
                                           minimumSize: const Size(48, 48),
                                           tapTargetSize:
@@ -892,7 +924,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
     if (!mounted) return;
     if (changed == true) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Изменения сохранены')),
+        SnackBar(content: Text(AppLocalizations.of(context).planEditorChangesSaved)),
       );
     } else if (changed is Map<String, dynamic> && changed['deletedId'] != null) {
       final int did = (changed['deletedId'] as num).toInt();
@@ -901,29 +933,30 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
         _selectedMicrocycleIds.remove(did);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Микроцикл удалён')),
+        SnackBar(content: Text(AppLocalizations.of(context).planEditorMicrocycleDeleted)),
       );
     }
   }
 
   Future<void> _confirmDeleteMesocycle(Mesocycle meso) async {
+    final l10n = AppLocalizations.of(context);
     final colors = Theme.of(context).colorScheme;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Удалить мезоцикл'),
+        title: Text(l10n.planEditorDeleteMesocycleTitle),
         content: Text(
-          'Вы уверены, что хотите удалить мезоцикл "${meso.name}" и все его микроциклы?',
+          l10n.planEditorDeleteMesocycleBody(meso.name),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Отмена'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(backgroundColor: colors.error),
-            child: const Text('Удалить'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -936,13 +969,13 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
           widget.plan.mesocycles.removeWhere((m) => m.id == meso.id);
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Мезоцикл удалён')),
+          SnackBar(content: Text(l10n.planEditorMesocycleDeleted)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка удаления: $e')),
+          SnackBar(content: Text(l10n.planEditorDeleteFailed(e.toString()))),
         );
       }
     }
@@ -952,23 +985,24 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
     Mesocycle meso,
     Microcycle micro,
   ) async {
+    final l10n = AppLocalizations.of(context);
     final colors = Theme.of(context).colorScheme;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Удалить микроцикл'),
+        title: Text(l10n.planEditorDeleteMicrocycleTitle),
         content: Text(
-          'Вы уверены, что хотите удалить микроцикл "${micro.name}"?',
+          l10n.planEditorDeleteMicrocycleBody(micro.name),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Отмена'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(backgroundColor: colors.error),
-            child: const Text('Удалить'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -982,13 +1016,13 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
           _selectedMicrocycleIds.remove(micro.id);
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Микроцикл удалён')),
+          SnackBar(content: Text(l10n.planEditorMicrocycleDeleted)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка удаления: $e')),
+          SnackBar(content: Text(l10n.planEditorDeleteFailed(e.toString()))),
         );
       }
     }
@@ -1026,23 +1060,24 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) {
+          final l10n = AppLocalizations.of(ctx);
           return AlertDialog(
-            title: const Text('Массовые правки: выбранные микроциклы'),
+            title: Text(l10n.planEditorMassEditTitle),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ModeValueControl(
-                    label: 'Интенсивность',
+                    label: l10n.planEditorIntensity,
                     enabled: intensityEnabled,
                     onEnabledChanged: (v) => setState(() { intensityEnabled = v; }),
                     value: intensityMV,
                     onChanged: (mv) => setState(() { intensityMV = mv; }),
                     allowedModes: const [ParamMode.set, ParamMode.offset, ParamMode.scale],
-                    modeTitles: const {
-                      ParamMode.set: 'Задать',
-                      ParamMode.offset: 'Сдвиг',
-                      ParamMode.scale: 'Множитель',
+                    modeTitles: {
+                      ParamMode.set: l10n.planEditorModeSet,
+                      ParamMode.offset: l10n.planEditorModeOffset,
+                      ParamMode.scale: l10n.planEditorModeScale,
                     },
                     displayTextBuilder: (m, v) {
                       if (m == ParamMode.scale) return v.toStringAsFixed(2);
@@ -1067,9 +1102,9 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                     value: effortMV,
                     onChanged: (mv) => setState(() { effortMV = mv; }),
                     allowedModes: const [ParamMode.set, ParamMode.offset],
-                    modeTitles: const {
-                      ParamMode.set: 'Задать',
-                      ParamMode.offset: 'Сдвиг',
+                    modeTitles: {
+                      ParamMode.set: l10n.planEditorModeSet,
+                      ParamMode.offset: l10n.planEditorModeOffset,
                     },
                     displayTextBuilder: (m, v) => v.toStringAsFixed(0),
                     stepForMode: (m) => 1.0,
@@ -1078,16 +1113,16 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                   ),
                   const SizedBox(height: 8),
                   ModeValueControl(
-                    label: 'Повторы',
+                    label: l10n.planEditorReps,
                     enabled: volumeEnabled,
                     onEnabledChanged: (v) => setState(() { volumeEnabled = v; }),
                     value: volumeMV,
                     onChanged: (mv) => setState(() { volumeMV = mv; }),
                     allowedModes: const [ParamMode.set, ParamMode.offset, ParamMode.scale],
-                    modeTitles: const {
-                      ParamMode.set: 'Задать',
-                      ParamMode.offset: 'Сдвиг',
-                      ParamMode.scale: 'Множитель',
+                    modeTitles: {
+                      ParamMode.set: l10n.planEditorModeSet,
+                      ParamMode.offset: l10n.planEditorModeOffset,
+                      ParamMode.scale: l10n.planEditorModeScale,
                     },
                     displayTextBuilder: (m, v) => m == ParamMode.scale ? v.toStringAsFixed(2) : v.toStringAsFixed(0),
                     stepForMode: (m) {
@@ -1104,11 +1139,11 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                   const SizedBox(height: 8),
                   DropdownButtonFormField<RecalcTarget>(
                     initialValue: recalcTarget,
-                    items: const [
-                      DropdownMenuItem(value: RecalcTarget.auto, child: Text('Пересчитать: Авто')),
-                      DropdownMenuItem(value: RecalcTarget.reps, child: Text('Пересчитать: Повторы')),
-                      DropdownMenuItem(value: RecalcTarget.effort, child: Text('Пересчитать: RPE')),
-                      DropdownMenuItem(value: RecalcTarget.intensity, child: Text('Пересчитать: Интенсивность')),
+                    items: [
+                      DropdownMenuItem(value: RecalcTarget.auto, child: Text(l10n.planEditorRecalcAuto)),
+                      DropdownMenuItem(value: RecalcTarget.reps, child: Text(l10n.planEditorRecalcReps)),
+                      DropdownMenuItem(value: RecalcTarget.effort, child: Text(l10n.planEditorRecalcEffort)),
+                      DropdownMenuItem(value: RecalcTarget.intensity, child: Text(l10n.planEditorRecalcIntensity)),
                     ],
                     onChanged: (v) => setState(() { recalcTarget = v ?? RecalcTarget.auto; }),
                   ),
@@ -1121,13 +1156,13 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                         final chV = volumeEnabled;
                         String t;
                         if ((chI || chE) && !chV) {
-                          t = 'Авто-пересчет: Повторы (по Интенсивности и RPE)';
+                          t = l10n.planEditorAutoRecalcReps;
                         } else if (chV && !(chI || chE)) {
-                          t = 'Авто-пересчет: Интенсивность (по Повторам и RPE)';
+                          t = l10n.planEditorAutoRecalcIntensity;
                         } else if (chI && chV && !chE) {
-                          t = 'Авто-пересчет: RPE (по Интенсивности и Повторам)';
+                          t = l10n.planEditorAutoRecalcRpe;
                         } else {
-                          t = 'Авто-пересчет: не применяется';
+                          t = l10n.planEditorAutoRecalcNone;
                         }
                         return Row(
                           children: [
@@ -1142,7 +1177,7 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Expanded(child: Text('Фильтр: упражнения (опционально)')),
+                      Expanded(child: Text(l10n.planEditorFilterExercisesOptional)),
                       TextButton(
                         onPressed: () {
                           setState(() {
@@ -1153,7 +1188,11 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                             }
                           });
                         },
-                        child: Text(selectedExerciseIds.length == exerciseIdsSorted.length ? 'Снять все' : 'Выбрать все'),
+                        child: Text(
+                          selectedExerciseIds.length == exerciseIdsSorted.length
+                              ? l10n.planEditorClearAll
+                              : l10n.planEditorSelectAll,
+                        ),
                       ),
                     ],
                   ),
@@ -1175,8 +1214,8 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                                 }
                               });
                             },
-                            title: Text(unique[id] ?? 'Exercise $id'),
-                            subtitle: Text('Вхождений: ${counts[id] ?? 0}'),
+                            title: Text(unique[id] ?? l10n.planEditorExerciseIdFallback(id)),
+                            subtitle: Text(l10n.planEditorOccurrences(counts[id] ?? 0)),
                             controlAffinity: ListTileControlAffinity.leading,
                           )).toList(),
                         ),
@@ -1186,17 +1225,17 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                   const SizedBox(height: 8),
                   TextField(
                     controller: dayCtrl,
-                    decoration: const InputDecoration(labelText: 'Фильтр: день (число, опционально)'),
+                    decoration: InputDecoration(labelText: l10n.planEditorDayFilterLabel),
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 8),
-                  const Text('Будут изменены ВСЕ подходы всех упражнений во всех выбранных микроциклах.'),
+                  Text(l10n.planEditorMassEditWarning),
                 ],
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Отмена')),
-              FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Применить')),
+              TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(l10n.cancel)),
+              FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(l10n.apply)),
             ],
           );
         },
@@ -1300,7 +1339,9 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
 
     if (sumChanged == 0) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Нет изменений по выбранным параметрам')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).planEditorNoChanges)),
+        );
       }
       return;
     }
@@ -1316,8 +1357,9 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) {
+          final l10n = AppLocalizations.of(ctx);
           return AlertDialog(
-            title: const Text('Предпросмотр массовых правок'),
+            title: Text(l10n.planEditorMassEditPreviewTitle),
             content: SizedBox(
               width: (MediaQuery.sizeOf(ctx).width - 96).clamp(0.0, 460.0),
               child: Column(
@@ -1328,19 +1370,19 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      Text('Микроциклов: ${diffs.length}'),
-                      Text('Несоответствий: $sumInvalid'),
+                      Text(l10n.planEditorMicrocyclesCountPlain(diffs.length.toString())),
+                      Text(l10n.planEditorMismatchesCount(sumInvalid.toString())),
                     ],
                   ),
-                  Text('Изменённых сетов: $sumChanged из $sumTotal'),
-                  Text('Изменения: Int $sumI · RPE $sumE · Повт $sumV'),
+                  Text(l10n.planEditorChangedSets(sumChanged.toString(), sumTotal.toString())),
+                  Text(l10n.planEditorDeltaSummary(sumE.toString(), sumI.toString(), sumV.toString())),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<FixStrategy>(
                     initialValue: localFix,
-                    items: const [
-                      DropdownMenuItem(value: FixStrategy.none, child: Text('Валидатор: Без авто-исправлений')),
-                      DropdownMenuItem(value: FixStrategy.fixReps, child: Text('Валидатор: Поправить Повторы')),
-                      DropdownMenuItem(value: FixStrategy.fixIntensity, child: Text('Валидатор: Поправить Интенсивность')),
+                    items: [
+                      DropdownMenuItem(value: FixStrategy.none, child: Text(l10n.planEditorFixNone)),
+                      DropdownMenuItem(value: FixStrategy.fixReps, child: Text(l10n.planEditorFixReps)),
+                      DropdownMenuItem(value: FixStrategy.fixIntensity, child: Text(l10n.planEditorFixIntensity)),
                     ],
                     onChanged: (v) {
                       localFix = v ?? FixStrategy.none;
@@ -1361,7 +1403,15 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
                         children: diffs.map((d) => ListTile(
                           dense: true,
                           title: Text(d.name),
-                          subtitle: Text('Сеты: ${d.changedSets}/${d.totalSets} · Δ Int ${d.changedIntensity} · Δ RPE ${d.changedEffort} · Δ Повт ${d.changedVolume}'),
+                          subtitle: Text(
+                            l10n.planEditorPreviewMicroDiff(
+                              d.changedSets.toString(),
+                              d.totalSets.toString(),
+                              d.changedIntensity.toString(),
+                              d.changedEffort.toString(),
+                              d.changedVolume.toString(),
+                            ),
+                          ),
                         )).toList(),
                       ),
                     ),
@@ -1370,8 +1420,8 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Отмена')),
-              FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Применить')),
+              TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text(l10n.cancel)),
+              FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: Text(l10n.apply)),
             ],
           );
         },
@@ -1415,13 +1465,19 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
         final invalidCount = _selectedMicrocycleIds.length - validIds.length;
         if (invalidCount > 0) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Пропущено $invalidCount микроциклов без прав доступа')),
+            SnackBar(
+              content: Text(AppLocalizations.of(context).planEditorSkipNoRights(invalidCount)),
+            ),
           );
         }
       } catch (e) {
         validIds = _selectedMicrocycleIds.toList();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Проверка прав недоступна, применяю ко всем выбранным: $e')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).planEditorRightsCheckUnavailableApplyAll(e.toString()),
+            ),
+          ),
         );
       }
 
@@ -1469,7 +1525,11 @@ class _PlanEditorScreenState extends State<PlanEditorScreen> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Массовые правки: успешно $success, ошибок $failed')),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).planEditorMassEditsResult(success, failed),
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _batchSaving = false);

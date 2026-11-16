@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/services/service_locator.dart';
 import 'package:workout_app/src/widgets/snack_utils.dart';
 import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
@@ -65,7 +66,7 @@ class _ExerciseSelectionScreenState
       setState(() => _isLoading = false);
       showAppSnackBar(
         context,
-        'Ошибка загрузки упражнений: $e',
+        AppLocalizations.of(context).exerciseLoadError(e.toString()),
         isError: true,
       );
     }
@@ -101,9 +102,10 @@ class _ExerciseSelectionScreenState
         final topInset = AmbientScaffoldShell.topContentInset(context);
         final bottomInset = AmbientScaffoldShell.bottomContentInset(context);
 
+        final l10n = AppLocalizations.of(context);
         return AmbientScaffoldShell(
           appBar: PrimaryAppBar(
-            title: 'Выберите упражнение',
+            title: l10n.exerciseSelectTitle,
             onTitleTap: openChat,
             showBack: true,
           ),
@@ -126,7 +128,7 @@ class _ExerciseSelectionScreenState
                         controller: _searchController,
                         decoration: InstrumentTheme.inputDecoration(
                           context,
-                          labelText: 'Поиск упражнений',
+                          labelText: l10n.exerciseSearchLabel,
                           prefixIcon: const Icon(Icons.search_rounded),
                         ),
                       ),
@@ -137,7 +139,7 @@ class _ExerciseSelectionScreenState
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         items: [
                           CanvasPillItem(
-                            label: 'Все',
+                            label: l10n.filterAll,
                             selected: _selectedMuscleGroup == null,
                             onTap: () {
                               _selectedMuscleGroup = null;
@@ -160,11 +162,10 @@ class _ExerciseSelectionScreenState
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: _filteredExercises.isEmpty
-                          ? const EmptyState(
+                          ? EmptyState(
                               icon: Icons.search_off_rounded,
-                              title: 'Упражнения не найдены',
-                              description:
-                                  'Попробуйте изменить поисковый запрос или группу мышц.',
+                              title: l10n.exerciseEmptyTitle,
+                              description: l10n.exerciseEmptyDescription,
                             )
                           : Container(
                               decoration:
@@ -240,9 +241,12 @@ class _SelectableExerciseRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final meta = <String>[
-      if (exercise.muscleGroup != null) 'Группа мышц: ${exercise.muscleGroup}',
-      if (exercise.equipment != null) 'Оборудование: ${exercise.equipment}',
+      if (exercise.muscleGroup != null)
+        l10n.exerciseMuscleGroupMeta(exercise.muscleGroup!),
+      if (exercise.equipment != null)
+        l10n.exerciseEquipmentMeta(exercise.equipment!),
     ];
 
     return InkWell(

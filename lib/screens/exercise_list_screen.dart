@@ -99,7 +99,7 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
 
     final submitted = await showInstrumentDialog<bool>(
       context: context,
-      eyebrow: 'CATALOG ENTRY',
+      eyebrow: l10n.catalogEntryEyebrow,
       title: l10n.exerciseListAddExerciseTitle,
       content: StatefulBuilder(
         builder: (context, setModalState) {
@@ -232,7 +232,7 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
     final instrument = InstrumentTheme.of(context);
     final confirm = await showInstrumentDialog<bool>(
       context: context,
-      eyebrow: 'DESTRUCTIVE ACTION',
+      eyebrow: l10n.destructiveActionEyebrow,
       title: l10n.exerciseListDeleteExerciseTitle,
       message: l10n.exerciseListDeleteExerciseBody,
       accentColor: instrument.peakEffortColor,
@@ -333,7 +333,7 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     items: [
                       CanvasPillItem(
-                        label: 'All',
+                        label: l10n.allLabel,
                         selected: _selectedMuscleGroup == null,
                         onTap: () => _onMuscleGroupChanged(null),
                       ),
@@ -377,7 +377,7 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
         child: EmptyState(
           icon: Icons.fitness_center_rounded,
           title: l10n.exerciseListEmpty,
-          description: 'Try changing the filter or add a new exercise',
+          description: l10n.tryChangingFilterOrAddExercise,
           action: InstrumentActionButton(
             label: l10n.exerciseListAddExerciseTitle,
             icon: Icons.add_rounded,

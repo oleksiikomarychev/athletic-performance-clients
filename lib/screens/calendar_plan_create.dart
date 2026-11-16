@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider_package;
@@ -332,14 +333,15 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
   }
 
   String _normalizationSummary(MicrocycleCreate microcycle) {
+    final l10n = AppLocalizations.of(context);
     final value = microcycle.normalizationValueInput.trim();
     final unit = microcycle.normalizationUnit?.trim() ?? '';
     final rulesCount = microcycle.normalizationRules.length;
     if (value.isEmpty || unit.isEmpty) {
-      return rulesCount > 0 ? 'Индивид. правил: $rulesCount' : 'Нормализация не задана';
+      return rulesCount > 0 ? l10n.normRulesCount(rulesCount) : l10n.normNotSet;
     }
-    final unitLabel = unit == '%' ? '% от 1RM' : 'кг';
-    final rulesLabel = rulesCount > 0 ? ', правил: $rulesCount' : '';
+    final unitLabel = unit == '%' ? l10n.normUnitPct1rm : l10n.normUnitKg;
+    final rulesLabel = rulesCount > 0 ? l10n.normRulesSuffix(rulesCount) : '';
     return 'Δ $value $unitLabel$rulesLabel';
   }
 
@@ -348,12 +350,13 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
     int microIndex,
     MicrocycleCreate microcycle,
   ) {
+    final l10n = AppLocalizations.of(context);
     final dimensions = UiDimensions.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'НОРМАЛИЗАЦИЯ ПОСЛЕ МИКРОЦИКЛА',
+          l10n.normSectionHeader,
           style: InstrumentTheme.microLabel(context),
         ),
         SizedBox(height: dimensions.rowGap),
@@ -372,8 +375,8 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
                 ),
                 decoration: InstrumentTheme.inputDecoration(
                   context,
-                  labelText: 'Изменение (напр. -2.5)',
-                  hintText: 'В кг или %',
+                  labelText: l10n.normDeltaLabel,
+                  hintText: l10n.normDeltaHint,
                 ),
                 onChanged: (value) => _updateMicrocycleNormalizationValue(
                   mesocycleIndex,
@@ -390,16 +393,14 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
                 isExpanded: true,
                 decoration: InstrumentTheme.inputDecoration(
                   context,
-                  labelText: 'Ед. измерения',
+                  labelText: l10n.normUnitLabel,
                 ),
                 items: _normalizationUnits
                     .map(
                       (unit) => DropdownMenuItem(
                         value: unit,
                         child: Text(
-                          unit == '%'
-                              ? '% (мультипликативно)'
-                              : 'кг (абсолютно)',
+                          unit == '%' ? l10n.normUnitPctMult : l10n.normUnitKgAbs,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -416,7 +417,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Можно указать одно общее изменение и/или список правил для конкретных упражнений, групп мышц или target-мышц.',
+          l10n.normDescription,
           style: Theme.of(context).textTheme.bodySmall,
         ),
         SizedBox(height: dimensions.sectionGap),
@@ -425,7 +426,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
           children: [
             Expanded(
               child: Text(
-                'ПРАВИЛА НОРМАЛИЗАЦИИ',
+                l10n.normRulesHeader,
                 style: InstrumentTheme.microLabel(context),
               ),
             ),
@@ -436,7 +437,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
               ),
               onPressed: () => _addNormalizationRule(mesocycleIndex, microIndex),
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('Добавить правило'),
+              label: Text(l10n.normAddRule),
             ),
           ],
         ),
@@ -444,7 +445,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
             child: Text(
-              'Пока нет индивидуальных правил',
+              l10n.normNoRules,
               style: Theme.of(context).textTheme.bodySmall,
             ),
           )
@@ -484,7 +485,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'ПРАВИЛО ${ruleIndex + 1}',
+                AppLocalizations.of(context).normRuleHeader(ruleIndex + 1),
                 style: InstrumentTheme.tabular(
                   InstrumentTheme.microLabel(context),
                 ),
@@ -493,7 +494,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
                 width: 48,
                 height: 48,
                 child: IconButton(
-                  tooltip: 'Удалить правило',
+                  tooltip: AppLocalizations.of(context).normDeleteRuleTooltip,
                   style: IconButton.styleFrom(
                     minimumSize: const Size(48, 48),
                     tapTargetSize: MaterialTapTargetSize.padded,
@@ -516,8 +517,8 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
             ),
             decoration: InstrumentTheme.inputDecoration(
               context,
-              labelText: 'ID упражнений (через запятую)',
-              hintText: 'Напр.: 12, 45, 103',
+              labelText: AppLocalizations.of(context).normExerciseIdsLabel,
+              hintText: AppLocalizations.of(context).normExerciseIdsHint,
             ),
             onChanged: (value) => _updateNormalizationRule(
               mesocycleIndex,
@@ -533,8 +534,8 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
             maxLines: 2,
             decoration: InstrumentTheme.inputDecoration(
               context,
-              labelText: 'Muscle groups (через запятую)',
-              hintText: 'Напр.: chest, quads',
+              labelText: AppLocalizations.of(context).normMuscleGroupsLabel,
+              hintText: AppLocalizations.of(context).normMuscleGroupsHint,
             ),
             onChanged: (value) => _updateNormalizationRule(
               mesocycleIndex,
@@ -552,8 +553,8 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
             maxLines: 2,
             decoration: InstrumentTheme.inputDecoration(
               context,
-              labelText: 'Target muscles (через запятую)',
-              hintText: 'Напр.: biceps_long, lats',
+              labelText: AppLocalizations.of(context).normTargetMusclesLabel,
+              hintText: AppLocalizations.of(context).normTargetMusclesHint,
             ),
             onChanged: (value) => _updateNormalizationRule(
               mesocycleIndex,
@@ -580,7 +581,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
                   ),
                   decoration: InstrumentTheme.inputDecoration(
                     context,
-                    labelText: 'Δ значение',
+                    labelText: AppLocalizations.of(context).normDeltaValueLabel,
                   ),
                   onChanged: (value) => _updateNormalizationRule(
                     mesocycleIndex,
@@ -600,7 +601,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
                   isExpanded: true,
                   decoration: InstrumentTheme.inputDecoration(
                     context,
-                    labelText: 'Ед. изм.',
+                    labelText: AppLocalizations.of(context).normUnitShortLabel,
                   ),
                   items: _normalizationUnits
                       .map(
@@ -608,8 +609,8 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
                           value: unit,
                           child: Text(
                             unit == '%'
-                                ? '% (мультипликативно)'
-                                : 'кг (абсолютно)',
+                                ? AppLocalizations.of(context).normUnitPctMult
+                                : AppLocalizations.of(context).normUnitKgAbs,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -631,9 +632,10 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
   }
 
   Future<void> _savePlan() async {
+    final l10n = AppLocalizations.of(context);
     if (_planNameController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a plan name')),
+        SnackBar(content: Text(l10n.pleaseEnterPlanName)),
       );
       return;
     }
@@ -653,13 +655,13 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
       await _apiClient.post(ApiConfig.createCalendarPlanEndpoint(), planData);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Plan created successfully')),
+        SnackBar(content: Text(l10n.planCreatedSuccess)),
       );
 
       Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create plan: $e')),
+        SnackBar(content: Text(l10n.failedToCreatePlan('$e'))),
       );
     } finally {
       setState(() {
@@ -714,16 +716,17 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
         },
       },
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return Scaffold(
           appBar: PrimaryAppBar(
-            title: 'Create Calendar Plan',
+            title: l10n.createCalendarPlanTitle,
             onTitleTap: openChat,
             actions: [
               SizedBox(
                 width: 48,
                 height: 48,
                 child: IconButton(
-                  tooltip: 'Save',
+                  tooltip: l10n.save,
                   style: IconButton.styleFrom(
                     minimumSize: const Size(48, 48),
                     tapTargetSize: MaterialTapTargetSize.padded,
@@ -749,7 +752,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
                   controller: _planNameController,
                   decoration: InstrumentTheme.inputDecoration(
                     context,
-                    labelText: 'Plan Name',
+                    labelText: l10n.planNameLabel,
                   ),
                 ),
                 SizedBox(height: dimensions.sectionGap),
@@ -773,7 +776,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
                         ),
                         onPressed: _addMesocycle,
                         icon: const Icon(Icons.add),
-                        tooltip: 'Add Mesocycle',
+                        tooltip: l10n.addMesocycleLabel,
                       ),
                     ),
                     SizedBox(
@@ -791,7 +794,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
                           Icons.delete_outline,
                           color: _mesocycles.isEmpty ? null : colors.error,
                         ),
-                        tooltip: 'Remove Mesocycle',
+                        tooltip: l10n.removeMesocycleTooltip,
                       ),
                     ),
                   ],
@@ -917,14 +920,14 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
           TextField(
             decoration: InstrumentTheme.inputDecoration(
               context,
-              labelText: 'Mesocycle Name',
+              labelText: AppLocalizations.of(context).mesocycleNameLabel,
             ),
             onChanged: (value) => _updateMesocycleName(index, value),
           ),
           SizedBox(height: dimensions.rowGap),
           _buildStepperRow(
             context,
-            label: 'Microcycles',
+            label: AppLocalizations.of(context).microcyclesLabel,
             value: mesocycle.microcycles.length,
             onDecrement: () => _updateMicrocyclesCount(
               index,
@@ -937,7 +940,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
           ),
           _buildStepperRow(
             context,
-            label: 'Microcycle Length (days)',
+            label: AppLocalizations.of(context).microcycleLengthDaysLabel,
             value: mesocycle.microcycleLengthDays,
             onDecrement: () => _updateMicrocycleLengthDays(
               index,
@@ -993,7 +996,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
                     initialValue: microcycle.name,
                     decoration: InstrumentTheme.inputDecoration(
                       context,
-                      labelText: 'Название микроцикла',
+                      labelText: AppLocalizations.of(context).microcycleNameLabel,
                     ),
                     onChanged: (value) =>
                         _updateMicrocycleNameField(index, microIndex, value),
@@ -1032,7 +1035,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
                           width: 48,
                           height: 48,
                           child: IconButton(
-                            tooltip: 'Add exercise',
+                            tooltip: AppLocalizations.of(context).addExerciseLabel,
                             style: IconButton.styleFrom(
                               minimumSize: const Size(48, 48),
                               tapTargetSize: MaterialTapTargetSize.padded,
@@ -1091,7 +1094,7 @@ class _CalendarPlanCreateState extends ConsumerState<CalendarPlanCreate> {
                                       context,
                                       controller:
                                           exercise.setDrafts[0].volumeCtrl,
-                                      labelText: 'Reps',
+                                      labelText: AppLocalizations.of(context).repsLabel,
                                       formatters: [
                                         FilteringTextInputFormatter.digitsOnly,
                                         LengthLimitingTextInputFormatter(3),

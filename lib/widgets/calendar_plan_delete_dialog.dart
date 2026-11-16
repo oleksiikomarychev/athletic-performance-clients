@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/api_config.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 import 'package:workout_app/services/api_client.dart';
 import 'package:workout_app/services/base_api_service.dart';
@@ -14,6 +15,7 @@ Future<bool> confirmAndDeleteCalendarPlan(
 }) async {
   Future<bool> confirm({List<Map<String, dynamic>>? variants}) async {
     if (!context.mounted) return false;
+    final l10n = AppLocalizations.of(context);
     final cascade = variants != null;
     final instrument = InstrumentTheme.of(context);
     final danger = instrument.peakEffortColor;
@@ -22,7 +24,9 @@ Future<bool> confirmAndDeleteCalendarPlan(
     return await showInstrumentDialog<bool>(
           context: context,
           eyebrow: cascade ? 'CASCADE DELETE' : 'DELETE PLAN',
-          title: cascade ? 'Удалить план с вариантами?' : 'Удалить план?',
+          title: cascade
+              ? l10n.deletePlanWithVariantsTitle
+              : l10n.deletePlanTitle,
           accentColor: danger,
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -37,8 +41,8 @@ Future<bool> confirmAndDeleteCalendarPlan(
               const SizedBox(height: 10),
               Text(
                 cascade
-                    ? 'Будут безвозвратно удалены план, все его варианты и связанные применения плана.'
-                    : 'План и связанные применения плана будут удалены. Это действие нельзя отменить.',
+                    ? l10n.deletePlanCascadeBody
+                    : l10n.deletePlanSingleBody,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: scheme.onSurfaceVariant,
                 ),
@@ -61,7 +65,7 @@ Future<bool> confirmAndDeleteCalendarPlan(
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            '${variant['name'] ?? 'Без названия'}',
+                            '${variant['name'] ?? l10n.untitled}',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ),
@@ -71,19 +75,22 @@ Future<bool> confirmAndDeleteCalendarPlan(
               ],
             ],
           ),
-          actionsBuilder: (dialogContext) => [
-            InstrumentActionButton(
-              label: 'Отмена',
-              variant: InstrumentActionVariant.secondary,
-              onPressed: () => Navigator.pop(dialogContext, false),
-            ),
-            InstrumentActionButton(
-              label: cascade ? 'Удалить всё' : 'Удалить',
-              variant: InstrumentActionVariant.destructive,
-              accentColor: danger,
-              onPressed: () => Navigator.pop(dialogContext, true),
-            ),
-          ],
+          actionsBuilder: (dialogContext) {
+            final dialogL10n = AppLocalizations.of(dialogContext);
+            return [
+              InstrumentActionButton(
+                label: dialogL10n.cancel,
+                variant: InstrumentActionVariant.secondary,
+                onPressed: () => Navigator.pop(dialogContext, false),
+              ),
+              InstrumentActionButton(
+                label: cascade ? dialogL10n.deleteAll : dialogL10n.delete,
+                variant: InstrumentActionVariant.destructive,
+                accentColor: danger,
+                onPressed: () => Navigator.pop(dialogContext, true),
+              ),
+            ];
+          },
         ) ??
         false;
   }

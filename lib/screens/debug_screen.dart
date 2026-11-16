@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart' as pv;
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/screens/coach/athlete_detail_screen.dart';
 import 'package:workout_app/screens/coach/coach_athletes_screen.dart';
 import 'package:workout_app/screens/coach/coach_chat_screen.dart';
@@ -120,7 +121,7 @@ class DebugScreen extends StatelessWidget {
 
         return AmbientScaffoldShell(
           appBar: PrimaryAppBar.main(
-            title: 'Debug Screen',
+            title: AppLocalizations.of(context).debugScreenTitle,
             onTitleTap: openChat,
             actions: [_buildOverflowMenu(context)],
           ),
@@ -228,32 +229,39 @@ class DebugScreen extends StatelessWidget {
           _handleLogout(context);
         }
       },
-      itemBuilder: (context) => const [
-        PopupMenuItem(value: 'logout', child: Text('Log out')),
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'logout',
+          child: Text(AppLocalizations.of(context).signOutAction),
+        ),
       ],
     );
   }
 
   Future<void> _handleLogout(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     final instrument = InstrumentTheme.of(context);
     final shouldLogout = await showInstrumentDialog<bool>(
       context: context,
       eyebrow: 'DEBUG SESSION',
-      title: 'Выйти из аккаунта?',
-      message: 'Вы уверены, что хотите выйти?',
+      title: l10n.signOutTitle,
+      message: l10n.signOutConfirmBody,
       accentColor: instrument.peakEffortColor,
-      actionsBuilder: (ctx) => [
-        InstrumentActionButton(
-          label: 'Отмена',
-          variant: InstrumentActionVariant.secondary,
-          onPressed: () => Navigator.of(ctx).pop(false),
-        ),
-        InstrumentActionButton(
-          label: 'Выйти',
-          variant: InstrumentActionVariant.destructive,
-          onPressed: () => Navigator.of(ctx).pop(true),
-        ),
-      ],
+      actionsBuilder: (ctx) {
+        final cL10n = AppLocalizations.of(ctx);
+        return [
+          InstrumentActionButton(
+            label: cL10n.cancel,
+            variant: InstrumentActionVariant.secondary,
+            onPressed: () => Navigator.of(ctx).pop(false),
+          ),
+          InstrumentActionButton(
+            label: cL10n.signOutAction,
+            variant: InstrumentActionVariant.destructive,
+            onPressed: () => Navigator.of(ctx).pop(true),
+          ),
+        ];
+      },
     );
 
     if (shouldLogout != true || !context.mounted) return;
@@ -274,7 +282,7 @@ class DebugScreen extends StatelessWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Ошибка при выходе: $e'),
+          content: Text(l10n.signOutError(e.toString())),
           backgroundColor: InstrumentTheme.of(context).peakEffortColor,
         ),
       );
@@ -367,7 +375,9 @@ class _EmbeddedChatDebugPage extends StatelessWidget {
     final topInset = AmbientScaffoldShell.topContentInset(context);
     final bottomInset = AmbientScaffoldShell.bottomContentInset(context);
     return AmbientScaffoldShell(
-      appBar: PrimaryAppBar.detail(title: 'Chat Screen (embedded)'),
+      appBar: PrimaryAppBar.detail(
+        title: AppLocalizations.of(context).debugChatEmbeddedTitle,
+      ),
       body: Padding(
         padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
         child: const ChatScreen(embedded: true),

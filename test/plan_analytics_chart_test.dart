@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workout_app/config/theme/app_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 import 'package:workout_app/models/calendar_plan_summary.dart';
 import 'package:workout_app/providers/interface_maker_provider.dart';
@@ -21,6 +22,8 @@ void main() {
 
     await tester.pumpWidget(
       const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: SizedBox(
             width: 400,
@@ -63,6 +66,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.darkTheme(),
           home: const MediaQuery(
             data: MediaQueryData(
@@ -143,6 +148,8 @@ void main() {
         StatefulBuilder(
           builder: (context, setState) {
             return MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
               theme: AppTheme.darkTheme(),
               home: MediaQuery(
                 data: const MediaQueryData(
@@ -249,7 +256,7 @@ void main() {
       expect(borderedBoxes.length, 1);
 
       // Tap KPI matrix slot KPSH and verify activeMetric updates to 'volume'.
-      await tester.tap(find.text('КПШ'));
+      await tester.tap(find.text('REPS'));
       await tester.pumpAndSettle();
       expect(activeMetric, 'volume');
       final updatedChart = tester.widget<PlanAnalyticsChart>(

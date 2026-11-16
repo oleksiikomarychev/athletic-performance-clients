@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/crm_analytics.dart';
 import 'package:workout_app/providers/ambient_environment_provider.dart';
 import 'package:workout_app/providers/interface_maker_provider.dart';
@@ -94,9 +95,10 @@ class AthleteDetailScreen extends ConsumerWidget {
 
     return AssistantChatHost(
       initialMessage:
-          'Открываю ассистента из AthleteDetailScreen. Используй контекст v1 для анализа метрик и тренда атлета.',
+          'Opening assistant from AthleteDetailScreen. Use v1 context to analyze athlete metrics and trends.',
       contextBuilder: buildChatContext,
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return AmbientScaffoldShell(
           environment: env,
           appBar: PrimaryAppBar(
@@ -106,7 +108,7 @@ class AthleteDetailScreen extends ConsumerWidget {
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh),
-                tooltip: 'Refresh',
+                tooltip: l10n.refresh,
                 onPressed: () {
                   ref.invalidate(athleteDetailedAnalyticsProvider(athleteId));
                 },
@@ -218,12 +220,12 @@ class AthleteDetailScreen extends ConsumerWidget {
                               cells: [
                                 InstrumentMetricCellData(
                                   slot: MetricSlot.setsCount,
-                                  label: 'SESSIONS',
+                                  label: l10n.sessionsUpperLabel,
                                   value: '${details.sessionsCount}',
                                 ),
                                 InstrumentMetricCellData(
                                   slot: MetricSlot.tonnage,
-                                  label: 'VOLUME',
+                                  label: l10n.volumeUpperLabel,
                                   value:
                                       details.totalVolume?.toStringAsFixed(1) ??
                                       '—',
@@ -231,7 +233,7 @@ class AthleteDetailScreen extends ConsumerWidget {
                                 ),
                                 InstrumentMetricCellData(
                                   slot: MetricSlot.frequencyPerWeek,
-                                  label: 'SESS / WK',
+                                  label: l10n.sessPerWeekUpperLabel,
                                   value:
                                       details.sessionsPerWeek?.toStringAsFixed(
                                         1,
@@ -240,7 +242,7 @@ class AthleteDetailScreen extends ConsumerWidget {
                                 ),
                                 InstrumentMetricCellData(
                                   slot: MetricSlot.density,
-                                  label: 'PLAN %',
+                                  label: l10n.planPercentUpperLabel,
                                   value: adherencePct,
                                   valueColor: (details.planAdherence ?? 0) >= 0.8
                                       ? instrument.successColor
@@ -256,14 +258,14 @@ class AthleteDetailScreen extends ConsumerWidget {
                               cells: [
                                 InstrumentMetricCellData(
                                   slot: MetricSlot.peakIntensity,
-                                  label: 'INTENSITY',
+                                  label: l10n.intensityUpperLabel,
                                   value:
                                       details.avgIntensity?.toStringAsFixed(1) ??
                                       '—',
                                 ),
                                 InstrumentMetricCellData(
                                   slot: MetricSlot.avgRpe,
-                                  label: 'AVG RPE',
+                                  label: l10n.avgRpeUpperLabel,
                                   value:
                                       details.avgEffort?.toStringAsFixed(1) ??
                                       '—',
@@ -274,12 +276,12 @@ class AthleteDetailScreen extends ConsumerWidget {
                                 ),
                                 InstrumentMetricCellData(
                                   slot: MetricSlot.durationWeeks,
-                                  label: 'LAST DAY',
+                                  label: l10n.lastDayUpperLabel,
                                   value: lastWorkoutText,
                                 ),
                                 InstrumentMetricCellData(
                                   slot: MetricSlot.kpsh,
-                                  label: 'DAYS GAP',
+                                  label: l10n.daysGapUpperLabel,
                                   value: details.daysSinceLastWorkout != null
                                       ? '${details.daysSinceLastWorkout}d'
                                       : '—',

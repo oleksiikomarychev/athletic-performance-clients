@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
@@ -113,14 +114,14 @@ class SessionInstrumentCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _MetricCell(
-                        label: 'STARTED',
+                        label: AppLocalizations.of(context).sessionStartedHeader,
                         value: _formatDate(session.startedAt),
                       ),
                     ),
                     SizedBox(width: dimensions.rowGap),
                     Expanded(
                       child: _MetricCell(
-                        label: 'FINISHED',
+                        label: AppLocalizations.of(context).sessionFinishedHeader,
                         value: _formatDate(session.finishedAt),
                       ),
                     ),
@@ -131,14 +132,14 @@ class SessionInstrumentCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _MetricCell(
-                        label: 'DURATION',
+                        label: AppLocalizations.of(context).sessionDurationHeader,
                         value: '${session.durationSeconds ?? 0} s',
                       ),
                     ),
                     SizedBox(width: dimensions.rowGap),
                     Expanded(
                       child: _MetricCell(
-                        label: 'COMPLETED SETS',
+                        label: AppLocalizations.of(context).sessionCompletedSetsHeader,
                         value: '$completedSets',
                       ),
                     ),

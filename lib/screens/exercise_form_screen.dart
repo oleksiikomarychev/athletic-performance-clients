@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/exercise_definition.dart';
 import 'package:workout_app/models/exercise_instance.dart';
 import 'package:workout_app/models/exercise_set_dto.dart';
@@ -146,7 +147,11 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
       }
     } catch (e) {
       if (mounted) {
-        showAppSnackBar(context, 'Failed to load data: $e', isError: true);
+        showAppSnackBar(
+          context,
+          AppLocalizations.of(context).failedToLoadData('$e'),
+          isError: true,
+        );
       }
     } finally {
       if (mounted) {
@@ -208,7 +213,11 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
       return true;
     } catch (e) {
       if (mounted) {
-        showAppSnackBar(context, 'Error saving: $e', isError: true);
+        showAppSnackBar(
+          context,
+          AppLocalizations.of(context).errorSaving('$e'),
+          isError: true,
+        );
       }
       return false;
     } finally {
@@ -219,18 +228,19 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
   }
 
   Widget _buildTemplateDropdown(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return DropdownButtonFormField<ProgressionTemplate>(
       initialValue: _selectedTemplate,
       decoration: InstrumentTheme.inputDecoration(
         context,
-        labelText: 'Progression Template (optional)',
+        labelText: l10n.progressionTemplateOptionalLabel,
       ),
-      hint: const Text('Select template'),
+      hint: Text(l10n.selectTemplateHint),
       isExpanded: true,
       items: [
-        const DropdownMenuItem<ProgressionTemplate>(
+        DropdownMenuItem<ProgressionTemplate>(
           value: null,
-          child: Text('No template'),
+          child: Text(l10n.noTemplateOption),
         ),
         ..._templates.map((template) {
           return DropdownMenuItem<ProgressionTemplate>(
@@ -287,7 +297,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
               IconButton(
                 onPressed: _isLoading ? null : _saveExercise,
                 icon: const Icon(Icons.check_rounded),
-                tooltip: 'Save Exercise',
+                tooltip: AppLocalizations.of(context).saveExercise,
               ),
             ],
           ),
@@ -307,8 +317,8 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
                     ),
                     children: [
                       _FormSectionCard(
-                        eyebrow: '01 · EXERCISE SPEC',
-                        title: 'Exercise Details',
+                        eyebrow: AppLocalizations.of(context).exerciseSpecEyebrow,
+                        title: AppLocalizations.of(context).exerciseDetailsTitle,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -316,11 +326,11 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
                               controller: _nameController,
                               decoration: InstrumentTheme.inputDecoration(
                                 context,
-                                labelText: 'Exercise Name',
+                                labelText: AppLocalizations.of(context).exerciseNameLabel,
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter a name';
+                                  return AppLocalizations.of(context).pleaseEnterNameValidation;
                                 }
                                 return null;
                               },
@@ -330,12 +340,12 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
                               initialValue: _selectedMuscleGroup,
                               decoration: InstrumentTheme.inputDecoration(
                                 context,
-                                labelText: 'Muscle Group',
+                                labelText: AppLocalizations.of(context).muscleGroupLabel,
                               ),
                               isExpanded: true,
                               hint: _muscleGroups.isEmpty
-                                  ? const Text('Loading...')
-                                  : const Text('Select group'),
+                                  ? Text(AppLocalizations.of(context).loadingEllipsis)
+                                  : Text(AppLocalizations.of(context).selectGroupHint),
                               items: _muscleGroups
                                   .map(
                                     (g) => DropdownMenuItem<String>(
@@ -367,8 +377,8 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
                       ),
                       const SizedBox(height: 14),
                       _FormSectionCard(
-                        eyebrow: '02 · PRESCRIBED SETS (${_volumeControllers.length})',
-                        title: 'Sets',
+                        eyebrow: AppLocalizations.of(context).prescribedSetsEyebrow(_volumeControllers.length),
+                        title: AppLocalizations.of(context).sets,
                         accentColor: instrument.workingAura,
                         flushBody: true,
                         child: Column(
@@ -401,7 +411,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
                             Padding(
                               padding: const EdgeInsets.all(16),
                               child: InstrumentActionButton(
-                                label: 'Add Set',
+                                label: AppLocalizations.of(context).addSet,
                                 icon: Icons.add_rounded,
                                 variant: InstrumentActionVariant.secondary,
                                 expanded: true,
@@ -417,7 +427,7 @@ class _ExerciseFormScreenState extends ConsumerState<ExerciseFormScreen> {
                       ),
                       const SizedBox(height: 16),
                       InstrumentActionButton(
-                        label: 'Save Exercise',
+                        label: AppLocalizations.of(context).saveExercise,
                         icon: Icons.save_rounded,
                         expanded: true,
                         loading: _isLoading,
@@ -526,12 +536,12 @@ class _SetInputRow extends StatelessWidget {
       style: tabularStyle,
       decoration: InstrumentTheme.inputDecoration(
         context,
-        labelText: 'Weight (kg)',
+        labelText: AppLocalizations.of(context).weightKgLabel,
       ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Required';
+          return AppLocalizations.of(context).requiredField;
         }
         return null;
       },
@@ -542,12 +552,12 @@ class _SetInputRow extends StatelessWidget {
       style: tabularStyle,
       decoration: InstrumentTheme.inputDecoration(
         context,
-        labelText: 'Reps',
+        labelText: AppLocalizations.of(context).repsLabel,
       ),
       keyboardType: TextInputType.number,
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Required';
+          return AppLocalizations.of(context).requiredField;
         }
         return null;
       },
@@ -562,7 +572,7 @@ class _SetInputRow extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'SET #${index + 1}',
+                  AppLocalizations.of(context).setNumberLabel(index + 1),
                   style: InstrumentTheme.microLabel(
                     context,
                     color: instrument.workingAura,
@@ -582,7 +592,7 @@ class _SetInputRow extends StatelessWidget {
                             alpha: 0.35,
                           ),
                   ),
-                  tooltip: 'Remove set',
+                  tooltip: AppLocalizations.of(context).removeSetTooltip,
                   onPressed: canDelete ? onDelete : null,
                 ),
               ),

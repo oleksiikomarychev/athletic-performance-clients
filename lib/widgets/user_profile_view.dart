@@ -114,7 +114,7 @@ class UserProfileView extends StatelessWidget {
                     color: instrument.workingAura,
                   ),
                   onPressed: onAvatarTool,
-                  tooltip: 'Avatar',
+                  tooltip: AppLocalizations.of(context).avatarTooltip,
                   constraints: const BoxConstraints(
                     minWidth: 48,
                     minHeight: 48,

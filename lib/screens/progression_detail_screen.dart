@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/progression_template.dart';
 import 'package:workout_app/services/progression_service.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
@@ -50,7 +51,11 @@ class _ProgressionDetailScreenState extends State<ProgressionDetailScreen> {
           _error = e.toString();
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка загрузки шаблона: $e')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).templateLoadError(e.toString()),
+            ),
+          ),
         );
       }
     }
@@ -65,9 +70,10 @@ class _ProgressionDetailScreenState extends State<ProgressionDetailScreen> {
         'entities': {'template_id': widget.templateId},
       },
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return Scaffold(
           appBar: PrimaryAppBar(
-            title: 'Детали шаблона',
+            title: l10n.templateDetailsTitle,
             onTitleTap: openChat,
             showBack: true,
             actions: [
@@ -75,7 +81,7 @@ class _ProgressionDetailScreenState extends State<ProgressionDetailScreen> {
                 width: 48,
                 height: 48,
                 child: IconButton(
-                  tooltip: 'Обновить',
+                  tooltip: l10n.refresh,
                   style: IconButton.styleFrom(
                     minimumSize: const Size(48, 48),
                     tapTargetSize: MaterialTapTargetSize.padded,
@@ -98,7 +104,7 @@ class _ProgressionDetailScreenState extends State<ProgressionDetailScreen> {
     }
     if (_error != null) {
       return ErrorMessage(
-        message: 'Ошибка: $_error',
+        message: AppLocalizations.of(context).errorWithDetails(_error!),
         onRetry: _loadTemplate,
       );
     }
@@ -111,7 +117,9 @@ class _ProgressionDetailScreenState extends State<ProgressionDetailScreen> {
         }
         if (templateSnapshot.hasError) {
           return ErrorMessage(
-            message: 'Ошибка: ${templateSnapshot.error}',
+            message: AppLocalizations.of(context).errorWithDetails(
+              templateSnapshot.error.toString(),
+            ),
             onRetry: _loadTemplate,
           );
         }
@@ -165,7 +173,7 @@ class _ProgressionDetailScreenState extends State<ProgressionDetailScreen> {
                         children: [
                           Expanded(
                             child: _SpecTile(
-                              label: 'INTENSITY',
+                              label: AppLocalizations.of(context).intensityUpperLabel,
                               value: '${template.intensity}%',
                             ),
                           ),
@@ -178,7 +186,7 @@ class _ProgressionDetailScreenState extends State<ProgressionDetailScreen> {
                           ),
                           Expanded(
                             child: _SpecTile(
-                              label: 'REPS',
+                              label: AppLocalizations.of(context).repsUpperLabel,
                               value: template.volume?.toString() ?? '—',
                             ),
                           ),
@@ -202,7 +210,7 @@ class _ProgressionDetailScreenState extends State<ProgressionDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'ОПИСАНИЕ',
+                        AppLocalizations.of(context).descriptionSectionHeader,
                         style: InstrumentTheme.microLabel(context),
                       ),
                       const SizedBox(height: 6),

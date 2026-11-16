@@ -19,6 +19,7 @@ import 'package:workout_app/models/calendar_plan_summary.dart';
 import 'package:workout_app/screens/plan_editor_screen.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/providers/ambient_environment_provider.dart';
 import 'package:workout_app/providers/interface_maker_provider.dart';
 import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
@@ -142,13 +143,13 @@ class _MultiSelectSheetState<T> extends State<_MultiSelectSheet<T>> {
                 TextButton(
                   onPressed: () =>
                       Navigator.of(context).pop(widget.initialSelection),
-                  child: const Text('Отмена'),
+                  child: Text(AppLocalizations.of(context).cancel),
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton(
                   onPressed: () =>
                       Navigator.of(context).pop(Set<T>.from(_selection)),
-                  child: const Text('Готово'),
+                  child: Text(AppLocalizations.of(context).done),
                 ),
               ],
             ),
@@ -247,12 +248,12 @@ class _SingleSelectSheetState<T> extends State<_SingleSelectSheet<T>> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Отмена'),
+                  child: Text(AppLocalizations.of(context).cancel),
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(_value),
-                  child: const Text('Готово'),
+                  child: Text(AppLocalizations.of(context).done),
                 ),
               ],
             ),
@@ -350,7 +351,11 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
       Navigator.of(context).pop(true);
     } catch (error) {
       if (mounted) {
-        showAppSnackBar(context, 'Не удалось удалить план: $error', isError: true);
+        showAppSnackBar(
+          context,
+          AppLocalizations.of(context).planDetailDeleteFailed(error.toString()),
+          isError: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _deletingPlan = false);
@@ -358,9 +363,10 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
   }
 
   Widget _buildOverflowMenu(WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     return PopupMenuButton<_HeaderMenuAction>(
       icon: const Icon(Icons.more_vert),
-      tooltip: 'Дополнительные действия',
+      tooltip: l10n.tooltipMoreActions,
       enabled: !_deletingPlan,
       onSelected: (action) {
         switch (action) {
@@ -383,11 +389,11 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
         }
       },
       itemBuilder: (context) => [
-        const PopupMenuItem(
+        PopupMenuItem(
           value: _HeaderMenuAction.editPlan,
           child: ListTile(
-            leading: Icon(Icons.edit),
-            title: Text('Редактировать план'),
+            leading: const Icon(Icons.edit),
+            title: Text(l10n.planDetailEditPlan),
             contentPadding: EdgeInsets.zero,
             dense: true,
           ),
@@ -403,16 +409,16 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.auto_fix_high),
-            title: const Text('Пересчитать сеты (RPE)'),
+            title: Text(l10n.planDetailRecalcSets),
             contentPadding: EdgeInsets.zero,
             dense: true,
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: _HeaderMenuAction.profile,
           child: ListTile(
-            leading: Icon(Icons.account_circle_outlined),
-            title: Text('Профиль'),
+            leading: const Icon(Icons.account_circle_outlined),
+            title: Text(l10n.profile),
             contentPadding: EdgeInsets.zero,
             dense: true,
           ),
@@ -428,7 +434,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                 color: Theme.of(context).colorScheme.error,
               ),
               title: Text(
-                'Удалить план',
+                l10n.planDetailDeletePlan,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
               contentPadding: EdgeInsets.zero,
@@ -525,7 +531,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _adoptersError = 'Не удалось загрузить счетчик применений: $e';
+        _adoptersError = AppLocalizations.of(context).planDetailAdoptersLoadError(e.toString());
         _adoptersLoading = false;
       });
     }
@@ -596,7 +602,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
             if (!mounted) return;
             showAppSnackBar(
               context,
-              'Не удалось загрузить план: $e',
+              AppLocalizations.of(context).planDetailLoadError(e.toString()),
               isError: true,
             );
           },
@@ -616,12 +622,12 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
       final updated = await PlanApi.recalcCalendarPlanSets(planId);
       if (!mounted) return;
       _setPlan(updated);
-      showAppSnackBar(context, 'План пересчитан');
+      showAppSnackBar(context, AppLocalizations.of(context).planDetailRecalculated);
     } catch (e) {
       if (!mounted) return;
       showAppSnackBar(
         context,
-        'Не удалось пересчитать план: $e',
+        AppLocalizations.of(context).planDetailRecalcError(e.toString()),
         isError: true,
       );
     } finally {
@@ -677,7 +683,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
           onError: (e) {
             if (!mounted) return;
             setState(() {
-              _variantsError = 'Не удалось загрузить варианты: $e';
+              _variantsError = AppLocalizations.of(context).planDetailVariantsLoadError(e.toString());
               _variantsLoading = false;
             });
           },
@@ -694,15 +700,16 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            final l10n = AppLocalizations.of(context);
             return AlertDialog(
-              title: const Text('Новый вариант плана'),
+              title: Text(l10n.planDetailNewVariantTitle),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: controller,
-                    decoration: const InputDecoration(
-                      labelText: 'Название варианта',
+                    decoration: InputDecoration(
+                      labelText: l10n.planDetailVariantNameLabel,
                     ),
                     autofocus: true,
                   ),
@@ -724,7 +731,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                   onPressed: submitting
                       ? null
                       : () => Navigator.of(context).pop(),
-                  child: const Text('Отмена'),
+                  child: Text(l10n.cancel),
                 ),
                 FilledButton(
                   onPressed: submitting
@@ -732,7 +739,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                       : () async {
                           final name = controller.text.trim();
                           if (name.isEmpty) {
-                            setModalState(() => error = 'Введите название');
+                            setModalState(() => error = l10n.errorEnterName);
                             return;
                           }
                           setModalState(() {
@@ -748,11 +755,11 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                             Navigator.of(context).pop();
                             await _fetchVariants();
                             if (!mounted) return;
-                            showAppSnackBar(context, 'Вариант создан');
+                            showAppSnackBar(context, l10n.planDetailVariantCreated);
                           } catch (e) {
                             setModalState(() {
                               submitting = false;
-                              error = 'Ошибка: $e';
+                              error = l10n.errorWithDetails(e.toString());
                             });
                           }
                         },
@@ -762,7 +769,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Создать'),
+                      : Text(l10n.actionCreate),
                 ),
               ],
             );
@@ -850,7 +857,10 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
               ref.invalidate(activeAppliedPlanProvider);
               ref.invalidate(activeAppliedPlanSWRProvider);
               Navigator.of(context).pop();
-              showAppSnackBar(context, 'Plan applied successfully');
+              showAppSnackBar(
+                context,
+                AppLocalizations.of(context).planAppliedSuccess,
+              );
             } catch (e) {
               showAppSnackBar(
                 context,
@@ -865,9 +875,11 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).genericError('$e')),
+        ),
+      );
     }
   }
 
@@ -952,7 +964,9 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
           return InstrumentMetricCellData(
             slot: slot,
             value: topUserMax != null
-                ? '${topUserMax.round()} кг'
+                ? AppLocalizations.of(context).unitKgValue(
+                    topUserMax.round().toString(),
+                  )
                 : (peakIntensity != null ? '${peakIntensity.round()}%' : '—'),
           );
         case MetricSlot.peakRpe:
@@ -974,8 +988,10 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
         case MetricSlot.tonnage:
           return InstrumentMetricCellData(
             slot: slot,
-            label: 'ОБЪЁМ',
-            value: totalReps > 0 ? '$totalReps повт.' : '—',
+            label: AppLocalizations.of(context).metricVolumeShort,
+            value: totalReps > 0
+                ? AppLocalizations.of(context).unitRepsShort(totalReps.toString())
+                : '—',
           );
         case MetricSlot.kpsh:
           return InstrumentMetricCellData(
@@ -991,7 +1007,9 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
           return InstrumentMetricCellData(
             slot: slot,
             value: totalWorkouts > 0
-                ? '${(totalSets / totalWorkouts).toStringAsFixed(1)}/тр'
+                ? AppLocalizations.of(context).unitSetsPerWorkout(
+                    (totalSets / totalWorkouts).toStringAsFixed(1),
+                  )
                 : '—',
           );
         case MetricSlot.durationWeeks:
@@ -1021,6 +1039,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (sheetContext, setSheetState) {
+            final l10n = AppLocalizations.of(sheetContext);
             final theme = Theme.of(sheetContext);
             final hasFilters =
                 _selectedExerciseIds.isNotEmpty || _selectedMuscles.isNotEmpty;
@@ -1034,7 +1053,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                     children: [
                       Expanded(
                         child: Text(
-                          'Фильтры аналитики',
+                          l10n.planDetailAnalyticsFilters,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -1046,13 +1065,13 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                             _clearFilters();
                             setSheetState(() {});
                           },
-                          child: const Text('Сбросить'),
+                          child: Text(l10n.interfaceMakerReset),
                         ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'ГРАНУЛЯРНОСТЬ',
+                    l10n.planDetailGranularity,
                     style: InstrumentTheme.microLabel(sheetContext),
                   ),
                   const SizedBox(height: 8),
@@ -1078,11 +1097,11 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                     contentPadding: EdgeInsets.zero,
                     enabled: filtersReady,
                     leading: const Icon(Icons.fitness_center_outlined),
-                    title: const Text('Упражнения'),
+                    title: Text(l10n.planDetailExercisesTitle),
                     subtitle: Text(
                       filtersReady
                           ? _exerciseSummaryText()
-                          : (_loadingMeta ? 'Загрузка…' : (_metaError ?? '')),
+                          : (_loadingMeta ? l10n.loadingEllipsis : (_metaError ?? '')),
                     ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: filtersReady
@@ -1096,11 +1115,11 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                     contentPadding: EdgeInsets.zero,
                     enabled: filtersReady,
                     leading: const Icon(Icons.accessibility_new_outlined),
-                    title: const Text('Мышечные группы'),
+                    title: Text(l10n.planDetailMuscleGroupsTitle),
                     subtitle: Text(
                       filtersReady
                           ? _muscleSummaryText()
-                          : (_loadingMeta ? 'Загрузка…' : (_metaError ?? '')),
+                          : (_loadingMeta ? l10n.loadingEllipsis : (_metaError ?? '')),
                     ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: filtersReady
@@ -1113,7 +1132,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.scatter_plot_outlined),
-                    title: const Text('Ось X / Ось Y'),
+                    title: Text(l10n.planDetailAxesTitle),
                     subtitle: Text(
                       '${_metricLabel(_metricX)} × ${_metricLabel(_metricY)}',
                     ),
@@ -1214,15 +1233,20 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                       extraPills: [
                         CanvasPillItem(
                           label: hasFilters
-                              ? 'Фильтры · ${_bucketShort()} ($filterCount)'
-                              : 'Фильтры · ${_bucketShort()}',
+                              ? AppLocalizations.of(context).planDetailFiltersPillCount(
+                                  _bucketShort(),
+                                  filterCount,
+                                )
+                              : AppLocalizations.of(context).planDetailFiltersPill(
+                                  _bucketShort(),
+                                ),
                           icon: Icons.tune_rounded,
                           selected: hasFilters,
                           accentColor: accent,
                           onTap: _showSecondaryFiltersSheet,
                         ),
                         CanvasPillItem(
-                          label: 'Сетка',
+                          label: AppLocalizations.of(context).gridPillLabel,
                           icon: Icons.grid_view_rounded,
                           onTap: () => InterfaceMakerSheet.show(context),
                         ),
@@ -1256,7 +1280,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                                 metricY: _metricY,
                                 bleedMode: true,
                                 accentColor: accent,
-                                emptyText: 'Нет данных для плана',
+                                emptyText: AppLocalizations.of(context).activePlanNoData,
                               ),
                             )
                           : null,
@@ -1306,7 +1330,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
                         onPressed: _deletingPlan
                             ? null
                             : () => _applyPlan(context, ref),
-                        tooltip: 'Apply Plan',
+                        tooltip: AppLocalizations.of(context).applyPlanButton,
                       ),
                       _buildOverflowMenu(ref),
                     ],
@@ -1639,7 +1663,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
       });
     } catch (e) {
       setState(() {
-        _metaError = 'Не удалось загрузить данные упражнений';
+        _metaError = AppLocalizations.of(context).planDetailExercisesLoadError;
         _loadingMeta = false;
       });
     }
@@ -1699,31 +1723,33 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
   }
 
   String _exerciseSummaryText() {
-    if (_selectedExerciseIds.isEmpty) return 'Все упражнения';
+    final l10n = AppLocalizations.of(context);
+    if (_selectedExerciseIds.isEmpty) return l10n.planDetailAllExercises;
     final defs = _availableExercises();
     final selected = defs
         .where((d) => d.id != null && _selectedExerciseIds.contains(d.id))
         .toList();
-    if (selected.isEmpty) return 'Фильтр не содержит данных';
+    if (selected.isEmpty) return l10n.planDetailFilterEmpty;
     if (selected.length <= 2) {
       return selected.map((d) => d.name).join(', ');
     }
     final displayed = selected.take(2).map((d) => d.name).join(', ');
-    return '$displayed и еще ${selected.length - 2}';
+    return l10n.planDetailAndMore(selected.length - 2, displayed);
   }
 
   String _muscleSummaryText() {
-    if (_selectedMuscles.isEmpty) return 'Все мышцы';
+    final l10n = AppLocalizations.of(context);
+    if (_selectedMuscles.isEmpty) return l10n.planDetailAllMuscles;
     final options = _availableMuscles();
     final selected = options
         .where((entry) => _selectedMuscles.contains(entry.key))
         .toList();
-    if (selected.isEmpty) return 'Фильтр не содержит данных';
+    if (selected.isEmpty) return l10n.planDetailFilterEmpty;
     if (selected.length <= 2) {
       return selected.map((entry) => entry.value).join(', ');
     }
     final displayed = selected.take(2).map((entry) => entry.value).join(', ');
-    return '$displayed и еще ${selected.length - 2}';
+    return l10n.planDetailAndMore(selected.length - 2, displayed);
   }
 
   // Removed legacy _buildFilterDropdown, _buildMetricPicker, and _buildTimeBucketPicker.
@@ -1732,7 +1758,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     final options = _availableExercises();
     final initial = Set<int>.from(_selectedExerciseIds);
     final result = await _showMultiSelectSheet<int>(
-      title: 'Выберите упражнения',
+      title: AppLocalizations.of(context).planDetailSelectExercises,
       options: options
           .map(
             (def) => _MultiSelectOption<int>(value: def.id!, label: def.name),
@@ -1754,7 +1780,7 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     final options = _availableMuscles();
     final initial = Set<String>.from(_selectedMuscles);
     final result = await _showMultiSelectSheet<String>(
-      title: 'Выберите мышцы',
+      title: AppLocalizations.of(context).planDetailSelectMuscles,
       options: options
           .map(
             (entry) => _MultiSelectOption<String>(
@@ -1793,8 +1819,8 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
       ),
       builder: (context) => _SingleSelectSheet<String>(
         title: isX
-            ? 'Выберите метрику для оси X'
-            : 'Выберите метрику для оси Y',
+            ? AppLocalizations.of(context).planDetailSelectMetricX
+            : AppLocalizations.of(context).planDetailSelectMetricY,
         options: options,
         initialValue: current,
       ),
@@ -1846,28 +1872,30 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
   }
 
   String _metricLabel(String m) {
+    final l10n = AppLocalizations.of(context);
     switch (m) {
       case 'sets':
-        return 'Сеты';
+        return l10n.metricSetsShort;
       case 'volume':
-        return 'Повторения (volume)';
+        return l10n.metricYRepsVolume;
       case 'intensity':
-        return 'Интенсивность (%)';
+        return l10n.metricYIntensityPct;
       case 'effort':
-        return 'Усилие (RPE)';
+        return l10n.metricYEffortRpe;
       default:
         return m;
     }
   }
 
   String _timeBucketLabel(_TimeBucket b) {
+    final l10n = AppLocalizations.of(context);
     switch (b) {
       case _TimeBucket.session:
-        return 'Сессии';
+        return l10n.granularitySessions;
       case _TimeBucket.microcycle:
-        return 'Микроциклы';
+        return l10n.granularityMicrocycles;
       case _TimeBucket.calendarWeek:
-        return 'Недели';
+        return l10n.granularityWeeks;
     }
   }
 
@@ -2002,8 +2030,11 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
           const SizedBox(height: 4),
           Text(
             latestUserMax != null
-                ? 'Текущий максимум: ${latestUserMax.maxWeight} кг × ${latestUserMax.repMax}'
-                : 'Максимум не задан',
+                ? AppLocalizations.of(context).planDetailCurrentMax(
+                    latestUserMax.repMax.toString(),
+                    latestUserMax.maxWeight.toString(),
+                  )
+                : AppLocalizations.of(context).planDetailMaxNotSet,
             style: InstrumentTheme.tabular(
               theme.textTheme.bodySmall?.copyWith(
                     color: latestUserMax != null
@@ -2025,7 +2056,8 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
     );
   }
 
-  Widget _buildSetsSection(List<PlanSet> sets, Color hairline) {
+          Widget _buildSetsSection(List<PlanSet> sets, Color hairline) {
+    final l10n = AppLocalizations.of(context);
     final labelStyle = InstrumentTheme.microLabel(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2036,18 +2068,18 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
             children: [
               SizedBox(
                 width: 34,
-                child: Text('SET', style: labelStyle),
+                child: Text(l10n.metricSetShort, style: labelStyle),
               ),
               Expanded(
                 child: Text(
-                  'INT',
+                  l10n.metricIntShort,
                   textAlign: TextAlign.center,
                   style: labelStyle,
                 ),
               ),
               Expanded(
                 child: Text(
-                  'REPS',
+                  l10n.metricRepsColShort,
                   textAlign: TextAlign.center,
                   style: labelStyle,
                 ),
@@ -2179,13 +2211,15 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
           _setPlan(updated);
           showAppSnackBar(
             context,
-            value ? 'План сделан публичным' : 'План скрыт (только для вас)',
+            value
+                ? AppLocalizations.of(context).planDetailMadePublic
+                : AppLocalizations.of(context).planDetailMadePrivate,
           );
         } catch (e) {
           if (!mounted) return;
           showAppSnackBar(
             context,
-            'Не удалось обновить видимость плана: $e',
+            AppLocalizations.of(context).planDetailVisibilityError(e.toString()),
             isError: true,
           );
         } finally {
@@ -2345,9 +2379,11 @@ class _CalendarPlanDetailState extends State<CalendarPlanDetail> {
               ),
             ),
           if (microcycle.planWorkouts.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Text('No plan workouts available'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Text(
+                AppLocalizations.of(context).noPlanWorkoutsAvailable,
+              ),
             )
           else
             for (var i = 0; i < microcycle.planWorkouts.length; i++) ...[

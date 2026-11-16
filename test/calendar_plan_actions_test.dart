@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/config/api_config.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 import 'package:workout_app/services/api_client.dart';
@@ -81,6 +82,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: Builder(
             builder: (context) => TextButton(
@@ -111,7 +114,7 @@ void main() {
     final api = _DeletionApi();
     Object? result;
     await open(tester, api, (value) => result = value);
-    await tester.tap(find.text('Отмена'));
+    await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     expect(result, false);
     expect(api.calls, isEmpty);
@@ -123,7 +126,7 @@ void main() {
     final api = _DeletionApi();
     Object? result;
     await open(tester, api, (value) => result = value);
-    await tester.tap(find.text('Удалить'));
+    await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
     expect(result, true);
     expect(api.calls, [null]);
@@ -147,13 +150,13 @@ void main() {
       final api = _DeletionApi(hasVariants: true);
       Object? result;
       await open(tester, api, (value) => result = value);
-      await tester.tap(find.text('Удалить'));
+      await tester.tap(find.text('Delete'));
       await tester.pumpAndSettle();
       expect(api.calls, [null]);
       expect(find.text('Variant A'), findsOneWidget);
       expect(find.text('Original'), findsNothing);
       expect(find.byIcon(Icons.subdirectory_arrow_right_rounded), findsOneWidget);
-      await tester.tap(find.text(confirmCascade ? 'Удалить всё' : 'Отмена'));
+      await tester.tap(find.text(confirmCascade ? 'Delete all' : 'Cancel'));
       await tester.pumpAndSettle();
       expect(result, confirmCascade);
       expect(
@@ -172,7 +175,7 @@ void main() {
     final api = _DeletionApi(forbidden: true);
     Object? result;
     await open(tester, api, (value) => result = value);
-    await tester.tap(find.text('Удалить'));
+    await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
     expect(result, isA<ApiException>());
     expect(api.calls, [null]);
@@ -185,7 +188,7 @@ void main() {
     final api = _DeletionApi(failCache: true);
     Object? result;
     await open(tester, api, (value) => result = value);
-    await tester.tap(find.text('Удалить'));
+    await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
     expect(result, true);
     expect(api.calls, [null]);

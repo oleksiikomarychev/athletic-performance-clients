@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:workout_app/models/workout_session.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -96,9 +97,10 @@ class _SessionLogScreenState extends ConsumerState<SessionLogScreen> {
 
     return AssistantChatHost(
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return Scaffold(
           appBar: PrimaryAppBar(
-            title: 'Session #${session.id ?? '-'} Logs',
+            title: l10n.sessionNumberTitle('${session.id ?? '-'}'),
             onTitleTap: openChat,
           ),
           body: ListView(
@@ -114,20 +116,23 @@ class _SessionLogScreenState extends ConsumerState<SessionLogScreen> {
                 child: Column(
                   children: [
                     _InfoRow(
-                      label: 'WORKOUT ID',
+                      label: l10n.workoutIdUpperLabel,
                       value: session.workoutId.toString(),
                     ),
-                    _InfoRow(label: 'STATUS', value: session.status.toUpperCase()),
                     _InfoRow(
-                      label: 'STARTED',
+                      label: l10n.statusUpperLabel,
+                      value: session.status.toUpperCase(),
+                    ),
+                    _InfoRow(
+                      label: l10n.startedUpperLabel,
                       value: _fmtDate(session.startedAt),
                     ),
                     _InfoRow(
-                      label: 'FINISHED',
+                      label: l10n.finishedUpperLabel,
                       value: _fmtDate(session.finishedAt),
                     ),
                     _InfoRow(
-                      label: 'DURATION',
+                      label: l10n.durationUpperLabel,
                       value: '${session.durationSeconds ?? 0} s',
                     ),
                   ],
@@ -147,7 +152,7 @@ class _SessionLogScreenState extends ConsumerState<SessionLogScreen> {
                   ),
                 )
               else if (_workout == null || _workout!.exerciseInstances.isEmpty)
-                const Text('No exercise data available for this workout')
+                Text(l10n.noExerciseDataForWorkout)
               else
                 ..._workout!.exerciseInstances.map(_buildInstanceCard),
               SizedBox(height: UiDimensions.of(context).sectionGap),
@@ -157,7 +162,7 @@ class _SessionLogScreenState extends ConsumerState<SessionLogScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Diagnostics only: JSON с ключом completed, где ключи — id инстансов упражнения, а значения — массив id завершённых сетов. Используется для подсветки сетов выше.',
+                'Diagnostics only: JSON with a "completed" key, where keys are exercise instance IDs and values are arrays of completed set IDs. Used to highlight sets above.',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),

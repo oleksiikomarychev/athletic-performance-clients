@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/calendar_plan.dart';
 import 'package:workout_app/models/exercise_set_dto.dart';
 import 'package:workout_app/models/workout.dart';
@@ -24,6 +25,8 @@ class TrainingEnvironmentData {
   final int? peakReps;
   final int totalSets;
   final double totalTonnage;
+  final String? contextLabel;
+  final bool isIdle;
   final String badgeLabel;
   final String tacticalBriefing;
   final String carrotSnarkBriefing;
@@ -37,6 +40,8 @@ class TrainingEnvironmentData {
     this.peakReps,
     this.totalSets = 0,
     this.totalTonnage = 0.0,
+    this.contextLabel,
+    this.isIdle = false,
     required this.badgeLabel,
     required this.tacticalBriefing,
     required this.carrotSnarkBriefing,
@@ -51,9 +56,11 @@ class TrainingEnvironmentData {
       peakReps = null,
       totalSets = 0,
       totalTonnage = 0.0,
+      contextLabel = null,
+      isIdle = true,
       badgeLabel = 'WORK ZONE',
-      tacticalBriefing = 'Система готова. Выберите сессию или настройте сетку.',
-      carrotSnarkBriefing = 'Штанга сама себя не поднимет. Выбирай цель.';
+      tacticalBriefing = 'System ready. Select a session or configure the grid.',
+      carrotSnarkBriefing = 'The barbell will not lift itself. Pick a target.';
 
   Color accentColor(InstrumentTheme theme) {
     switch (state) {
@@ -70,6 +77,94 @@ class TrainingEnvironmentData {
 
   String briefing({bool snarky = false}) =>
       snarky ? carrotSnarkBriefing : tacticalBriefing;
+
+  String localizedBadgeLabel(AppLocalizations l10n) {
+    switch (state) {
+      case TrainingEnvironmentState.liveExecution:
+        return l10n.envBadgeLive;
+      case TrainingEnvironmentState.cnsStorm:
+        return l10n.envBadgeCnsStorm;
+      case TrainingEnvironmentState.deload:
+        return l10n.envBadgeDeload;
+      case TrainingEnvironmentState.workingVolume:
+        return l10n.envBadgeWorkZone;
+    }
+  }
+
+  String localizedBriefing(AppLocalizations l10n, {bool snarky = false}) {
+    if (isIdle) {
+      return snarky ? l10n.envIdleSnarky : l10n.envIdleTactical;
+    }
+    final peakSetSnippet = _formatPeakSet(
+      peakWeight: peakWeight,
+      peakReps: peakReps,
+      peakRpe: peakRpe,
+      peakIntensity: peakIntensity,
+      l10n: l10n,
+    );
+    final tonnageSnippet = totalTonnage > 0
+        ? l10n.unitKgValue(totalTonnage.round().toString())
+        : (totalSets > 0 ? l10n.unitSetsShort(totalSets.toString()) : null);
+
+    switch (state) {
+      case TrainingEnvironmentState.liveExecution:
+        if (snarky) {
+          return peakSetSnippet != null
+              ? l10n.envLiveSnarkyPeak(peakSetSnippet)
+              : l10n.envLiveSnarky;
+        }
+        return peakSetSnippet != null
+            ? l10n.envLiveTacticalPeak(peakSetSnippet)
+            : l10n.envLiveTactical;
+      case TrainingEnvironmentState.cnsStorm:
+        final intensity = peakIntensity;
+        final detail = peakSetSnippet ??
+            (intensity != null
+                ? '${intensity.round()}% 1RM'
+                : 'RPE ${(peakRpe ?? 9.0).toStringAsFixed(1)}');
+        if (snarky) {
+          return l10n.envStormSnarky(detail);
+        }
+        return tonnageSnippet != null
+            ? l10n.envStormTacticalWithTonnage(detail, tonnageSnippet)
+            : l10n.envStormTactical(detail);
+      case TrainingEnvironmentState.deload:
+        final rpe = peakRpe;
+        final rpeLabel = rpe != null
+            ? 'RPE ${rpe.toStringAsFixed(1)}'
+            : l10n.envDeloadLightZone;
+        if (snarky) {
+          return l10n.envDeloadSnarky(rpeLabel);
+        }
+        return tonnageSnippet != null
+            ? l10n.envDeloadTacticalWithTonnage(rpeLabel, tonnageSnippet)
+            : l10n.envDeloadTactical(rpeLabel);
+      case TrainingEnvironmentState.workingVolume:
+        if (peakSetSnippet != null && tonnageSnippet != null) {
+          return snarky
+              ? l10n.envWorkSnarkyPeak(peakSetSnippet)
+              : l10n.envWorkTacticalPeakTonnage(peakSetSnippet, tonnageSnippet);
+        } else if (totalSets > 0) {
+          if (snarky) {
+            return l10n.envWorkSnarkySets(totalSets.toString());
+          }
+          return tonnageSnippet != null
+              ? l10n.envWorkTacticalSetsWithTonnage(
+                  totalSets.toString(),
+                  tonnageSnippet,
+                )
+              : l10n.envWorkTacticalSets(totalSets.toString());
+        } else {
+          final prefix =
+              (contextLabel != null && contextLabel!.trim().isNotEmpty)
+                  ? '${contextLabel!.trim()} · '
+                  : '';
+          return snarky
+              ? l10n.envWorkSnarkyReady(prefix)
+              : l10n.envWorkTacticalReady(prefix);
+        }
+    }
+  }
 
   static TrainingEnvironmentData evaluate({
     bool isLiveExecution = false,
@@ -102,8 +197,8 @@ class TrainingEnvironmentData {
       peakIntensity: peakIntensity,
     );
     final tonnageSnippet = totalTonnage > 0
-        ? '${totalTonnage.round()} кг'
-        : (totalSets > 0 ? '$totalSets подх.' : null);
+        ? '${totalTonnage.round()} kg'
+        : (totalSets > 0 ? '$totalSets sets' : null);
 
     late final String badgeLabel;
     late final String tactical;
@@ -113,11 +208,11 @@ class TrainingEnvironmentData {
       case TrainingEnvironmentState.liveExecution:
         badgeLabel = 'LIVE';
         tactical = peakSetSnippet != null
-            ? 'Идёт сессия · Пик $peakSetSnippet'
-            : 'Идёт активная сессия · Режим фокуса';
+            ? 'Session in progress · Peak $peakSetSnippet'
+            : 'Active session in progress · Focus mode';
         snarky = peakSetSnippet != null
-            ? 'Таймер тикает. Покори $peakSetSnippet и не ной.'
-            : 'Секундомер пошёл. Меньше разговоров, больше повторов.';
+            ? 'Clock is ticking. Conquer $peakSetSnippet and quit whining.'
+            : 'Stopwatch is running. Less talk, more reps.';
         break;
       case TrainingEnvironmentState.cnsStorm:
         badgeLabel = 'CNS STORM';
@@ -126,35 +221,35 @@ class TrainingEnvironmentData {
                 ? '${peakIntensity.round()}% 1RM'
                 : 'RPE ${(peakRpe ?? 9.0).toStringAsFixed(1)}');
         tactical = tonnageSnippet != null
-            ? 'Пик $detail · Объём $tonnageSnippet · Высокая нагрузка ЦНС'
-            : 'Пик $detail · Предельная нагрузка ЦНС';
-        snarky = 'Пик $detail. ЦНС просит пощады — сделай её погромче.';
+            ? 'Peak $detail · Volume $tonnageSnippet · High CNS load'
+            : 'Peak $detail · Peak CNS load';
+        snarky = 'Peak $detail. CNS is begging for mercy — turn it up.';
         break;
       case TrainingEnvironmentState.deload:
         badgeLabel = 'DELOAD';
         final rpeLabel = peakRpe != null
             ? 'RPE ${peakRpe.toStringAsFixed(1)}'
-            : 'лёгкая зона';
+            : 'light zone';
         tactical = tonnageSnippet != null
-            ? 'Восстановление · $rpeLabel · Объём $tonnageSnippet'
-            : 'Разгрузочная фаза · $rpeLabel · Адаптация';
-        snarky = 'Режим курорта ($rpeLabel). Даже не думай добавлять блины.';
+            ? 'Recovery · $rpeLabel · Volume $tonnageSnippet'
+            : 'Deload phase · $rpeLabel · Adaptation';
+        snarky = 'Resort mode ($rpeLabel). Do not even think about adding plates.';
         break;
       case TrainingEnvironmentState.workingVolume:
         badgeLabel = 'WORK ZONE';
         if (peakSetSnippet != null && tonnageSnippet != null) {
-          tactical = 'Пик $peakSetSnippet · Рабочий объём $tonnageSnippet';
-          snarky = 'Рабочий коридор: $peakSetSnippet. Дисциплина важнее эго.';
+          tactical = 'Peak $peakSetSnippet · Working volume $tonnageSnippet';
+          snarky = 'Working corridor: $peakSetSnippet. Discipline beats ego.';
         } else if (totalSets > 0) {
           tactical =
-              'Рабочая зона · $totalSets подх.${tonnageSnippet != null ? ' · $tonnageSnippet' : ''}';
-          snarky = '$totalSets рабочих подходов. Скучно? Это называется прогресс.';
+              'Work zone · $totalSets sets${tonnageSnippet != null ? ' · $tonnageSnippet' : ''}';
+          snarky = '$totalSets working sets. Boring? That is called progress.';
         } else {
           final prefix = (contextLabel != null && contextLabel.trim().isNotEmpty)
               ? '${contextLabel.trim()} · '
               : '';
-          tactical = '${prefix}Рабочая зона · Готово к запуску';
-          snarky = '${prefix}Чистый лист. Нагрузи его нормально.';
+          tactical = '${prefix}Work zone · Ready to launch';
+          snarky = '${prefix}Clean slate. Load it properly.';
         }
         break;
     }
@@ -168,6 +263,7 @@ class TrainingEnvironmentData {
       peakReps: peakReps,
       totalSets: totalSets,
       totalTonnage: totalTonnage,
+      contextLabel: contextLabel,
       badgeLabel: badgeLabel,
       tacticalBriefing: tactical,
       carrotSnarkBriefing: snarky,
@@ -179,16 +275,18 @@ class TrainingEnvironmentData {
     int? peakReps,
     double? peakRpe,
     double? peakIntensity,
+    AppLocalizations? l10n,
   }) {
     final parts = <String>[];
     if (peakWeight != null && peakWeight > 0) {
       final wStr = peakWeight == peakWeight.roundToDouble()
           ? peakWeight.round().toString()
           : peakWeight.toStringAsFixed(1);
+      final wLabel = l10n != null ? l10n.unitKgValue(wStr) : '$wStr kg';
       if (peakReps != null && peakReps > 0) {
-        parts.add('$wStr кг × $peakReps');
+        parts.add('$wLabel × $peakReps');
       } else {
-        parts.add('$wStr кг');
+        parts.add(wLabel);
       }
     } else if (peakIntensity != null && peakIntensity > 0) {
       parts.add('${peakIntensity.round()}%');

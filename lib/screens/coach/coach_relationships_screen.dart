@@ -75,7 +75,7 @@ class CoachRelationshipsScreen extends ConsumerWidget {
 
     return AssistantChatHost(
       initialMessage:
-          'Открываю ассистента из CoachRelationshipsScreen. Используй контекст v1, чтобы понимать фильтр по статусу и приоритетные связи.',
+          'Opening assistant from CoachRelationshipsScreen. Use v1 context to understand status filter and priority relationships.',
       contextBuilder: () => _buildCoachRelationshipsChatContext(ref),
       builder: (context, openChat) {
         return AmbientScaffoldShell(
@@ -86,7 +86,7 @@ class CoachRelationshipsScreen extends ConsumerWidget {
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh),
-                tooltip: 'Refresh',
+                tooltip: l10n.refresh,
                 onPressed: () => ref.refresh(coachRelationshipsProvider),
               ),
             ],
@@ -369,14 +369,14 @@ class _RelationshipModule extends ConsumerWidget {
                   ),
                   InstrumentMetricCellData(
                     slot: MetricSlot.tonnage,
-                    label: 'VOLUME',
+                    label: l10n.volumeUpperLabel,
                     value: summary!.totalVolume != null
                         ? summary!.totalVolume!.toStringAsFixed(1)
                         : l10n.coachRelationshipsVolumeDash,
                   ),
                   InstrumentMetricCellData(
                     slot: MetricSlot.durationWeeks,
-                    label: 'LAST',
+                    label: l10n.lastUpperLabel,
                     value: summary!.lastWorkoutAt != null
                         ? DateFormat('MMM d').format(
                             summary!.lastWorkoutAt!.toLocal(),
@@ -390,7 +390,7 @@ class _RelationshipModule extends ConsumerWidget {
                   ),
                   InstrumentMetricCellData(
                     slot: MetricSlot.kpsh,
-                    label: 'PLAN',
+                    label: l10n.planUpperLabel,
                     value:
                         summary!.activePlanName ??
                         l10n.coachRelationshipsLastWorkoutNA,
@@ -520,7 +520,7 @@ class _RelationshipModule extends ConsumerWidget {
     final controller = TextEditingController();
     final confirmed = await showInstrumentDialog<bool>(
       context: context,
-      eyebrow: 'RELATIONSHIP',
+      eyebrow: l10n.relationshipEyebrow,
       title: l10n.coachRelationshipsDeclineRequestTitle,
       content: TextField(
         controller: controller,
@@ -621,7 +621,7 @@ class _RelationshipModule extends ConsumerWidget {
     final controller = TextEditingController();
     final confirmed = await showInstrumentDialog<bool>(
       context: context,
-      eyebrow: 'RELATIONSHIP',
+      eyebrow: l10n.relationshipEyebrow,
       title: l10n.coachRelationshipsEndCoaching,
       content: TextField(
         controller: controller,

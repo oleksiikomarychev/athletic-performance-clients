@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/providers/interface_maker_provider.dart';
 
 /// Descriptor for one cell in an [InstrumentMetricMatrix].
@@ -22,6 +23,9 @@ class InstrumentMetricCellData {
   });
 
   String get effectiveLabel => label ?? slot.shortLabel;
+
+  String localizedLabel(AppLocalizations l10n) =>
+      label ?? slot.localizedShortLabel(l10n);
 }
 
 /// Bare 4-column telemetry matrix ("Data Point Picker") placed at the bottom
@@ -178,7 +182,7 @@ class _MatrixCell extends StatelessWidget {
               children: [
                 Flexible(
                   child: Text(
-                    data.effectiveLabel,
+                    data.localizedLabel(AppLocalizations.of(context)),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: InstrumentTheme.microLabel(
@@ -257,7 +261,7 @@ class _MatrixCell extends StatelessWidget {
     return Semantics(
       button: true,
       selected: isSelected,
-      label: '${data.effectiveLabel}: ${data.value}',
+      label: '${data.localizedLabel(AppLocalizations.of(context))}: ${data.value}',
       child: Material(
         color: Colors.transparent,
         child: InkWell(

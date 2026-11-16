@@ -199,6 +199,8 @@ void main() {
             ),
           ],
           child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: Builder(
                 builder: (context) => TextButton(
@@ -213,21 +215,21 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Завершённая тренировка'));
-      final open = find.text('Посмотреть изменения');
+      final open = find.text('View changes');
       final deadline = DateTime.now().add(const Duration(seconds: 10));
       while (open.evaluate().isEmpty && DateTime.now().isBefore(deadline)) {
         await tester.pump(const Duration(milliseconds: 50));
       }
       await tester.tap(open);
       await tester.pumpAndSettle();
-      final button = find.text('Подтвердить изменения подходов');
+      final button = find.text('Confirm set changes');
       await tester.scrollUntilVisible(button, 200);
       await tester.ensureVisible(button);
       await tester.pumpAndSettle();
       await tester.tap(button);
       await api.confirmed.future.timeout(const Duration(seconds: 10));
       await tester.pumpAndSettle();
-      expect(find.text('Изменено экземпляров упражнений: 2'), findsOneWidget);
+      expect(find.text('Exercise instances modified: 2'), findsOneWidget);
     });
   }
   testWidgets('редактор передаёт проценты со знаком и валидирует границу', (
@@ -298,8 +300,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Изменений подходов нет.'), findsOneWidget);
-    expect(find.text('Подтвердить изменения подходов'), findsNothing);
+    expect(find.text('No set changes.'), findsOneWidget);
+    expect(find.text('Confirm set changes'), findsNothing);
   });
 
   testWidgets('смешанное предложение сохраняет отдельные подтверждения', (
@@ -337,11 +339,11 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    final sets = find.text('Подтвердить изменения подходов');
+    final sets = find.text('Confirm set changes');
     await tester.ensureVisible(sets);
     await tester.tap(sets);
     await tester.pumpAndSettle();
-    final meso = find.text('Применить правила вставки мезоциклов отдельно');
+    final meso = find.text('Apply mesocycle insert rules separately');
     await tester.ensureVisible(meso);
     await tester.tap(meso);
     await tester.pumpAndSettle();
@@ -349,7 +351,7 @@ void main() {
       {'preview_id': 'shown-id'},
       {'mesocycles_only': true},
     ]);
-    expect(find.text('Мезоцикл добавлен'), findsOneWidget);
+    expect(find.text('Mesocycle added'), findsOneWidget);
   });
 
   for (final fail in [false, true]) {
@@ -379,14 +381,14 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(find.textContaining('Запрошено: 3 повт., 95%'), findsOneWidget);
+        expect(find.textContaining('Requested: 3 reps, 95%'), findsOneWidget);
         expect(
-          find.textContaining('Ближайший вариант: 3 повт., 93%'),
+          find.textContaining('Closest option: 3 reps, 93%'),
           findsOneWidget,
         );
         expect(api.calls, isEmpty);
         expect(api.previews, fail ? 0 : 1);
-        await tester.tap(find.text('Подтвердить изменения подходов'));
+        await tester.tap(find.text('Confirm set changes'));
         await tester.pumpAndSettle();
         expect(api.calls, [
           {'preview_id': 'shown-id'},
@@ -395,7 +397,7 @@ void main() {
           find.textContaining(
             fail
                 ? 'Тренировка изменилась'
-                : 'Изменено экземпляров упражнений: 1',
+                : 'Exercise instances modified: 1',
           ),
           findsOneWidget,
         );
@@ -427,8 +429,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.textContaining('требуется новая версия'), findsOneWidget);
-    expect(find.text('Подтвердить изменения подходов'), findsNothing);
+    expect(find.textContaining('newer server version'), findsOneWidget);
+    expect(find.text('Confirm set changes'), findsNothing);
     expect(api.calls, isEmpty);
   });
 

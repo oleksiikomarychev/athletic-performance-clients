@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/macro.dart';
 import 'package:workout_app/providers/macro_providers.dart';
 import 'package:workout_app/providers/plan_providers.dart';
@@ -33,7 +34,10 @@ class _MacrosListScreenState extends ConsumerState<MacrosListScreen> {
     final id = active?.id;
     if (!mounted) return;
     if (id == null) {
-      showAppSnackBar(context, 'Active plan not found');
+      showAppSnackBar(
+        context,
+        AppLocalizations.of(context).activePlanNotFound,
+      );
       return;
     }
     await Navigator.of(context).push(
@@ -70,21 +74,22 @@ class _MacrosListScreenState extends ConsumerState<MacrosListScreen> {
   }
 
   Future<void> _confirmDelete(PlanMacro macro) async {
+    final l10n = AppLocalizations.of(context);
     final instrument = InstrumentTheme.of(context);
     final confirm = await showInstrumentDialog<bool>(
       context: context,
-      eyebrow: 'REMOVE RULE',
-      title: 'Delete Macro',
-      message: 'Are you sure to delete "${macro.name}"?',
+      eyebrow: l10n.removeRuleEyebrow,
+      title: l10n.deleteMacroTitle,
+      message: l10n.deleteExerciseConfirmBody(macro.name),
       accentColor: instrument.peakEffortColor,
       actionsBuilder: (ctx) => [
         InstrumentActionButton(
-          label: 'Cancel',
+          label: l10n.cancel,
           variant: InstrumentActionVariant.secondary,
           onPressed: () => Navigator.of(ctx).pop(false),
         ),
         InstrumentActionButton(
-          label: 'Delete',
+          label: l10n.delete,
           variant: InstrumentActionVariant.destructive,
           onPressed: () => Navigator.of(ctx).pop(true),
         ),
@@ -118,21 +123,22 @@ class _MacrosListScreenState extends ConsumerState<MacrosListScreen> {
 
     return AssistantChatHost(
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         final instrument = InstrumentTheme.of(context);
         return AmbientScaffoldShell(
           appBar: PrimaryAppBar(
-            title: 'Plan Macros',
+            title: l10n.planMacrosTitle,
             onTitleTap: openChat,
             showBack: true,
             actions: [
               IconButton(
                 icon: const Icon(Icons.visibility_outlined),
-                tooltip: 'Preview/Apply',
+                tooltip: l10n.previewApplyTooltip,
                 onPressed: _openPreview,
               ),
               IconButton(
                 icon: const Icon(Icons.add_rounded),
-                tooltip: 'Add Macro',
+                tooltip: l10n.addMacroLabel,
                 onPressed: _createMacro,
               ),
             ],
@@ -161,11 +167,11 @@ class _MacrosListScreenState extends ConsumerState<MacrosListScreen> {
                         children: [
                           EmptyState(
                             icon: Icons.auto_fix_high_rounded,
-                            title: 'No macros yet',
+                            title: l10n.noMacrosYet,
                             description:
                                 'Create rule-based automation to adapt loads, reps, sets, or mesocycles.',
                             action: InstrumentActionButton(
-                              label: 'Add Macro',
+                              label: l10n.addMacroLabel,
                               icon: Icons.add_rounded,
                               onPressed: _createMacro,
                             ),
@@ -185,7 +191,7 @@ class _MacrosListScreenState extends ConsumerState<MacrosListScreen> {
                             padding: EdgeInsets.zero,
                             items: [
                               CanvasPillItem(
-                                label: 'All (${state.items.length})',
+                                label: l10n.allCountLabel(state.items.length),
                                 selected: _filter == _MacroFilter.all,
                                 onTap: () =>
                                     setState(() => _filter = _MacroFilter.all),
@@ -212,10 +218,10 @@ class _MacrosListScreenState extends ConsumerState<MacrosListScreen> {
                           ),
                           const SizedBox(height: 14),
                           if (filtered.isEmpty)
-                            const EmptyState(
+                            EmptyState(
                               icon: Icons.filter_list_off_rounded,
-                              title: 'No matching macros',
-                              description: 'Switch filter above to view rules.',
+                              title: l10n.noMatchingMacros,
+                              description: l10n.switchFilterToViewRules,
                             )
                           else
                             for (int i = 0; i < filtered.length; i++) ...[
@@ -315,7 +321,7 @@ class _MacroRuleCard extends StatelessWidget {
                       Icons.edit_outlined,
                       color: scheme.onSurfaceVariant,
                     ),
-                    tooltip: 'Edit',
+                    tooltip: AppLocalizations.of(context).edit,
                     constraints: const BoxConstraints(
                       minWidth: 48,
                       minHeight: 48,
@@ -327,7 +333,7 @@ class _MacroRuleCard extends StatelessWidget {
                       Icons.delete_outline_rounded,
                       color: instrument.peakEffortColor,
                     ),
-                    tooltip: 'Delete',
+                    tooltip: AppLocalizations.of(context).delete,
                     constraints: const BoxConstraints(
                       minWidth: 48,
                       minHeight: 48,

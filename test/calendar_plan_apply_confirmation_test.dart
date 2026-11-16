@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workout_app/config/api_config.dart';
 import 'package:workout_app/config/theme/app_theme.dart';
@@ -41,6 +42,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: Builder(
             builder: (context) => TextButton(
@@ -93,8 +96,8 @@ void main() {
         return 'queued';
       }, (value) => result = value);
       expect(calls, [false]);
-      expect(find.text('Заменить активный план?'), findsOneWidget);
-      await tester.tap(find.text(confirm ? 'Заменить план' : 'Отмена'));
+      expect(find.text('Replace active plan?'), findsOneWidget);
+      await tester.tap(find.text(confirm ? 'Replace plan' : 'Cancel'));
       await tester.pumpAndSettle();
       expect(calls, confirm ? [false, true] : [false]);
       expect(result, confirm ? 'queued' : null);
@@ -124,7 +127,7 @@ void main() {
       calls.add(replace);
       throw ApiException('Conflict', statusCode: 409);
     }, (value) => result = value);
-    await tester.tap(find.text('Заменить план'));
+    await tester.tap(find.text('Replace plan'));
     await tester.pumpAndSettle();
     expect(calls, [false, true]);
     expect(result, isA<ApiException>());
@@ -195,6 +198,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.darkTheme(density: UiDensity.compact),
           builder: (context, child) => MediaQuery(
             data: MediaQuery.of(context).copyWith(
@@ -238,21 +243,21 @@ void main() {
       expect(find.text('PLAN APPLICATION'), findsOneWidget);
       expect(tester.takeException(), isNull);
 
-      final scrollableFinder = find.byType(Scrollable).last;
+      final scrollableFinder = find.byType(Scrollable).first;
 
-      final pillFinder = find.text('120 кг × 1');
+      final pillFinder = find.text('120 kg × 1');
       await tester.scrollUntilVisible(pillFinder, 180, scrollable: scrollableFinder);
       await tester.pumpAndSettle();
       await tester.tap(pillFinder);
       await tester.pumpAndSettle();
 
-      final ceilFinder = find.text('Вверх');
+      final ceilFinder = find.text('Up');
       await tester.scrollUntilVisible(ceilFinder, 180, scrollable: scrollableFinder);
       await tester.pumpAndSettle();
       await tester.tap(ceilFinder);
       await tester.pumpAndSettle();
 
-      final applyBtn = find.widgetWithText(FilledButton, 'Применить план');
+      final applyBtn = find.widgetWithText(FilledButton, 'Apply plan');
       await tester.scrollUntilVisible(applyBtn, 180, scrollable: scrollableFinder);
       await tester.pumpAndSettle();
       await tester.tap(applyBtn);

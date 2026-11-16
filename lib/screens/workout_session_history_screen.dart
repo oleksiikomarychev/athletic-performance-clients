@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/providers/providers.dart';
 import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
@@ -35,17 +36,18 @@ class _WorkoutSessionHistoryScreenState
         'entities': {'workout_id': widget.workoutId},
       },
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         final topInset = AmbientScaffoldShell.topContentInset(context);
         final bottomInset = AmbientScaffoldShell.bottomContentInset(context);
 
         return AmbientScaffoldShell(
           appBar: PrimaryAppBar(
-            title: 'Session History',
+            title: l10n.sessionHistoryTitle,
             onTitleTap: openChat,
             showBack: true,
             actions: [
               IconButton(
-                tooltip: 'Refresh',
+                tooltip: l10n.refresh,
                 icon: const Icon(Icons.refresh_rounded),
                 onPressed: () {
                   ref.invalidate(sessionsHistorySWRProvider(widget.workoutId));
@@ -63,7 +65,9 @@ class _WorkoutSessionHistoryScreenState
             error: (e, _) => Padding(
               padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
               child: ErrorMessage(
-                message: 'Ошибка загрузки: $e',
+                message: AppLocalizations.of(context).loadErrorWithDetails(
+                  e.toString(),
+                ),
                 onRetry: () => ref.invalidate(
                   sessionsHistorySWRProvider(widget.workoutId),
                 ),
@@ -76,6 +80,7 @@ class _WorkoutSessionHistoryScreenState
                 });
               }
               if (sessions.isEmpty) {
+                final l10n = AppLocalizations.of(context);
                 return ListView(
                   padding: EdgeInsets.fromLTRB(
                     16,
@@ -83,12 +88,11 @@ class _WorkoutSessionHistoryScreenState
                     16,
                     bottomInset + 24,
                   ),
-                  children: const [
+                  children: [
                     EmptyState(
                       icon: Icons.history_rounded,
-                      title: 'Нет данных для отображения',
-                      description:
-                          'Завершённые сессии по этой тренировке появятся здесь.',
+                      title: l10n.noDisplayDataTitle,
+                      description: l10n.workoutHistoryEmptyDesc,
                     ),
                   ],
                 );

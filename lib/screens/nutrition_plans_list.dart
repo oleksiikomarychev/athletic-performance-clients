@@ -86,7 +86,7 @@ class _NutritionPlansListState extends State<NutritionPlansList> {
               IconButton(
                 onPressed: _createSession,
                 icon: const Icon(Icons.add_rounded),
-                tooltip: 'Create session',
+                tooltip: l10n.createSessionTooltip,
               ),
             ],
           ),
@@ -114,7 +114,7 @@ class _NutritionPlansListState extends State<NutritionPlansList> {
       return Padding(
         padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
         child: ErrorMessage(
-          message: 'Failed to load nutrition sessions: $_errorMessage',
+          message: l10n.failedToLoadNutritionSessions('$_errorMessage'),
           onRetry: _loadSessions,
         ),
       );
@@ -130,7 +130,7 @@ class _NutritionPlansListState extends State<NutritionPlansList> {
             title: l10n.nutritionSessionsEmpty,
             description: l10n.nutritionSessionsEmptyDesc,
             action: InstrumentActionButton(
-              label: 'Create Session',
+              label: l10n.createSessionButton,
               icon: Icons.add_rounded,
               onPressed: _createSession,
             ),

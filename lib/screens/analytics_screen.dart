@@ -171,7 +171,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         ? '${df.format(_rangeStart!)} — ${df.format(_rangeEnd!)}'
         : (_rangeStart != null
               ? '${df.format(_rangeStart!)} — …'
-              : 'All sessions');
+              : l10n.allSessionsLabel);
 
     final isTrendMode = _metricX == _metricY;
 
@@ -237,7 +237,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         width: 48,
                         height: 48,
                         child: IconButton(
-                          tooltip: 'Reset dates',
+                          tooltip: l10n.resetDatesTooltip,
                           style: IconButton.styleFrom(
                             minimumSize: const Size(48, 48),
                             tapTargetSize: MaterialTapTargetSize.padded,
@@ -257,8 +257,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       height: 48,
                       child: IconButton(
                         tooltip: _datePickerExpanded
-                            ? 'Collapse calendar'
-                            : 'Select date range',
+                            ? l10n.collapseCalendarTooltip
+                            : l10n.selectDateRangeTooltip,
                         style: IconButton.styleFrom(
                           minimumSize: const Size(48, 48),
                           tapTargetSize: MaterialTapTargetSize.padded,
@@ -287,8 +287,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             lastDay: DateTime.utc(2100, 12, 31),
                             focusedDay: _focusedDay,
                             calendarFormat: CalendarFormat.month,
-                            availableCalendarFormats: const {
-                              CalendarFormat.month: 'Month',
+                            availableCalendarFormats: {
+                              CalendarFormat.month: l10n.calendarMonthLabel,
                             },
                             headerStyle: const HeaderStyle(
                               formatButtonVisible: false,
@@ -334,7 +334,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     Expanded(
                       child: Text(
                         isTrendMode
-                            ? 'PRIMARY METRIC (TREND)'
+                            ? l10n.primaryMetricTrendHeader
                             : '${l10n.axisY.toUpperCase()} VS ${l10n.axisX.toUpperCase()}',
                         style: InstrumentTheme.microLabel(context),
                       ),
@@ -396,7 +396,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: ChoiceChip(
-                          label: const Text('Trend'),
+                          label: Text(l10n.trendLabel),
                           selected: _metricX == _metricY,
                           onSelected: (_) {
                             setState(() => _metricX = _metricY);

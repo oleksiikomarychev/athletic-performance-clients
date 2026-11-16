@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/src/api/nutrition_api.dart';
 import 'package:workout_app/src/widgets/snack_utils.dart';
 import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
@@ -88,12 +89,17 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoadingItems = false);
-        showAppSnackBar(context, 'Error loading items: $e', isError: true);
+        showAppSnackBar(
+          context,
+          AppLocalizations.of(context).errorLoadingItems('$e'),
+          isError: true,
+        );
       }
     }
   }
 
   Future<void> _addEntry(Map<String, dynamic> item, String type) async {
+    final l10n = AppLocalizations.of(context);
     final dosageController = TextEditingController(
       text: item['dosage']?.toString() ?? '',
     );
@@ -101,7 +107,9 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
     final result = await showInstrumentDialog<bool>(
       context: context,
       eyebrow: type.toUpperCase(),
-      title: 'Add ${item['name'] ?? 'Item'}',
+      title: l10n.addItemTitle(
+        item['name']?.toString() ?? l10n.itemGenericName,
+      ),
       content: TextField(
         controller: dosageController,
         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -109,19 +117,19 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
         ),
         decoration: InstrumentTheme.inputDecoration(
           context,
-          labelText: 'Dosage (${item['unit'] ?? ''})',
+          labelText: l10n.dosageWithUnitLabel(item['unit']?.toString() ?? ''),
           hintText: item['dosage']?.toString(),
         ),
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
       ),
       actions: [
         InstrumentActionButton(
-          label: 'Cancel',
+          label: l10n.cancel,
           variant: InstrumentActionVariant.secondary,
           onPressed: () => Navigator.pop(context, false),
         ),
         InstrumentActionButton(
-          label: 'Add',
+          label: l10n.addLabel,
           icon: Icons.add_rounded,
           onPressed: () => Navigator.pop(context, true),
         ),
@@ -218,7 +226,11 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
       Navigator.pop(context, result);
     } catch (e) {
       if (!mounted) return;
-      showAppSnackBar(context, 'Error: $e', isError: true);
+      showAppSnackBar(
+        context,
+        AppLocalizations.of(context).genericError('$e'),
+        isError: true,
+      );
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -235,6 +247,7 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
         'entities': {'selected_entries_count': _selectedEntries.length},
       },
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         final theme = Theme.of(context);
         final scheme = theme.colorScheme;
         final instrument = InstrumentTheme.of(context);
@@ -255,7 +268,7 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
               IconButton(
                 onPressed: _isLoading ? null : _save,
                 icon: const Icon(Icons.check_rounded),
-                tooltip: 'Save',
+                tooltip: l10n.save,
               ),
             ],
           ),
@@ -271,7 +284,7 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
               children: [
                 _NutritionFormCard(
                   eyebrow: '01 · SESSION CONFIG',
-                  title: 'Session Configuration',
+                  title: l10n.sessionConfigurationTitle,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -282,21 +295,23 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
                             style: tabularStyle,
                             decoration: InstrumentTheme.inputDecoration(
                               context,
-                              labelText: 'Session ID',
+                              labelText: l10n.sessionIdLabel,
                             ),
-                            validator: (value) =>
-                                value?.isEmpty == true ? 'Required' : null,
+                            validator: (value) => value?.isEmpty == true
+                                ? l10n.requiredField
+                                : null,
                           );
                           final userIdField = TextFormField(
                             controller: _userIdController,
                             style: tabularStyle,
                             decoration: InstrumentTheme.inputDecoration(
                               context,
-                              labelText: 'User ID',
+                              labelText: l10n.userIdFieldLabel,
                             ),
                             keyboardType: TextInputType.number,
-                            validator: (value) =>
-                                value?.isEmpty == true ? 'Required' : null,
+                            validator: (value) => value?.isEmpty == true
+                                ? l10n.requiredField
+                                : null,
                           );
 
                           if (constraints.maxWidth < 300) {
@@ -323,7 +338,7 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
                         style: tabularStyle,
                         decoration: InstrumentTheme.inputDecoration(
                           context,
-                          labelText: 'Workout ID (optional)',
+                          labelText: l10n.workoutIdOptionalLabel,
                         ),
                         keyboardType: TextInputType.number,
                       ),
@@ -333,7 +348,7 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
                         style: tabularStyle,
                         decoration: InstrumentTheme.inputDecoration(
                           context,
-                          labelText: 'Applied Plan Workout ID (optional)',
+                          labelText: l10n.appliedPlanWorkoutIdOptionalLabel,
                         ),
                         keyboardType: TextInputType.number,
                       ),
@@ -346,7 +361,7 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
                           child: InputDecorator(
                             decoration: InstrumentTheme.inputDecoration(
                               context,
-                              labelText: 'Date',
+                              labelText: l10n.dateLabel,
                               suffixIcon: Icon(
                                 Icons.calendar_today_outlined,
                                 size: 18,
@@ -366,7 +381,7 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
                 const SizedBox(height: 14),
                 _NutritionFormCard(
                   eyebrow: '02 · SELECTED INTAKE (${_selectedEntries.length})',
-                  title: 'Selected Entries',
+                  title: l10n.selectedEntriesTitle,
                   accentColor: instrument.deloadAura,
                   flushBody: true,
                   child: _selectedEntries.isEmpty
@@ -399,7 +414,7 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
                 const SizedBox(height: 14),
                 _NutritionFormCard(
                   eyebrow: '03 · CATALOG',
-                  title: 'Available Items',
+                  title: l10n.availableItemsTitle,
                   flushBody: true,
                   child: _isLoadingItems
                       ? const Padding(
@@ -411,20 +426,20 @@ class _NutritionPlanCreateState extends State<NutritionPlanCreate> {
                           children: [
                             _buildCollapsibleCategory(
                               context,
-                              title: 'Food',
+                              title: l10n.foodLabel,
                               items: _foodList,
                               type: 'food',
                               isFirst: true,
                             ),
                             _buildCollapsibleCategory(
                               context,
-                              title: 'Supplements',
+                              title: l10n.supplementsLabel,
                               items: _supplementList,
                               type: 'supplement',
                             ),
                             _buildCollapsibleCategory(
                               context,
-                              title: 'Medications',
+                              title: l10n.medicationsLabel,
                               items: _medicationList,
                               type: 'medication',
                             ),
@@ -642,7 +657,7 @@ class _SelectedEntryRow extends StatelessWidget {
                 Icons.remove_circle_outline_rounded,
                 color: instrument.peakEffortColor,
               ),
-              tooltip: 'Remove entry',
+              tooltip: AppLocalizations.of(context).removeEntryTooltip,
               onPressed: onRemove,
             ),
           ),
@@ -698,7 +713,7 @@ class _CatalogItemRow extends StatelessWidget {
                   Icons.add_circle_outline_rounded,
                   color: instrument.workingAura,
                 ),
-                tooltip: 'Add entry',
+                tooltip: AppLocalizations.of(context).addEntryTooltip,
                 onPressed: onAdd,
               ),
             ),

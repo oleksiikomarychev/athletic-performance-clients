@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 
 class PlanAnalyticsPoint {
   final int order;
@@ -72,7 +73,7 @@ class PlanAnalyticsChart extends StatelessWidget {
     this.scatterSeries,
     this.bottomLabelModulo,
     this.showScatterAxisTitles = true,
-    this.emptyText = 'Нет данных для плана',
+    this.emptyText = 'No data for plan',
     this.bleedMode = false,
     this.accentColor,
   });
@@ -783,12 +784,21 @@ class _SeriesLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Wrap(
       spacing: 12,
       runSpacing: 4,
       children: [
-        _LegendItem(color: plannedColor, filled: false, label: 'PLANNED'),
-        _LegendItem(color: actualColor, filled: true, label: 'ACTUAL'),
+        _LegendItem(
+          color: plannedColor,
+          filled: false,
+          label: l10n.plannedUpperLabel,
+        ),
+        _LegendItem(
+          color: actualColor,
+          filled: true,
+          label: l10n.actualUpperLabel,
+        ),
       ],
     );
   }

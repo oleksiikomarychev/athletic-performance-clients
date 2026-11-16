@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/widgets/empty_state.dart';
@@ -28,12 +29,13 @@ class ExerciseDetailScreen extends ConsumerWidget {
         'entities': {'exercise_id': exerciseId},
       },
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         final topInset = AmbientScaffoldShell.topContentInset(context);
         final bottomInset = AmbientScaffoldShell.bottomContentInset(context);
 
         return AmbientScaffoldShell(
           appBar: PrimaryAppBar(
-            title: 'Exercise',
+            title: l10n.exerciseTitle,
             onTitleTap: openChat,
             showBack: true,
           ),
@@ -45,7 +47,7 @@ class ExerciseDetailScreen extends ConsumerWidget {
             error: (e, _) => Padding(
               padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
               child: ErrorMessage(
-                message: 'Failed to load exercise: $e',
+                message: l10n.failedToLoadExercise('$e'),
                 onRetry: () => ref.invalidate(exercisesNotifierProvider),
               ),
             ),
@@ -57,11 +59,10 @@ class ExerciseDetailScreen extends ConsumerWidget {
               if (current == null) {
                 return Padding(
                   padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
-                  child: const EmptyState(
+                  child: EmptyState(
                     icon: Icons.fitness_center_rounded,
-                    title: 'Exercise not found',
-                    description:
-                        'The requested exercise definition could not be located.',
+                    title: l10n.exerciseNotFoundTitle,
+                    description: l10n.exerciseDetailNotFoundDescription,
                   ),
                 );
               }
@@ -176,22 +177,22 @@ class ExerciseDetailScreen extends ConsumerWidget {
                         ],
                         Container(height: 1, color: instrument.hairlineBorder),
                         _SpecLineRow(
-                          label: 'MUSCLE GROUP',
+                          label: l10n.muscleGroupHeader,
                           value: current.muscleGroup ?? '—',
                         ),
                         Container(height: 1, color: instrument.hairlineBorder),
                         _SpecLineRow(
-                          label: 'EQUIPMENT',
+                          label: l10n.equipmentHeader,
                           value: current.equipment ?? '—',
                         ),
                         Container(height: 1, color: instrument.hairlineBorder),
                         _SpecLineRow(
-                          label: 'MOVEMENT TYPE',
+                          label: l10n.movementTypeHeader,
                           value: current.movementType ?? '—',
                         ),
                         Container(height: 1, color: instrument.hairlineBorder),
                         _SpecLineRow(
-                          label: 'REGION',
+                          label: l10n.regionHeader,
                           value: current.region ?? '—',
                         ),
                         Container(height: 1, color: instrument.hairlineBorder),
@@ -201,14 +202,14 @@ class ExerciseDetailScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _MetaTagsStrip(
-                                label: 'TARGET MUSCLES',
+                                label: l10n.targetMusclesHeader,
                                 values:
                                     current.targetMuscles ?? const <String>[],
                                 accentColor: instrument.workingAura,
                               ),
                               const SizedBox(height: 12),
                               _MetaTagsStrip(
-                                label: 'SYNERGIST MUSCLES',
+                                label: l10n.synergistMusclesHeader,
                                 values:
                                     current.synergistMuscles ??
                                     const <String>[],
@@ -223,24 +224,24 @@ class ExerciseDetailScreen extends ConsumerWidget {
                   if (parent != null) ...[
                     const SizedBox(height: 14),
                     _RelatedExercisesModule(
-                      eyebrow: 'PARENT EXERCISE',
-                      title: 'Base Movement',
+                      eyebrow: l10n.parentExerciseEyebrow,
+                      title: l10n.baseMovementTitle,
                       items: [parent],
                     ),
                   ],
                   if (variants.isNotEmpty) ...[
                     const SizedBox(height: 14),
                     _RelatedExercisesModule(
-                      eyebrow: 'VARIANTS · ${variants.length}',
-                      title: 'Direct Variants',
+                      eyebrow: l10n.variantsCountEyebrow(variants.length),
+                      title: l10n.directVariantsTitle,
                       items: variants,
                     ),
                   ],
                   if (siblings.isNotEmpty) ...[
                     const SizedBox(height: 14),
                     _RelatedExercisesModule(
-                      eyebrow: 'OTHER VARIANTS · ${siblings.length}',
-                      title: 'Related Siblings',
+                      eyebrow: l10n.otherVariantsCountEyebrow(siblings.length),
+                      title: l10n.relatedSiblingsTitle,
                       items: siblings,
                     ),
                   ],
@@ -339,7 +340,7 @@ class _RelatedExercisesModule extends StatelessWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              '${items[i].muscleGroup ?? 'No muscle group'} · ${items[i].equipment ?? 'No equipment'}',
+                              '${items[i].muscleGroup ?? AppLocalizations.of(context).noMuscleGroup} · ${items[i].equipment ?? AppLocalizations.of(context).noEquipment}',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: scheme.onSurfaceVariant,
                               ),

@@ -1,20 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/providers/plan_catalog_provider.dart';
 import 'package:workout_app/services/service_locator.dart';
 import 'package:workout_app/widgets/instrument_modal.dart';
 
 const catalogFacetTitles = {
-  'duration_weeks': 'Длительность',
-  'goals': 'Цель',
-  'frequencies': 'Тренировок в неделю',
-  'levels': 'Уровень',
+  'duration_weeks': 'Duration',
+  'goals': 'Goal',
+  'frequencies': 'Workouts per week',
+  'levels': 'Level',
 };
 
-String catalogFilterLabel(String key, String value) => switch (key) {
-  'duration_weeks' => '$value нед.',
-  'frequencies' => '$value / нед.',
+String localizedFacetTitle(String key, AppLocalizations l10n) => switch (key) {
+  'duration_weeks' => l10n.filterDuration,
+  'goals' => l10n.filterGoal,
+  'frequencies' => l10n.filterFrequency,
+  'levels' => l10n.filterLevel,
+  _ => key,
+};
+
+String catalogFilterLabel(
+  String key,
+  String value, [
+  AppLocalizations? l10n,
+]) => switch (key) {
+  'duration_weeks' =>
+    l10n != null ? l10n.filterDurationValue(value) : '$value wk',
+  'frequencies' =>
+    l10n != null ? l10n.filterFrequencyValue(value) : '$value / wk',
   // Display formatting only; requests and selections retain exact stored codes.
   _ => value.replaceAll('_', ' '),
 };
@@ -105,7 +120,7 @@ class _PlanCatalogFiltersState extends ConsumerState<PlanCatalogFilters> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Фильтры планов',
+                        AppLocalizations.of(context).planFiltersTitle,
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -119,7 +134,7 @@ class _PlanCatalogFiltersState extends ConsumerState<PlanCatalogFilters> {
                     minHeight: 48,
                   ),
                   child: IconButton(
-                    tooltip: 'Закрыть',
+                    tooltip: AppLocalizations.of(context).tooltipClose,
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.close),
                   ),
@@ -147,14 +162,14 @@ class _PlanCatalogFiltersState extends ConsumerState<PlanCatalogFilters> {
                   )
                 else if (_catalog.error != null)
                   InstrumentActionButton(
-                    label: 'Повторить загрузку',
+                    label: AppLocalizations.of(context).actionRetryLoad,
                     variant: InstrumentActionVariant.secondary,
                     accentColor: instrument.peakEffortColor,
                     onPressed: _controller.refresh,
                   )
                 else
                   Text(
-                    'Найдено: ${_catalog.page.total}',
+                    AppLocalizations.of(context).plansFoundCount(_catalog.page.total),
                     style: InstrumentTheme.tabular(
                       (theme.textTheme.labelLarge ?? const TextStyle())
                           .copyWith(
@@ -164,7 +179,7 @@ class _PlanCatalogFiltersState extends ConsumerState<PlanCatalogFilters> {
                     ),
                   ),
                 InstrumentActionButton(
-                  label: 'Сбросить',
+                  label: AppLocalizations.of(context).interfaceMakerReset,
                   variant: InstrumentActionVariant.secondary,
                   onPressed: () => setState(() {
                     _selected.clear();
@@ -178,7 +193,10 @@ class _PlanCatalogFiltersState extends ConsumerState<PlanCatalogFilters> {
             const SizedBox(height: 14),
             for (final facet in catalogFacetTitles.entries) ...[
               Text(
-                facet.value.toUpperCase(),
+                localizedFacetTitle(
+                  facet.key,
+                  AppLocalizations.of(context),
+                ).toUpperCase(),
                 style: InstrumentTheme.microLabel(context),
               ),
               const SizedBox(height: 8),
@@ -192,7 +210,7 @@ class _PlanCatalogFiltersState extends ConsumerState<PlanCatalogFilters> {
                   })
                     InstrumentSelectablePill(
                       label:
-                          '${catalogFilterLabel(facet.key, value)} (${_catalog.loading ? '…' : _catalog.page.facets[facet.key]?[value] ?? 0})',
+                          '${catalogFilterLabel(facet.key, value, AppLocalizations.of(context))} (${_catalog.loading ? '…' : _catalog.page.facets[facet.key]?[value] ?? 0})',
                       selected: _selected[facet.key]?.contains(value) ?? false,
                       onTap: () => setState(() {
                         final values = _selected.putIfAbsent(
@@ -212,7 +230,7 @@ class _PlanCatalogFiltersState extends ConsumerState<PlanCatalogFilters> {
             ],
             const SizedBox(height: 4),
             InstrumentActionButton(
-              label: 'Применить',
+              label: AppLocalizations.of(context).apply,
               expanded: true,
               variant: InstrumentActionVariant.primary,
               accentColor: instrument.workingAura,

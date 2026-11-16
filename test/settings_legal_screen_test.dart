@@ -75,8 +75,8 @@ void main() {
   }
 
   group('LegalDocumentsRepository & SettingsLegalScreen', () {
-    test('provides Privacy, Terms, and Health Disclaimer in EN, RU, and UK', () {
-      for (final lang in ['en', 'ru', 'uk']) {
+    test('provides Privacy, Terms, and Health Disclaimer in EN and UK', () {
+      for (final lang in ['en', 'uk']) {
         final docs = LegalDocumentsRepository.getAllDocuments(lang);
         expect(docs.length, 3);
         expect(docs[0].type, LegalDocumentType.privacy);
@@ -96,25 +96,25 @@ void main() {
       'renders tabs and switches between documents and languages',
       (WidgetTester tester) async {
         await tester.pumpWidget(
-          buildApp(const SettingsLegalScreen(initialLanguageCode: 'ru')),
+          buildApp(const SettingsLegalScreen(initialLanguageCode: 'uk')),
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('Политика конфиденциальности'), findsWidgets);
-        expect(find.text('Коротко о главном (TL;DR)'), findsOneWidget);
+        expect(find.text('Політика конфіденційності'), findsWidgets);
+        expect(find.text('Коротко про головне (TL;DR)'), findsOneWidget);
 
-        await tester.tap(find.text('Условия (ToS)'));
+        await tester.tap(find.text('Умови (ToS)'));
         await tester.pumpAndSettle();
         expect(
-          find.text('Условия использования (Terms of Service)'),
+          find.text('Умови використання (Terms of Service)'),
           findsOneWidget,
         );
 
-        await tester.tap(find.text('Мед. дисклеймер'));
+        await tester.tap(find.text('Мед. застереження'));
         await tester.pumpAndSettle();
-        expect(find.text('Медицинский и фитнес-дисклеймер'), findsOneWidget);
+        expect(find.text('Медичне та фітнес-застереження'), findsOneWidget);
 
-        await tester.tap(find.text('RU'));
+        await tester.tap(find.text('UK'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('English (EN)'));
         await tester.pumpAndSettle();

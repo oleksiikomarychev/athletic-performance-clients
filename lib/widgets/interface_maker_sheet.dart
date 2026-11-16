@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/providers/interface_maker_provider.dart';
 
 /// Descriptor for a floating pill inside [CanvasPillStrip].
@@ -188,6 +189,7 @@ class InterfaceMakerSheet extends ConsumerWidget {
         minChildSize: 0.48,
         maxChildSize: 0.94,
         builder: (context, scrollController) {
+          final l10n = AppLocalizations.of(context);
           return ListView(
             controller: scrollController,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
@@ -213,7 +215,7 @@ class InterfaceMakerSheet extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Сетка и модули экрана',
+                      l10n.interfaceMakerTitle,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -221,13 +223,13 @@ class InterfaceMakerSheet extends ConsumerWidget {
                   ),
                   TextButton(
                     onPressed: controller.resetToDefault,
-                    child: const Text('Сбросить'),
+                    child: Text(l10n.interfaceMakerReset),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               Text(
-                'ПРЕСЕТЫ ДИСЦИПЛИНЫ',
+                l10n.interfaceMakerPresetsSection,
                 style: InstrumentTheme.microLabel(context),
               ),
               const SizedBox(height: 8),
@@ -238,7 +240,7 @@ class InterfaceMakerSheet extends ConsumerWidget {
                     .map((preset) {
                       final selected = config.preset == preset;
                       return ChoiceChip(
-                        label: Text(preset.label),
+                        label: Text(preset.localizedLabel(l10n)),
                         selected: selected,
                         onSelected: (_) => controller.applyPreset(preset),
                       );
@@ -248,25 +250,21 @@ class InterfaceMakerSheet extends ConsumerWidget {
               const SizedBox(height: 16),
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('График-волна в карточках'),
-                subtitle: const Text(
-                  'Отключите для компактного режима без графиков',
-                ),
+                title: Text(l10n.interfaceMakerWaveChartTitle),
+                subtitle: Text(l10n.interfaceMakerWaveChartSubtitle),
                 value: config.showChart,
                 onChanged: controller.setShowChart,
               ),
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Характерный CARROT-брифинг'),
-                subtitle: const Text(
-                  'Саркастичная сводка нагрузки вместо сухой тактической',
-                ),
+                title: Text(l10n.interfaceMakerSnarkyTitle),
+                subtitle: Text(l10n.interfaceMakerSnarkySubtitle),
                 value: config.snarkyVoice,
                 onChanged: controller.setSnarkyVoice,
               ),
               const Divider(height: 24),
               Text(
-                '4 СЛОТА ТЕЛЕМЕТРИИ (DATA POINT PICKER)',
+                l10n.interfaceMakerSlotsSection,
                 style: InstrumentTheme.microLabel(context),
               ),
               const SizedBox(height: 8),
@@ -280,7 +278,7 @@ class InterfaceMakerSheet extends ConsumerWidget {
                         SizedBox(
                           width: 72,
                           child: Text(
-                            'Слот ${i + 1}',
+                            l10n.interfaceMakerSlotNumber((i + 1).toString()),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodyMedium?.copyWith(
@@ -304,7 +302,7 @@ class InterfaceMakerSheet extends ConsumerWidget {
                                   (m) => DropdownMenuItem(
                                     value: m,
                                     child: Text(
-                                      m.displayName,
+                                      m.localizedDisplayName(l10n),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
@@ -318,7 +316,7 @@ class InterfaceMakerSheet extends ConsumerWidget {
                 ),
               const Divider(height: 24),
               Text(
-                'МОДУЛИ И ПОРЯДОК ЭКРАНА',
+                l10n.interfaceMakerModulesSection,
                 style: InstrumentTheme.microLabel(context),
               ),
               const SizedBox(height: 8),
@@ -363,6 +361,7 @@ class _ModuleConfigRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 48),
       child: Row(
@@ -373,18 +372,18 @@ class _ModuleConfigRow extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              module.displayName,
+              module.localizedDisplayName(l10n),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),
           IconButton(
-            tooltip: 'Выше',
+            tooltip: l10n.interfaceMakerMoveUp,
             onPressed: canMoveUp ? onMoveUp : null,
             icon: const Icon(Icons.keyboard_arrow_up),
           ),
           IconButton(
-            tooltip: 'Ниже',
+            tooltip: l10n.interfaceMakerMoveDown,
             onPressed: canMoveDown ? onMoveDown : null,
             icon: const Icon(Icons.keyboard_arrow_down),
           ),

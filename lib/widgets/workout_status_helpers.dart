@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/constants/theme_constants.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/models/workout.dart';
 
 class WorkoutStatusView {
@@ -17,6 +18,7 @@ class WorkoutStatusView {
 }
 
 WorkoutStatusView workoutStatusView(BuildContext context, Workout workout) {
+  final l10n = AppLocalizations.of(context);
   final theme = Theme.of(context);
   final isDark = theme.brightness == Brightness.dark;
   final status = (workout.status ?? '').toLowerCase();
@@ -26,7 +28,7 @@ WorkoutStatusView workoutStatusView(BuildContext context, Workout workout) {
   if (completed) {
     final color = isDark ? Colors.green.shade300 : Colors.green;
     return WorkoutStatusView(
-      label: 'Completed',
+      label: l10n.statusCompleted,
       background: isDark
           ? Color.alphaBlend(color.withValues(alpha: 0.16), theme.colorScheme.surfaceContainerLow)
           : const Color(0xFFEFF8F2),
@@ -35,7 +37,7 @@ WorkoutStatusView workoutStatusView(BuildContext context, Workout workout) {
     );
   } else if (inProgress) {
     return WorkoutStatusView(
-      label: 'In Progress',
+      label: l10n.statusInProgress,
       background: isDark ? theme.colorScheme.primaryContainer : const Color(0xFFEAEFFF),
       textColor: isDark ? theme.colorScheme.onPrimaryContainer : AppColors.primary,
       dotColor: isDark ? theme.colorScheme.primary : AppColors.primary,
@@ -43,7 +45,7 @@ WorkoutStatusView workoutStatusView(BuildContext context, Workout workout) {
   } else if (isCancelled) {
     final color = isDark ? theme.colorScheme.error : Colors.redAccent;
     return WorkoutStatusView(
-      label: 'Cancelled',
+      label: l10n.statusCancelled,
       background: isDark ? theme.colorScheme.errorContainer : const Color(0xFFFFEBEE),
       textColor: isDark ? theme.colorScheme.onErrorContainer : color,
       dotColor: color,
@@ -51,7 +53,7 @@ WorkoutStatusView workoutStatusView(BuildContext context, Workout workout) {
   } else {
     final color = isDark ? theme.colorScheme.error : Colors.redAccent;
     return WorkoutStatusView(
-      label: 'Planned',
+      label: l10n.statusPlannedLabel,
       background: isDark ? theme.colorScheme.errorContainer : const Color(0xFFFFEBEE),
       textColor: isDark ? theme.colorScheme.onErrorContainer : color,
       dotColor: color,

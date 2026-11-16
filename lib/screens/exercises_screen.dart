@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http_parser/http_parser.dart';
@@ -104,15 +105,16 @@ class _TagAutocompleteState extends State<_TagAutocomplete> {
           }
         });
 
+        final l10n = AppLocalizations.of(context);
         return SizedBox(
           width: double.infinity,
           child: InputDecorator(
-            decoration: const InputDecoration(
-              labelText: 'Add muscle tag',
-              hintText: 'Type to search...',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.addMuscleTagLabel,
+              hintText: l10n.typeToSearchHint,
+              border: const OutlineInputBorder(),
               isDense: false,
-              contentPadding: EdgeInsets.fromLTRB(12, 20, 12, 12),
+              contentPadding: const EdgeInsets.fromLTRB(12, 20, 12, 12),
               floatingLabelBehavior: FloatingLabelBehavior.always,
             ),
             child: Wrap(
@@ -134,8 +136,8 @@ class _TagAutocompleteState extends State<_TagAutocomplete> {
                   child: TextField(
                     controller: controller,
                     focusNode: focusNode,
-                    decoration: const InputDecoration.collapsed(
-                      hintText: 'Type to search...',
+                    decoration: InputDecoration.collapsed(
+                      hintText: l10n.typeToSearchHint,
                     ),
                     onSubmitted: (value) {
                       final label = value.trim();
@@ -206,8 +208,9 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
       final bytes = file.bytes;
       if (bytes == null || bytes.isEmpty) {
         if (!mounted) return;
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to read selected file bytes')),
+          SnackBar(content: Text(l10n.failedToReadFileBytes)),
         );
         return;
       }
@@ -253,15 +256,19 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
       await ref.read(exercisesNotifierProvider.notifier).loadExercises();
 
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isGif ? 'GIF uploaded' : 'Image uploaded')),
+        SnackBar(
+          content: Text(isGif ? l10n.gifUploaded : l10n.imageUploaded),
+        ),
       );
     } catch (e) {
       if (mounted) {
         Navigator.of(context, rootNavigator: true).maybePop();
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+        ).showSnackBar(SnackBar(content: Text(l10n.uploadFailed('$e'))));
       }
     }
   }
@@ -337,25 +344,27 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
     await showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(isEdit ? 'Edit Exercise' : 'Create Exercise'),
+        builder: (context, setDialogState) {
+          final l10n = AppLocalizations.of(context);
+          return AlertDialog(
+          title: Text(isEdit ? l10n.editExerciseTitle : l10n.createExerciseTitle),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Name'),
+                  decoration: InputDecoration(labelText: l10n.nameLabel),
                 ),
                 const SizedBox(height: 8),
                 FutureBuilder<List<String>>(
                   future: _groupsFuture,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const ListTile(
+                      return ListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: Text('Muscle group'),
-                        subtitle: Text('Loading...'),
+                        title: Text(l10n.muscleGroupLabel),
+                        subtitle: Text(l10n.loadingEllipsis),
                       );
                     }
                     if (snapshot.hasError) {
@@ -364,7 +373,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Muscle group',
+                            l10n.muscleGroupLabel,
                             style: TextStyle(
                               fontSize: 12,
                               color: colors.onSurfaceVariant,
@@ -372,7 +381,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Failed to load groups: ${snapshot.error}',
+                            l10n.failedToLoadGroups('${snapshot.error}'),
                             style: TextStyle(color: colors.error),
                           ),
                         ],
@@ -382,10 +391,10 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                     return DropdownButtonFormField<String>(
                       initialValue: _selectedMuscleGroup,
                       isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Muscle group',
+                      decoration: InputDecoration(
+                        labelText: l10n.muscleGroupLabel,
                       ),
-                      hint: const Text('Select group'),
+                      hint: Text(l10n.selectGroupHint),
                       items: groups
                           .map(
                             (g) => DropdownMenuItem<String>(
@@ -571,15 +580,15 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   initialValue: _movementType,
-                  decoration: const InputDecoration(labelText: 'Movement type'),
-                  items: const [
+                  decoration: InputDecoration(labelText: l10n.movementTypeLabel),
+                  items: [
                     DropdownMenuItem(
                       value: 'compound',
-                      child: Text('Compound'),
+                      child: Text(l10n.movementTypeCompound),
                     ),
                     DropdownMenuItem(
                       value: 'isolation',
-                      child: Text('Isolation'),
+                      child: Text(l10n.movementTypeIsolation),
                     ),
                   ],
                   onChanged: (val) => setDialogState(() => _movementType = val),
@@ -587,10 +596,16 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   initialValue: _region,
-                  decoration: const InputDecoration(labelText: 'Region'),
-                  items: const [
-                    DropdownMenuItem(value: 'upper', child: Text('Upper')),
-                    DropdownMenuItem(value: 'lower', child: Text('Lower')),
+                  decoration: InputDecoration(labelText: l10n.regionLabel),
+                  items: [
+                    DropdownMenuItem(
+                      value: 'upper',
+                      child: Text(l10n.regionUpper),
+                    ),
+                    DropdownMenuItem(
+                      value: 'lower',
+                      child: Text(l10n.regionLower),
+                    ),
                   ],
                   onChanged: (val) => setDialogState(() => _region = val),
                 ),
@@ -600,7 +615,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -642,16 +657,19 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        'Failed to ${isEdit ? 'update' : 'create'} exercise: $e',
+                        isEdit
+                            ? l10n.failedToUpdateExercise('$e')
+                            : l10n.failedToCreateExercise('$e'),
                       ),
                     ),
                   );
                 }
               },
-              child: Text(isEdit ? 'Save' : 'Create'),
+              child: Text(isEdit ? l10n.save : l10n.create),
             ),
           ],
-        ),
+        );
+        },
       ),
     );
   }
@@ -668,9 +686,10 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
         'entities': {'show_only_main_exercises': _showOnlyMainExercises},
       },
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return Scaffold(
           appBar: PrimaryAppBar(
-            title: 'Exercises',
+            title: l10n.exercisesTitle,
             onTitleTap: openChat,
           ),
           body: Consumer(
@@ -682,7 +701,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                 error: (error, stackTrace) {
                   _logger.e('Error loading exercises: $error\n$stackTrace');
                   return ErrorMessage(
-                    message: 'Error loading exercises: $error',
+                    message: l10n.errorLoadingExercises('$error'),
                     onRetry: () {
                       final _ = ref.refresh(exercisesNotifierProvider);
                     },
@@ -692,14 +711,14 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                   if (exercises.isEmpty) {
                     return EmptyState(
                       icon: Icons.fitness_center,
-                      title: 'No Exercises',
-                      description: 'No exercises found. Add your first exercise!',
+                      title: l10n.noExercisesTitle,
+                      description: l10n.noExercisesDescription,
                       action: ElevatedButton.icon(
                         onPressed: () {
                           final _ = ref.refresh(exercisesNotifierProvider);
                         },
                         icon: const Icon(Icons.refresh),
-                        label: const Text('Refresh'),
+                        label: Text(l10n.refresh),
                       ),
                     );
                   }
@@ -837,7 +856,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '${exercise.muscleGroup ?? 'No muscle group'} • ${exercise.equipment ?? 'No equipment'}',
+                            '${exercise.muscleGroup ?? AppLocalizations.of(context).noMuscleGroup} • ${exercise.equipment ?? AppLocalizations.of(context).noEquipment}',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: colors.onSurfaceVariant,
                             ),
@@ -856,7 +875,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                       width: 48,
                       height: 48,
                       child: IconButton(
-                        tooltip: 'Upload Image',
+                        tooltip: AppLocalizations.of(context).uploadImageTooltip,
                         style: IconButton.styleFrom(
                           minimumSize: const Size(48, 48),
                           tapTargetSize: MaterialTapTargetSize.padded,
@@ -869,7 +888,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                       width: 48,
                       height: 48,
                       child: IconButton(
-                        tooltip: 'Edit',
+                        tooltip: AppLocalizations.of(context).edit,
                         style: IconButton.styleFrom(
                           minimumSize: const Size(48, 48),
                           tapTargetSize: MaterialTapTargetSize.padded,
@@ -883,7 +902,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                       width: 48,
                       height: 48,
                       child: IconButton(
-                        tooltip: 'Delete',
+                        tooltip: AppLocalizations.of(context).delete,
                         style: IconButton.styleFrom(
                           minimumSize: const Size(48, 48),
                           tapTargetSize: MaterialTapTargetSize.padded,
@@ -907,22 +926,23 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
   }
 
   Future<void> _confirmDeleteExercise(ExerciseDefinition exercise) async {
+    final l10n = AppLocalizations.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete exercise?'),
-        content: Text('Are you sure you want to delete "${exercise.name}"?'),
+        title: Text(l10n.deleteExerciseQuestion),
+        content: Text(l10n.deleteExerciseConfirmBody(exercise.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -937,7 +957,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete exercise: $e')),
+        SnackBar(content: Text(l10n.failedToDeleteExercise('$e'))),
       );
     }
   }

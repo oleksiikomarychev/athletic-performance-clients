@@ -6,6 +6,7 @@ import 'package:workout_app/config/api_config.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/services/api_client.dart';
 import 'package:workout_app/widgets/ambient_scaffold_shell.dart';
 import 'package:workout_app/widgets/instrument_modal.dart';
@@ -155,8 +156,9 @@ class _SettingsImportScreenState extends State<SettingsImportScreen> {
         (isDark ? instrument.hairlineBorder : scheme.outlineVariant)
             .withValues(alpha: isDark ? 0.85 : 0.55);
 
+    final l10n = AppLocalizations.of(context);
     return AmbientScaffoldShell(
-      appBar: const PrimaryAppBar.detail(title: 'Import workouts'),
+      appBar: PrimaryAppBar.detail(title: l10n.settingsImportWorkouts),
       body: ResponsiveContainer(
         maxWidth: Breakpoints.maxContentWidthNarrow,
         child: ListView(
@@ -339,19 +341,19 @@ class _SettingsImportScreenState extends State<SettingsImportScreen> {
                     ),
                     Container(height: 1, color: hairline),
                     _ImportMetricRow(
-                      label: 'Created workouts',
+                      label: l10n.importCreatedWorkouts,
                       value: '${_result!.createdWorkouts}',
                       color: instrument.successColor,
                     ),
                     Container(height: 1, color: hairline),
                     _ImportMetricRow(
-                      label: 'Total rows in file',
+                      label: l10n.importTotalRows,
                       value: '${_result!.totalInFile}',
                     ),
                     if (_result!.errors > 0) ...[
                       Container(height: 1, color: hairline),
                       _ImportMetricRow(
-                        label: 'Row errors',
+                        label: l10n.importRowErrors,
                         value: '${_result!.errors}',
                         color: instrument.peakEffortColor,
                       ),

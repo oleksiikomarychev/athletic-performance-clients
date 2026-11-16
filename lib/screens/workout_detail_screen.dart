@@ -1,3 +1,4 @@
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/screens/macros/macros_preview_screen.dart';
 import '../config/api_config.dart';
 import 'package:flutter/material.dart';
@@ -111,8 +112,8 @@ class WorkoutDetailScreen extends ConsumerWidget {
               children: [
                 const Icon(Icons.error_outline, size: 40),
                 const SizedBox(height: 12),
-                const Text(
-                  'Не удалось открыть тренировку',
+                Text(
+                  AppLocalizations.of(context).workoutDetailOpenError,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -120,7 +121,7 @@ class WorkoutDetailScreen extends ConsumerWidget {
                   onPressed: () =>
                       ref.invalidate(workoutSWRProvider(workoutId)),
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Повторить'),
+                  label: Text(AppLocalizations.of(context).retry),
                 ),
                 TextButton(
                   onPressed: () {
@@ -133,7 +134,7 @@ class WorkoutDetailScreen extends ConsumerWidget {
                       );
                     }
                   },
-                  child: const Text('Назад'),
+                  child: Text(AppLocalizations.of(context).actionBack),
                 ),
               ],
             ),
@@ -454,7 +455,9 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to apply readiness: $e')),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).failedToApplyReadiness('$e')),
+          ),
         );
       }
     } finally {
@@ -531,8 +534,8 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
     if (_ref == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update set: app state not ready'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).failedToUpdateSetNotReady),
           ),
         );
       }
@@ -624,9 +627,11 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
       _reconcileEditors();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to update set: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).failedToUpdateSet('$e')),
+          ),
+        );
       }
     } finally {
       _updatingSetKeys.remove(key);
@@ -692,21 +697,20 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
         _isLoading = true;
       });
 
+      final l10n = AppLocalizations.of(context);
       final shouldDelete = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Delete Exercise'),
-          content: const Text(
-            'Are you sure you want to remove this exercise from your workout?',
-          ),
+          title: Text(l10n.deleteExerciseTitle),
+          content: Text(l10n.removeExerciseConfirmBody),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
             ),
           ],
         ),
@@ -727,15 +731,15 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Exercise removed from workout')),
+            SnackBar(content: Text(l10n.exerciseRemovedFromWorkout)),
           );
         }
       } else {
         print('Cannot delete instance with null ID');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Error: Cannot delete unsaved exercise'),
+            SnackBar(
+              content: Text(l10n.errorCannotDeleteUnsavedExercise),
             ),
           );
         }
@@ -745,7 +749,11 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
       print('Stack trace: $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to remove exercise: ${e.toString()}')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).failedToRemoveExercise(e.toString()),
+            ),
+          ),
         );
       }
     } finally {
@@ -762,8 +770,8 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
     if (instanceId == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cannot add set: exercise is not saved yet'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).cannotAddSetUnsavedExercise),
           ),
         );
       }
@@ -845,14 +853,18 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Set added successfully')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).setAddedSuccessfully)),
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add set: ${e.toString()}')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).failedToAddSet(e.toString()),
+            ),
+          ),
         );
       }
     } finally {
@@ -922,9 +934,11 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
       print('Stack trace: $stackTrace');
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to load exercises: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).failedToLoadExercises('$e')),
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -1042,16 +1056,18 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
       });
       _syncMetadataControllers();
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Workout updated')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context).workoutUpdated)),
+        );
       }
     } catch (e, st) {
       _d('Failed to save workout metadata: $e\n$st');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to update workout: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).failedToUpdateWorkout('$e')),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSavingMetadata = false);
@@ -1183,14 +1199,16 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
           'workouts:list',
         ]);
       } catch (_) {}
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Workout started')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).workoutStarted)),
+      );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to start session: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).failedToStartSession('$e')),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -1239,18 +1257,23 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
         }
       } catch (_) {}
 
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(cancelled ? 'Session cancelled' : 'Workout finished'),
+          content: Text(
+            cancelled ? l10n.sessionCancelled : l10n.workoutFinished,
+          ),
         ),
       );
 
       if (!cancelled && updated.appliedPlanId != null) await _maybeShowMacroSuggestion();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to finish session: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).failedToFinishSession('$e')),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -1289,7 +1312,9 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
       if (setsToComplete.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('All sets are already completed')),
+            SnackBar(
+              content: Text(AppLocalizations.of(context).allSetsAlreadyCompleted),
+            ),
           );
         }
         return;
@@ -1341,13 +1366,17 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
       }
 
       final msg = failed == 0
-          ? 'All sets marked as completed ($success)'
-          : 'Marked $success sets, failed $failed';
+          ? AppLocalizations.of(context).allSetsMarkedCompleted(success)
+          : AppLocalizations.of(context).markedSetsPartial(failed, success);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to complete all sets: $e')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).failedToCompleteAllSets('$e'),
+            ),
+          ),
         );
       }
     } finally {
@@ -1417,7 +1446,11 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update set completion: $e')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).failedToUpdateSetCompletion('$e'),
+            ),
+          ),
         );
       }
     } finally {
@@ -1728,22 +1761,21 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
 
       final setToDelete = instance.sets[setIndex];
 
+      final l10n = AppLocalizations.of(context);
       final confirm = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Delete Set'),
-          content: const Text(
-            'Are you sure you want to delete this set? This action cannot be undone.',
-          ),
+          title: Text(l10n.deleteSetTitle),
+          content: Text(l10n.deleteSetConfirmMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('CANCEL'),
+              child: Text(l10n.cancel.toUpperCase()),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('DELETE'),
+              child: Text(l10n.delete.toUpperCase()),
             ),
           ],
         ),
@@ -1894,9 +1926,9 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Set deleted successfully'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).setDeletedSuccessfully),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -1907,7 +1939,9 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to delete set: ${e.toString()}'),
+            content: Text(
+              AppLocalizations.of(context).failedToDeleteSet(e.toString()),
+            ),
             duration: const Duration(seconds: 3),
           ),
         );
@@ -1968,7 +2002,11 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Exercise added successfully')),
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context).exerciseAddedSuccessfully,
+              ),
+            ),
           );
         }
       }
@@ -1977,7 +2015,11 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
       print('Stack trace: $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add exercise: ${e.toString()}')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).failedToAddExercise(e.toString()),
+            ),
+          ),
         );
       }
     }
@@ -2031,8 +2073,8 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
               SnackBar(
                 content: Text(
                   updatedInstance?.id == null
-                      ? 'Exercise added successfully'
-                      : 'Exercise updated successfully',
+                      ? AppLocalizations.of(context).exerciseAddedSuccessfully
+                      : AppLocalizations.of(context).exerciseUpdatedSuccessfully,
                 ),
               ),
             );
@@ -2044,7 +2086,11 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
       print('Stack trace: $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating exercise: ${e.toString()}')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).errorUpdatingExercise(e.toString()),
+            ),
+          ),
         );
       }
     } finally {
@@ -2103,7 +2149,7 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
               child: AmbientScaffoldShell(
                 environment: env,
                 appBar: FloatingHeaderBar(
-                  title: _workout?.name ?? 'Workout Details',
+                  title: _workout?.name ?? AppLocalizations.of(context).workoutDetailFallbackTitle,
                   onTitleTap: openChat,
                   leading: IconButton(
                     icon: const Icon(Icons.arrow_back),
@@ -2111,7 +2157,7 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                   ),
                   actions: [
                     IconButton(
-                      tooltip: 'Сетка',
+                      tooltip: AppLocalizations.of(context).gridPillLabel,
                       icon: const Icon(Icons.grid_view_rounded),
                       onPressed: () => InterfaceMakerSheet.show(context),
                     ),
@@ -2171,7 +2217,7 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                           ),
                         ),
                         icon: const Icon(Icons.add_rounded),
-                        label: const Text('Добавить упражнение'),
+                        label: Text(AppLocalizations.of(context).exerciseFormTitleAdd),
                       ),
                     ),
                   ),
@@ -2237,14 +2283,14 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                     ),
                     SizedBox(height: dimensions.sectionGap),
                     Text(
-                      'Упражнений пока нет',
+                      AppLocalizations.of(context).workoutDetailNoExercisesTitle,
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     SizedBox(height: dimensions.rowGap),
                     Text(
-                      'Нажмите «Добавить упражнение» ниже, чтобы собрать сессию',
+                      AppLocalizations.of(context).workoutDetailNoExercisesSubtitle,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
@@ -2395,20 +2441,20 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
           final exCount = w?.exerciseInstances.length ?? 0;
           return InstrumentMetricCellData(
             slot: slot,
-            label: 'УПР.',
+            label: AppLocalizations.of(context).metricExercisesShort,
             value: '$exCount',
           );
         case MetricSlot.durationWeeks:
           return InstrumentMetricCellData(
             slot: slot,
-            label: 'ТАЙМЕР',
+            label: AppLocalizations.of(context).metricTimerShort,
             value: _formatDuration(_elapsed),
           );
         case MetricSlot.frequencyPerWeek:
           return InstrumentMetricCellData(
             slot: slot,
-            label: 'РЕЖИМ',
-            value: env.badgeLabel,
+            label: AppLocalizations.of(context).metricModeShort,
+            value: env.localizedBadgeLabel(AppLocalizations.of(context)),
           );
       }
     }).toList(growable: false);
@@ -2515,7 +2561,7 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
     final metaParts = <String>[
       if ((exercise.muscleGroup ?? '').isNotEmpty) exercise.muscleGroup!,
       if ((exercise.equipment ?? '').isNotEmpty) exercise.equipment!,
-      '${instance.sets.length} ${instance.sets.length == 1 ? 'SET' : 'SETS'}',
+      AppLocalizations.of(context).setCountLabel(instance.sets.length),
       if (totalVolume > 0) '${totalVolume.round()} kg',
     ];
 
@@ -2590,7 +2636,7 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                         onPressed: (isUpdating || _isLoading)
                             ? null
                             : () => _addSetToInstance(instance),
-                        tooltip: 'Добавить подход',
+                        tooltip: AppLocalizations.of(context).exerciseFormAddSet,
                         color: accent,
                         padding: EdgeInsets.zero,
                       ),
@@ -2610,7 +2656,7 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                               ),
                           instance,
                         ),
-                        tooltip: 'Редактировать упражнение',
+                        tooltip: AppLocalizations.of(context).tooltipEditExercise,
                         color: scheme.primary,
                         padding: EdgeInsets.zero,
                       ),
@@ -2621,7 +2667,7 @@ class _WorkoutDetailContentState extends State<_WorkoutDetailContent> {
                       child: IconButton(
                         icon: const Icon(Icons.delete_outline, size: 20),
                         onPressed: () => _deleteExerciseInstance(instance),
-                        tooltip: 'Удалить упражнение',
+                        tooltip: AppLocalizations.of(context).deleteExerciseTooltip,
                         color: scheme.error,
                         padding: EdgeInsets.zero,
                       ),

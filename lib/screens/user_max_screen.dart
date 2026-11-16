@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/assistant_chat_host.dart';
 import 'package:workout_app/widgets/loading_indicator.dart';
@@ -111,25 +112,25 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
                     children: [
                       Expanded(
                         child: Text(
-                          'Анализ слабых мышц',
+                          AppLocalizations.of(context).userMaxWeakMusclesTitle,
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                       ),
                       if (llmEnabled)
-                        const Tooltip(
-                          message: 'LLM обогащение включено',
-                          child: Icon(Icons.smart_toy_outlined),
+                        Tooltip(
+                          message: AppLocalizations.of(context).userMaxLlmEnriched,
+                          child: const Icon(Icons.smart_toy_outlined),
                         ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Топ слабых мышц',
+                    AppLocalizations.of(context).userMaxTopWeakMuscles,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
                   if (weak.isEmpty)
-                    const Text('Нет данных')
+                    Text(AppLocalizations.of(context).noData)
                   else
                     ...weak.map((w) {
                       final m = w as Map;
@@ -148,12 +149,12 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
                     }),
                   const Divider(height: 24),
                   Text(
-                    'Сила по мышцам',
+                    AppLocalizations.of(context).userMaxStrengthByMuscle,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
                   if (muscleStrength.isEmpty)
-                    const Text('Нет данных')
+                    Text(AppLocalizations.of(context).noData)
                   else
                     ...(muscleStrength.entries.toList()
                           ..sort((a, b) => (a.key).compareTo(b.key)))
@@ -170,12 +171,12 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
                         ),
                   const Divider(height: 24),
                   Text(
-                    'Тренды',
+                    AppLocalizations.of(context).userMaxTrends,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
                   if (trends.isEmpty)
-                    const Text('Нет данных')
+                    Text(AppLocalizations.of(context).noData)
                   else
                     ...trends.entries.map((e) {
                       final v = (e.value as Map).cast<String, dynamic>();
@@ -193,12 +194,14 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
                     }),
                   const Divider(height: 24),
                   Text(
-                    'Аномалии',
+                    AppLocalizations.of(context).userMaxAnomalies,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    anomalies.isEmpty ? 'Не обнаружены' : anomalies.join(', '),
+                    anomalies.isEmpty
+                        ? AppLocalizations.of(context).userMaxNoneDetected
+                        : anomalies.join(', '),
                   ),
                 ],
               ),
@@ -208,9 +211,13 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Ошибка анализа: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).userMaxAnalysisError(e.toString()),
+          ),
+        ),
+      );
     }
   }
 
@@ -224,25 +231,32 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
   String _exerciseTitle(UserMax max) {
     if (max.exerciseName.isNotEmpty) return max.exerciseName;
     if (max.name.isNotEmpty) return max.name;
-    return 'Упражнение ${max.exerciseId}';
+    return AppLocalizations.of(context).userMaxExerciseFallback(
+      max.exerciseId.toString(),
+    );
   }
 
   Future<void> _deleteUserMax(UserMax max) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Удалить максимум?'),
+        title: Text(l10n.userMaxDeleteTitle),
         content: Text(
-          '${_exerciseTitle(max)}\n${max.maxWeight} кг × ${max.repMax} повторений',
+          l10n.userMaxDeleteBody(
+            _exerciseTitle(max),
+            max.repMax.toString(),
+            max.maxWeight.toString(),
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Отмена'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Удалить'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -258,13 +272,13 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Максимум удалён')));
+        ).showSnackBar(SnackBar(content: Text(l10n.userMaxDeleted)));
         await _refresh();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Не удалось удалить максимум: $e')),
+          SnackBar(content: Text(l10n.userMaxDeleteError(e.toString()))),
         );
       }
     }
@@ -300,7 +314,7 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
                 Row(
                   children: [
                     Text(
-                      '${max.maxWeight} кг',
+                      AppLocalizations.of(context).unitKgValue(max.maxWeight.toString()),
                       style: InstrumentTheme.tabular(
                         (theme.textTheme.bodyMedium ?? const TextStyle())
                             .copyWith(
@@ -335,7 +349,7 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Повторения: ${max.repMax}',
+                  '${AppLocalizations.of(context).userMaxRepsLabel}: ${max.repMax}',
                   style: InstrumentTheme.tabular(
                     theme.textTheme.bodySmall ?? const TextStyle(fontSize: 12),
                   ),
@@ -347,7 +361,7 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
             width: 48,
             height: 48,
             child: IconButton(
-              tooltip: 'Удалить максимум',
+              tooltip: AppLocalizations.of(context).userMaxDeleteTooltip,
               style: IconButton.styleFrom(
                 minimumSize: const Size(48, 48),
                 tapTargetSize: MaterialTapTargetSize.padded,
@@ -414,7 +428,7 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '${top.maxWeight} кг',
+                        AppLocalizations.of(context).unitKgValue(top.maxWeight.toString()),
                         style: InstrumentTheme.tabular(
                           (theme.textTheme.titleMedium ?? const TextStyle())
                               .copyWith(
@@ -449,16 +463,17 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
     return AssistantChatHost(
       contextBuilder: _buildChatContext,
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return Scaffold(
           appBar: PrimaryAppBar(
-            title: 'User Maxes',
+            title: l10n.userMaxesTitle,
             onTitleTap: openChat,
             actions: [
               SizedBox(
                 width: 48,
                 height: 48,
                 child: IconButton(
-                  tooltip: 'Анализ слабых мышц',
+                  tooltip: l10n.userMaxWeakMusclesTitle,
                   style: IconButton.styleFrom(
                     minimumSize: const Size(48, 48),
                     tapTargetSize: MaterialTapTargetSize.padded,
@@ -480,7 +495,7 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
 
                 if (snapshot.hasError) {
                   return ErrorMessage(
-                    message: 'Failed to load user maxes: ${snapshot.error}',
+                    message: l10n.failedToLoadData('${snapshot.error}'),
                     onRetry: _refresh,
                   );
                 }
@@ -489,8 +504,8 @@ class _UserMaxScreenState extends ConsumerState<UserMaxScreen> {
                 if (data.isEmpty) {
                   return EmptyState(
                     icon: Icons.fitness_center,
-                    title: 'No maxes saved',
-                    description: 'Add your first max weight',
+                    title: l10n.noMaxesSavedTitle,
+                    description: l10n.addFirstMaxWeightDescription,
                   );
                 }
 

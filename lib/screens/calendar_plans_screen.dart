@@ -4,6 +4,7 @@ import 'package:workout_app/screens/user_profile_screen.dart';
 import 'package:workout_app/config/theme/instrument_theme.dart';
 import 'package:workout_app/config/theme/responsive.dart';
 import 'package:workout_app/config/theme/ui_dimensions.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/widgets/primary_app_bar.dart';
 import 'package:workout_app/widgets/responsive_container.dart';
 import 'package:workout_app/widgets/loading_indicator.dart';
@@ -93,7 +94,11 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
     } catch (error) {
       if (mounted)
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Не удалось открыть план: $error')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).plansOpenError(error.toString()),
+            ),
+          ),
         );
     } finally {
       if (mounted) setState(() => _openingPlanId = null);
@@ -132,18 +137,19 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
     return AssistantChatHost(
       contextBuilder: _buildChatContext,
       builder: (context, openChat) {
+        final l10n = AppLocalizations.of(context);
         return Scaffold(
           appBar: PrimaryAppBar(
-            title: 'Training Plans',
+            title: l10n.navPlans,
             onTitleTap: openChat,
             actions: [
               IconButton(
-                tooltip: 'Create new calendar plan',
+                tooltip: l10n.actionCreate,
                 icon: const Icon(Icons.add),
                 onPressed: () => _createPlan(controller),
               ),
               IconButton(
-                tooltip: 'Профиль',
+                tooltip: l10n.profile,
                 icon: const Icon(Icons.person),
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const UserProfileScreen()),
@@ -177,7 +183,7 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                           onChanged: controller.setQuery,
                           onSubmitted: (_) => controller.refresh(),
                           decoration: InputDecoration(
-                            hintText: 'Поиск планов',
+                            hintText: l10n.plansSearchHint,
                             border: InputBorder.none,
                             enabledBorder: InputBorder.none,
                             focusedBorder: InputBorder.none,
@@ -190,7 +196,7 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                             suffixIcon: catalog.query.isEmpty
                                 ? null
                                 : IconButton(
-                                    tooltip: 'Очистить поиск',
+                                    tooltip: l10n.plansClearSearchTooltip,
                                     style: IconButton.styleFrom(
                                       minimumSize: const Size(48, 48),
                                       tapTargetSize:
@@ -215,7 +221,7 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                           ),
                         ),
                         child: IconButton(
-                          tooltip: 'Фильтры',
+                          tooltip: l10n.plansFiltersTooltip,
                           style: IconButton.styleFrom(
                             minimumSize: const Size(48, 48),
                             tapTargetSize: MaterialTapTargetSize.padded,
@@ -244,7 +250,7 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                               padding: const EdgeInsets.only(right: 6),
                               child: InputChip(
                                 label: Text(
-                                  catalogFilterLabel(facet.key, value),
+                                  catalogFilterLabel(facet.key, value, l10n),
                                 ),
                                 onDeleted: () {
                                   final next = {
@@ -258,7 +264,7 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                             ),
                         TextButton(
                           onPressed: () => controller.setFilters({}),
-                          child: const Text('Сбросить'),
+                          child: Text(l10n.interfaceMakerReset),
                         ),
                       ],
                     ),
@@ -273,7 +279,7 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'Найдено: ${catalog.page.total}',
+                      l10n.plansFoundCount(catalog.page.total),
                       style: InstrumentTheme.tabular(
                         Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Theme.of(
@@ -293,8 +299,7 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                       ? const LoadingIndicator()
                       : catalog.error != null && catalog.page.items.isEmpty
                       ? ErrorMessage(
-                          message:
-                              'Не удалось загрузить планы: ${catalog.error}',
+                          message: l10n.plansLoadError(catalog.error.toString()),
                           onRetry: controller.refresh,
                         )
                       : Responsive.isWide(context) &&
@@ -323,10 +328,10 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                               SizedBox(height: dimensions.rowGap),
                           itemBuilder: (context, index) {
                             if (catalog.page.items.isEmpty)
-                              return const EmptyState(
+                              return EmptyState(
                                 icon: Icons.search_off,
-                                title: 'Планы не найдены',
-                                description: 'Измените запрос или фильтры',
+                                title: l10n.plansEmptyTitle,
+                                description: l10n.plansEmptyDescription,
                               );
                             if (index == catalog.page.items.length)
                               return catalog.loadingMore
@@ -337,8 +342,8 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                                       onPressed: controller.loadMore,
                                       child: Text(
                                         catalog.error == null
-                                            ? 'Показать ещё'
-                                            : 'Не удалось загрузить. Повторить',
+                                            ? l10n.actionLoadMore
+                                            : l10n.actionLoadFailedRetry,
                                       ),
                                     );
                             final plan = catalog.page.items[index];
@@ -400,8 +405,8 @@ class _CalendarPlansScreenState extends ConsumerState<CalendarPlansScreen> {
                   onPressed: controller.loadMore,
                   child: Text(
                     catalog.error == null
-                        ? 'Показать ещё'
-                        : 'Не удалось загрузить. Повторить',
+                        ? AppLocalizations.of(context).actionLoadMore
+                        : AppLocalizations.of(context).actionLoadFailedRetry,
                   ),
                 );
         }

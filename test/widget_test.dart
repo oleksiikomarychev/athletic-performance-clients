@@ -20,6 +20,8 @@ void main() {
 
     for (final density in UiDensity.values) {
       await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.darkTheme(density: density),
         home: MediaQuery(
           data: const MediaQueryData(textScaler: TextScaler.linear(2)),

@@ -98,38 +98,38 @@ class _ConditionBuilderState extends State<ConditionBuilder> {
         .toList(growable: false);
   }
 
-  String _opHelp(String op) {
+  String _opHelp(String op, AppLocalizations l10n) {
     switch (op) {
       case '>':
       case '<':
       case '=':
       case '!=':
-        return 'Сравнение с числом. Введите значение (целое или дробное), например 10 или -2.5.';
+        return l10n.macroCondHelpCompare;
       case 'in_range':
-        return 'Проверяет, что значение находится ВНУТРИ диапазона (включительно). Введите два числа; порядок не важен.';
+        return l10n.macroCondHelpInRange;
       case 'not_in_range':
-        return 'Проверяет, что значение находится ВНЕ диапазона (включительно по границам). Введите два числа.';
+        return l10n.macroCondHelpOutOfRange;
       case 'stagnates_for':
-        return 'Стагнация: последние n окон укладываются в коридор шириной epsilon_percent (%). Укажите n и epsilon_percent.';
+        return l10n.macroCondHelpStagnates;
       case 'deviates_from_avg':
-        return 'Отклонение от среднего за n окон. value_percent — порог отклонения в %, direction — направление (опционально).';
+        return l10n.macroCondHelpDeviates;
       case 'holds_for':
-        return 'Подряд N тренировок: relation (>, <, >=, <=, ==, !=, в диапазоне, вне диапазона) применяется N раз подряд. Для диапазона укажите границы «от» и «до».';
+        return l10n.macroCondHelpHoldsWorkouts;
       case 'holds_for_sets':
-        return 'Подряд N подходов внутри тренировки: для каждой пары план/факт по сету применяется relation к дельте (например, Δповторов).';
+        return l10n.macroCondHelpHoldsSets;
       default:
         return '';
     }
   }
 
-  String _metricOpHelp(String op) {
+  String _metricOpHelp(String op, AppLocalizations l10n) {
     final m = (widget.metric ?? '').toString();
     if (m == 'Performance_Trend') {
       if (op == 'stagnates_for') {
-        return 'Тренд (стагнация): берутся последние n значений метрики и сравнивается ширина диапазона с epsilon_percent (%).\nФормат: n — целое (окна), epsilon_percent — число в процентах.\nПример: n=5, epsilon_percent=1.0 (изменение ≤ 1% за 5 окон).';
+        return l10n.macroCondNoteStagnates;
       }
       if (op == 'deviates_from_avg') {
-        return 'Тренд (отклонение): сравнивается последнее значение со средним за n окон.\nФормат: n — целое, value_percent — порог в %, direction — positive/negative (опционально).\nПример: n=5, value_percent=3, direction="negative" (падение ≥ 3%).';
+        return l10n.macroCondNoteDeviates;
       }
     }
     return '';
@@ -327,15 +327,15 @@ class _ConditionBuilderState extends State<ConditionBuilder> {
         if (effectiveOp.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
-            _opHelp(effectiveOp),
+            _opHelp(effectiveOp, l10n),
             style: theme.textTheme.bodySmall?.copyWith(
               color: scheme.onSurfaceVariant,
             ),
           ),
-          if (_metricOpHelp(effectiveOp).isNotEmpty) ...[
+          if (_metricOpHelp(effectiveOp, l10n).isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
-              _metricOpHelp(effectiveOp),
+              _metricOpHelp(effectiveOp, l10n),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: scheme.onSurfaceVariant,
               ),

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:workout_app/config/constants/legal_constants.dart';
+import 'package:workout_app/l10n/app_localizations.dart';
 import 'package:workout_app/screens/settings/settings_legal_screen.dart';
 
 class SignInScreen extends StatelessWidget {
@@ -77,7 +78,7 @@ class SignInScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Войдите, чтобы продолжить',
+                AppLocalizations.of(context).signInTitle,
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
             ],
@@ -85,14 +86,16 @@ class SignInScreen extends StatelessWidget {
         );
       },
       subtitleBuilder: (context, action) {
+        final l10n = AppLocalizations.of(context);
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: action == fui.AuthAction.signIn
-              ? const Text('Добро пожаловать! Войдите в свой аккаунт.')
-              : const Text('Создайте аккаунт, чтобы начать тренировки.'),
+              ? Text(l10n.signInWelcomeBack)
+              : Text(l10n.signInCreateAccount),
         );
       },
       footerBuilder: (context, action) {
+        final l10n = AppLocalizations.of(context);
         void openLegal(LegalDocumentType docType) {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -106,9 +109,9 @@ class SignInScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Продолжая, вы соглашаетесь с Условиями использования и подтверждаете ознакомление с Политикой конфиденциальности:',
-                style: TextStyle(color: Colors.grey, fontSize: 12),
+              Text(
+                l10n.signInLegalConsent,
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 6),
@@ -123,9 +126,9 @@ class SignInScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                     ),
                     onPressed: () => openLegal(LegalDocumentType.terms),
-                    child: const Text(
-                      'Условия использования',
-                      style: TextStyle(fontSize: 12),
+                    child: Text(
+                      l10n.legalTermsOfService,
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
                   TextButton(
@@ -134,9 +137,9 @@ class SignInScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                     ),
                     onPressed: () => openLegal(LegalDocumentType.privacy),
-                    child: const Text(
-                      'Политика конфиденциальности',
-                      style: TextStyle(fontSize: 12),
+                    child: Text(
+                      l10n.legalPrivacyPolicy,
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
                   TextButton(
@@ -146,9 +149,9 @@ class SignInScreen extends StatelessWidget {
                     ),
                     onPressed: () =>
                         openLegal(LegalDocumentType.healthDisclaimer),
-                    child: const Text(
-                      'Мед. дисклеймер',
-                      style: TextStyle(fontSize: 12),
+                    child: Text(
+                      l10n.legalMedicalDisclaimer,
+                      style: const TextStyle(fontSize: 12),
                     ),
                   ),
                 ],
